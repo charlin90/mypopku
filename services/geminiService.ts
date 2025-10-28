@@ -12,21 +12,24 @@ export async function generateInteractiveConcept(concept: string): Promise<Gener
 
   // 2. Check if the API call was successful.
   if (!response.ok) {
-    // If the server returned an error, parse the error message from the response body.
-    const errorData = await response.json().catch(() => ({
-      // Fallback if the response body isn't valid JSON
-      error: `An unexpected server error occurred (Status: ${response.status}).`,
-    }));
+    // Get the raw text of the error response to provide better debugging.
+    const errorText = await response.text();
     
-    // Construct a more detailed error message for debugging
-    let detailedError = errorData.error || 'Failed to generate concept.';
-    if (errorData.debug) {
-      // Pretty-print the debug object for better readability.
-      detailedError += `\n\n--- DEBUG INFO ---\n${JSON.stringify(errorData.debug, null, 2)}`;
+    // Try to parse it as our expected JSON error structure.
+    try {
+      const errorData = JSON.parse(errorText);
+      let detailedError = errorData.error || 'Failed to generate concept.';
+      if (errorData.debug) {
+        // Pretty-print the debug object for better readability.
+        detailedError += `\n\n--- DEBUG INFO ---\n${JSON.stringify(errorData.debug, null, 2)}`;
+      }
+      throw new Error(detailedError);
+    } catch (e) {
+      // If it's not JSON, it's likely a server crash page (e.g., from Vercel).
+      // Display the raw text to make debugging the server issue easier.
+      const finalError = `An unexpected server error occurred (Status: ${response.status}). The response was not valid JSON.\n\n--- RAW SERVER RESPONSE ---\n${errorText}`;
+      throw new Error(finalError);
     }
-
-    // Throw an error with the detailed message.
-    throw new Error(detailedError);
   }
 
   // 3. Parse the successful JSON response from our backend.
