@@ -114,7 +114,16 @@ export default async function handler(
         throw new Error(errorMessage);
     }
     
-    const parsedObject = JSON.parse(response.text.trim());
+    // Robust parsing: clean potential markdown fences before parsing JSON.
+    let responseText = response.text.trim();
+    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = responseText.match(jsonRegex);
+
+    if (match && match[1]) {
+      responseText = match[1];
+    }
+    
+    const parsedObject = JSON.parse(responseText);
 
     if (
         parsedObject &&
