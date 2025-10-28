@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types';
-import { marked } from 'marked';
+import { marked, type Tokens } from 'marked';
 
 interface ExplainerViewProps {
   content: GeneratedConcept;
@@ -9,11 +9,10 @@ interface ExplainerViewProps {
 
 // Configure marked to be more robust by default.
 const renderer = new marked.Renderer();
-// FIX: The `heading` renderer function signature is `(text, level, raw)`.
-// `marked` passes the heading text with inline markdown already rendered as HTML to the `text` argument.
-// The previous implementation was using an incorrect signature which caused type errors and would fail at runtime.
-renderer.heading = function (text: string, level: number) {
-  return `<h${level}>${text}</h${level}>`;
+// FIX: The function signature for custom renderers has changed in recent versions of `marked`.
+// We now receive a `token` object instead of separate `text` and `level` arguments.
+renderer.heading = (token: Tokens.Heading) => {
+  return `<h${token.depth}>${token.text}</h${token.depth}>`;
 };
 
 marked.setOptions({
