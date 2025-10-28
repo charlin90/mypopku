@@ -116,6 +116,9 @@ export default async function handler(
     
     // Robust parsing: clean potential markdown fences before parsing JSON.
     let responseText = response.text.trim();
+    // Log the raw text from the AI for debugging purposes.
+    console.log("AI Raw Response Text:", responseText);
+
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
     const match = responseText.match(jsonRegex);
 
@@ -140,6 +143,19 @@ export default async function handler(
   } catch (error) {
     console.error("Error in /api/generate:", error);
     const message = error instanceof Error ? error.message : "An unknown server error occurred.";
-    return res.status(500).json({ error: message });
+    
+    // Create a detailed debug object
+    const debugInfo: any = {
+      message: message,
+    };
+    if (error instanceof Error) {
+        debugInfo.name = error.name;
+        debugInfo.stack = error.stack;
+    }
+    
+    return res.status(500).json({ 
+      error: "An error occurred on the server during content generation.",
+      debug: debugInfo
+    });
   }
 }

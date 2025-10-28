@@ -15,10 +15,18 @@ export async function generateInteractiveConcept(concept: string): Promise<Gener
     // If the server returned an error, parse the error message from the response body.
     const errorData = await response.json().catch(() => ({
       // Fallback if the response body isn't valid JSON
-      error: 'An unexpected server error occurred.',
+      error: `An unexpected server error occurred (Status: ${response.status}).`,
     }));
-    // Throw an error with the user-facing message from our backend.
-    throw new Error(errorData.error || 'Failed to generate concept.');
+    
+    // Construct a more detailed error message for debugging
+    let detailedError = errorData.error || 'Failed to generate concept.';
+    if (errorData.debug) {
+      // Pretty-print the debug object for better readability.
+      detailedError += `\n\n--- DEBUG INFO ---\n${JSON.stringify(errorData.debug, null, 2)}`;
+    }
+
+    // Throw an error with the detailed message.
+    throw new Error(detailedError);
   }
 
   // 3. Parse the successful JSON response from our backend.

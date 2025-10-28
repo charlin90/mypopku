@@ -69,7 +69,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             disabled={isLoading}
           />
         </form>
-         {error && <p className="text-red-400 mt-4">{error}</p>}
+         {error && (
+            <div className="w-full max-w-lg mt-4 text-left">
+              <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
+                <code>{error}</code>
+              </pre>
+            </div>
+         )}
          <div className="mt-8 text-gray-500">
            <p>Try some preset concepts:</p>
            <div className="flex gap-4 mt-2">
