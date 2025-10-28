@@ -2,6 +2,7 @@
   "name": "concept-lab",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "tsc && cp index.html dist/index.html"
   },

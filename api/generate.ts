@@ -2,13 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GeneratedConcept } from '../types.js';
 
-const apiKey = process.env.API_KEY;
-if (!apiKey) {
-  // This will cause the function to fail gracefully if the API key is not set
-  throw new Error("API_KEY environment variable is not set");
-}
-const ai = new GoogleGenAI({ apiKey });
-
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
@@ -80,6 +73,22 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
+  // Check for API Key at the start of the handler.
+  // This prevents a module-level crash if the env var is missing.
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.error("API_KEY environment variable is not set.");
+    return res.status(500).json({
+      error: "Server configuration error.",
+      debug: {
+        message: "The API_KEY environment variable is not set on the server. This is a required configuration for the application to function."
+      }
+    });
+  }
+
+  // Initialize the AI client inside the handler, now that we know the key exists.
+  const ai = new GoogleGenAI({ apiKey });
+  
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
