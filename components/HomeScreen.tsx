@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { GeneratedConcept } from '../types';
-import { PRESET_CONCEPTS } from '../data/presets';
+import type { GeneratedConcept } from '../types.ts';
+import { PRESET_CONCEPTS } from '../data/presets.ts';
 
 interface HomeScreenProps {
   onConceptSubmit: (concept: string) => void;

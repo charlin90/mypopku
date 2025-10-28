@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { GeneratedConcept } from '../types';
+import type { GeneratedConcept } from '../types.ts';
 import { marked, type Tokens } from 'marked';
 
 interface ExplainerViewProps {

@@ -1,4 +1,4 @@
-import type { GeneratedConcept } from '../types';
+import type { GeneratedConcept } from '../types.ts';
 
 export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
   "Photosynthesis": {

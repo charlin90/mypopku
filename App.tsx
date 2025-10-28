@@ -1,10 +1,10 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { HomeScreen } from './components/HomeScreen';
-import { ExplainerView } from './components/ExplainerView';
-import { LoadingSpinner } from './components/LoadingSpinner';
-import { generateInteractiveConcept } from './services/geminiService';
-import type { GeneratedConcept } from './types';
+import { HomeScreen } from './components/HomeScreen.tsx';
+import { ExplainerView } from './components/ExplainerView.tsx';
+import { LoadingSpinner } from './components/LoadingSpinner.tsx';
+import { generateInteractiveConcept } from './services/geminiService.ts';
+import type { GeneratedConcept } from './types.ts';
 
 type View = 'home' | 'explainer';
 
