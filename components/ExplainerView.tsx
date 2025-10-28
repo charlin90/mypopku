@@ -9,13 +9,11 @@ interface ExplainerViewProps {
 
 // Configure marked to be more robust by default.
 const renderer = new marked.Renderer();
-// FIX: The signature for the `heading` renderer function has changed in newer versions of `marked`.
-// It now receives a single token object instead of separate `text` and `level` arguments.
-// We also use a standard `function` to get the correct `this` context, which provides
-// access to the parser for rendering inline elements within the heading.
-renderer.heading = function (token) {
-  const text = (this as any).parser.parseInline(token.tokens);
-  return `<h${token.depth}>${text}</h${token.depth}>`;
+// FIX: The `heading` renderer function signature is `(text, level, raw)`.
+// `marked` passes the heading text with inline markdown already rendered as HTML to the `text` argument.
+// The previous implementation was using an incorrect signature which caused type errors and would fail at runtime.
+renderer.heading = function (text: string, level: number) {
+  return `<h${level}>${text}</h${level}>`;
 };
 
 marked.setOptions({
@@ -78,7 +76,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
                     console.error('Error executing dynamic concept script:', e);
                 }
             `);
-            scriptRunnerTimeoutId = setTimeout(runScript, 100);
+            scriptRunnerTimeoutId = window.setTimeout(runScript, 100);
         } catch (e) {
             console.error("Syntax error in AI-generated JavaScript:", e);
         }
