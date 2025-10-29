@@ -18,6 +18,18 @@ const TrashIcon: React.FC = () => (
   </svg>
 );
 
+const DiscordIcon: React.FC = () => (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+        <path d="M20.3 4.4c-1.4-.9-3-1.6-4.6-1.9a.7.7 0 0 0-.7.1l-.4 2.1a15.2 15.2 0 0 0-5.2 0l-.4-2.1a.7.7 0 0 0-.7-.1c-1.7.3-3.3.9-4.7 1.9a.7.7 0 0 0-.2.8l1.8 5.9a15.3 15.3 0 0 0-4.5 4.1.7.7 0 0 0 .2 1c2.8 1.8 5.2 2.2 7.4 2.2h.1c2.2 0 4.6-.4 7.4-2.2a.7.7 0 0 0 .2-1 15.3 15.3 0 0 0-4.5-4.1l1.8-5.9a.7.7 0 0 0-.2-.8zM12 15.4c-1.4 0-2.6-1.2-2.6-2.7s1.2-2.7 2.6-2.7c1.4 0 2.6 1.2 2.6 2.7s-1.2 2.7-2.6 2.7zm3.4-5.8c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7zm-6.8 0c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7z" />
+    </svg>
+);
+
+const EmailIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6" role="img" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+    </svg>
+);
+
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
   onConceptSubmit, 
@@ -48,7 +60,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full min-h-screen p-4 bg-gray-900 overflow-y-auto">
+    <div className="relative flex flex-col justify-center items-center w-full min-h-screen p-4 bg-gray-900 overflow-y-auto pb-24">
       <div className="flex flex-col items-center text-center w-full max-w-2xl pt-24 pb-12 flex-shrink-0">
         <div className="mb-6">
           <svg className="w-24 h-24 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -122,6 +134,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
       )}
+      <footer className="absolute bottom-0 left-0 w-full p-6 text-center text-gray-500 text-sm">
+        <div className="flex justify-center items-center gap-x-8 gap-y-2 flex-wrap">
+            <a href="https://discord.gg/sCuEr8QB" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+                <DiscordIcon />
+                Join our Discord
+            </a>
+            <a href="mailto:lethituyet98221@gmail.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+                <EmailIcon />
+                lethituyet98221@gmail.com
+            </a>
+        </div>
+      </footer>
     </div>
   );
 };
