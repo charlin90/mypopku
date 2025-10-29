@@ -27,45 +27,52 @@ const responseSchema = {
 
 function getPrompt(concept: string): string {
     return `
-    You are an expert frontend developer and creative science communicator.
-    Your task is to create a simple, elegant, and interactive learning module for the concept: "${concept}".
+    You are an expert frontend developer and creative science communicator with a world-class eye for UI/UX design.
+    Your task is to create an interactive learning module for the concept: "${concept}".
     The module must follow a strict "Guided Discovery" philosophy: the user learns by doing, and every action is explained in real-time.
     Generate a JSON object that strictly adheres to the provided schema.
 
-    **The Non-Negotiable Interactivity Mandate (CRITICAL - READ AND OBEY):**
+    ---
+    **CORE MANDATES: Read and obey these rules without exception.**
+    ---
 
-    THE GOLDEN RULE: A USER ACTION THAT DOES NOT PRODUCE AN IMMEDIATE AND OBVIOUS VISUAL CHANGE IS A COMPLETE FAILURE. THERE ARE NO EXCEPTIONS.
+    **MANDATE 1: AESTHETICS & DESIGN**
 
-    To ensure this, you MUST follow this protocol without deviation:
+    The final product MUST be visually stunning, modern, elegant, and clean.
 
-    1.  **MANDATORY VISUAL FEEDBACK PROTOCOL (TOP PRIORITY):**
-        *   **EVERY ACTION MUST HAVE A VISIBLE REACTION:** Every single event listener (click, input, etc.) MUST cause an immediate and obvious visual change within '#interactive-stage'. An element MUST appear, move, change color, animate, or be added/removed. A state change that the user cannot see is a failed interaction.
-        *   **GUARANTEED CSS SYNCHRONIZATION:** If your JavaScript adds a CSS class to an element (e.g., \`element.classList.add('active')\`), you MUST verify that a corresponding, working CSS rule for that class exists in your CSS output. A class that does nothing is a bug.
-        *   **THE EXPLANATION PANEL AS PROOF:** The innerHTML of '#explanation-panel' MUST be updated on every single user interaction to describe what just happened. This is a non-negotiable form of feedback.
+    1.  **Modern, Dark-Themed Aesthetic:** You MUST use a sophisticated dark theme (e.g., background #111827). Foreground elements must have high contrast using light colors and a single vibrant accent color (e.g., teal). The style must be contemporary, with clean lines, clear typography, and smooth animations. Avoid cluttered or dated designs.
+    2.  **Elegant & Well-Styled:** The CSS MUST be deliberate. Pay meticulous attention to spacing (use ample whitespace), sizing, color harmony, and fonts. The result must be elegant, efficient, and perfectly integrate function and form.
 
-    2.  **A/B MATCHING PROTOCOL:**
-        *   **PART A (HTML):** For every interactive element, you MUST assign a simple, unique \`id\`. EXAMPLE: \`<button id="action-button">Click Me</button>\`.
-        *   **PART B (JAVASCRIPT):** In your JavaScript, you MUST use \`document.querySelector\` with the EXACT SAME ID STRING. You MUST perform a null check immediately after. EXAMPLE:
-            \`const button = document.querySelector('#action-button');\`
-            \`if (button) { /* ... add event listener ... */ }\`
-        *   **VERIFICATION:** Before outputting, double-check: Does the string in \`querySelector()\` in your JS *perfectly* match the \`id\` in your HTML?
+    **MANDATE 2: FLAWLESS INTERACTIVITY**
 
-    3.  **NO OBSCURING ELEMENTS (CSS):** Your CSS MUST NOT place any other element on top of your interactive elements. Buttons and sliders must be fully exposed and clickable.
+    THE GOLDEN RULE: Every user action must produce an immediate, obvious, and informative reaction. A silent or invisible action is a critical failure.
 
-    4.  **NO 'DISABLED' BY DEFAULT (HTML):** Interactive elements MUST be clickable from the start. DO NOT use the \`disabled\` attribute in the initial HTML.
+    1.  **Element Binding Protocol (No Dead Elements):**
+        *   **A: Assign IDs:** In the HTML, every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute.
+        *   **B: Query & Guard:** In the JavaScript, for EACH \`id\` you created, you MUST have a corresponding \`document.querySelector('#your-id')\`. This query MUST be immediately followed by a null-check guard (\`if (element) { ... }\`). Failing to do this is a critical error.
+        *   **C: Attach Listener:** Inside the \`if (element)\` block, you MUST attach an event listener.
 
-    **Explanation Content Style (Strict Requirement):**
-    - **Clarity and Scannability:** Use very short paragraphs (1-2 sentences max). Use HTML tags like \`<strong>\` and \`<ul>\` to make text digestible.
+    2.  **Visual Feedback Protocol (No Silent Actions):**
+        *   **A: Visible Reaction:** Inside EVERY event listener, the VERY FIRST priority is to cause an immediate and obvious visual change within the '#interactive-stage'. An element MUST appear, move, change color, animate, or be added/removed.
+        *   **B: CSS Sync:** If you add a class (e.g., \`el.classList.add('active')\`), you MUST ensure a corresponding, functional CSS rule exists in your CSS output. An unused or non-functional class is a bug.
+        *   **C: Textual Explanation:** After the visual change, you MUST update the \`innerHTML\` of '#explanation-panel' to describe what just happened visually and what it means for the concept. Use short paragraphs and \`<strong>\` tags for clarity.
 
-    **Execution Context (Reminder):**
-    - Your JavaScript code runs AFTER the HTML is in the DOM.
-    - You DO NOT need \`DOMContentLoaded\`. You SHOULD query for elements immediately.
-    - Your code MUST ONLY manipulate '#interactive-stage' and '#explanation-panel'.
+    3.  **Safety & Robustness Protocol:**
+        *   **No Obscuring Elements:** Your CSS MUST NOT place any other element on top of your interactive elements, making them unclickable. Check \`z-index\`, \`position\`, etc.
+        *   **Enabled by Default:** Interactive elements MUST be enabled from the start. DO NOT use the \`disabled\` attribute in the initial HTML. Disable them via JS only after a user action makes them redundant.
+        *   **Self-Contained Code:** All code must be self-contained. Do not assume any external libraries beyond standard browser APIs.
 
-    **Final Mandate:**
-    Review the **Non-Negotiable Interactivity Mandate** one last time, especially the **Visual Feedback Protocol**. If there is any doubt that the interaction will work flawlessly and provide immediate visual feedback, start over and simplify until it is perfect.
+    ---
+    **FINAL CHECK: Before generating the JSON, perform this mental code review.**
+    ---
 
-    Generate the JSON for the concept: "${concept}".
+    1.  **HTML-JS Link:** Does every \`id\` in my HTML have a corresponding, guarded \`querySelector\` and event listener in my JS?
+    2.  **JS-CSS Link:** Does every class I add in JS have a visible effect defined in my CSS?
+    3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? What about the second button? Is the flow logical?
+    4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it consistent with a dark theme?
+
+    Now, generate the raw JSON object for the concept: "${concept}".
+    Your entire response must be ONLY the JSON object, starting with { and ending with }. Do not wrap it in markdown fences (e.g., \`\`\`json) or add any other text before or after the object.
   `;
 }
 
