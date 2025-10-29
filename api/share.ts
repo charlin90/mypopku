@@ -68,6 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const blob = await put(pathname, htmlContent, {
       access: 'public',
       contentType: 'text/html; charset=utf-8',
+      token: process.env.conceptxlab_READ_WRITE_TOKEN,
     });
 
     // Construct the user-friendly URL

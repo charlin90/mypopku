@@ -217,7 +217,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
                         </div>
                     </div>
                 )}
-                 <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition-colors">
+                 <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
                     Close
                 </button>
             </div>
