@@ -25,6 +25,32 @@ async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
         /* Generated CSS from AI */
         ${concept.css}
       </style>
+      <style id="typography-fix">
+        /* 
+          This block manually adds the necessary styles from the Tailwind Typography plugin 
+          because they are not included in the default Tailwind CDN script. This ensures 
+          the explanation panel in the shared link has the correct styling.
+        */
+        #explanation-panel.prose h1,
+        #explanation-panel.prose h2,
+        #explanation-panel.prose h3,
+        #explanation-panel.prose h4 {
+          color: #5eead4; /* Equivalent to text-teal-300 */
+        }
+        #explanation-panel.prose p {
+          margin-bottom: 2rem; /* Approximates [&>p]:mb-8 with a base font size */
+        }
+        #explanation-panel.prose strong {
+          color: #f9fafb; /* Equivalent to prose-strong:text-gray-100 */
+        }
+        #explanation-panel.prose code {
+          background-color: #111827; /* Equivalent to prose-code:bg-gray-900 */
+          padding: 0.25rem 0.5rem; /* Equivalent to prose-code:px-2 prose-code:py-1 */
+          border-radius: 0.375rem; /* Equivalent to prose-code:rounded-md */
+          font-weight: 600;
+          color: #e5e7eb; /* A readable code color */
+        }
+      </style>
     </head>
     <body class="bg-gray-900 text-gray-100">
       <main class="fixed top-0 left-0 w-full h-full p-5 grid grid-cols-1 lg:grid-cols-3 gap-5 box-border">
@@ -35,7 +61,7 @@ async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
         </div>
         <div 
           id="explanation-panel"
-          class="col-span-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md"
+          class="col-span-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300"
         >
           ${explanationHtml}
         </div>
@@ -69,6 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       access: 'public',
       contentType: 'text/html; charset=utf-8',
       token: process.env.conceptxlab_READ_WRITE_TOKEN,
+      addRandomSuffix: false, // Use the exact pathname we generated
     });
 
     // Construct the user-friendly URL
