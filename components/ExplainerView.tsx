@@ -7,12 +7,6 @@ interface ExplainerViewProps {
   onBack: () => void;
 }
 
-const ShareIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.195.025.39.05.588.08m-5.88-.08a2.25 2.25 0 0 0-2.186 0M12 1.5a2.25 2.25 0 0 1 2.25 2.25v1.875c0 .598.224 1.17.622 1.606.4.436.944.744 1.538.862m-3.41 0a2.25 2.25 0 0 1-2.25-2.25v-1.875a2.25 2.25 0 0 1 2.25-2.25m3.41 0a2.25 2.25 0 0 0 2.25 2.25v1.875c0 .598-.224 1.17-.622 1.606-.4.436-.944.744-1.538.862m-3.41 0a6.75 6.75 0 0 0-6.75 6.75v1.875c0 .598.224 1.17.622 1.606.4.436.944.744 1.538.862m6.75-1.875a2.25 2.25 0 0 0-2.25 2.25v1.875c0 .598.224 1.17.622 1.606.4.436.944.744 1.538.862m-3.41 0a2.25 2.25 0 0 1 2.25 2.25v1.875a2.25 2.25 0 0 1-2.25 2.25m3.41 0a2.25 2.25 0 0 0 2.25-2.25v-1.875a2.25 2.25 0 0 0-2.25-2.25m0 0a2.25 2.25 0 0 0-2.25 2.25v1.875c0 .598.224 1.17.622 1.606.4.436.944.744 1.538.862" />
-    </svg>
-);
-
 const LoadingSpinnerInline: React.FC = () => (
     <svg className="animate-spin h-5 w-5 text-teal-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -171,10 +165,10 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
             </button>
             <button 
                 onClick={handleShareClick} 
-                className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
                 aria-label="Share experiment"
             >
-                <ShareIcon />
+                Share
             </button>
         </div>
 

@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const storeId = process.env.BLOB_READ_WRITE_TOKEN?.split('_')[2];
+    const storeId = process.env.conceptxlab_READ_WRITE_TOKEN?.split('_')[2];
     if (!storeId) {
       throw new Error("Could not determine blob store ID from environment variables.");
     }
