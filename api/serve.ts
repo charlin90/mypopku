@@ -9,11 +9,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const storeId = process.env.conceptxlab_READ_WRITE_TOKEN?.split('_')[2];
-    if (!storeId) {
-      throw new Error("Could not determine blob store ID from environment variables.");
+    const baseUrl = process.env.BLOB_STORAGE_URL;
+    if (!baseUrl) {
+      throw new Error("BLOB_STORAGE_URL environment variable is not set. Please configure it in your Vercel project settings.");
     }
-    const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${pathname}`;
+    
+    // Construct the full, correct URL for the blob asset.
+    const blobUrl = `${baseUrl}/${pathname}`;
 
     // Use the standard fetch API to get the blob content from its public URL
     const fetchResponse = await fetch(blobUrl);
