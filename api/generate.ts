@@ -28,39 +28,35 @@ const responseSchema = {
 function getPrompt(concept: string): string {
     return `
     You are an expert frontend developer and creative science communicator with a world-class eye for UI/UX design.
-    Your task is to create an interactive learning module for the concept: "${concept}".
-    The module must follow a strict "Guided Discovery" philosophy: the user learns by doing, and every action is explained in real-time.
+    Your task is to create a simple, elegant, and interactive learning module for the concept: "${concept}".
+    The module follows a "Guided Discovery" philosophy: the user learns by doing, and every action is explained in real-time.
     Generate a JSON object that strictly adheres to the provided schema.
 
     ---
-    **CORE MANDATES: Read and obey these rules without exception.**
+    **Guidelines: Read and obey these rules without exception.**
     ---
 
-    **MANDATE 1: AESTHETICS & DESIGN**
+    **1. HTML: Semantic & Interactive Foundation**
+    *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
+    *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
 
-    The final product MUST be visually stunning, modern, elegant, and clean.
+    **2. CSS: Modern, Dark, & Elegant Design**
+    *   You MUST use a sophisticated dark theme (e.g., background #111827).
+    *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
+    *   Pay meticulous attention to spacing, sizing, and color harmony. Avoid cluttered or dated designs.
+    *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
 
-    1.  **Modern, Dark-Themed Aesthetic:** You MUST use a sophisticated dark theme (e.g., background #111827). Foreground elements must have high contrast using light colors and a single vibrant accent color (e.g., teal). The style must be contemporary, with clean lines, clear typography, and smooth animations. Avoid cluttered or dated designs.
-    2.  **Elegant & Well-Styled:** The CSS MUST be deliberate. Pay meticulous attention to spacing (use ample whitespace), sizing, color harmony, and fonts. The result must be elegant, efficient, and perfectly integrate function and form.
+    **3. JavaScript: Flawless, Real-time Interactivity**
+    *   **THE GOLDEN RULE:** Every user action must produce an immediate, obvious, and informative reaction.
+    *   **Query & Guard:** For EACH \`id\` you created in the HTML, you MUST have a corresponding \`document.querySelector('#your-id')\`. This query MUST be immediately followed by a null-check guard (\`if (element) { ... }\`) before attaching an event listener.
+    *   **Visual Feedback:** Inside EVERY event listener, you MUST cause an immediate visual change within '#interactive-stage'. An element must appear, move, change color, etc.
+    *   **Explanation Update:** After the visual change, you MUST update the \`innerHTML\` of '#explanation-panel' to describe what just happened and what it means for the concept. Use short, clear paragraphs and \`<strong>\` tags.
+    *   **Robustness:** Interactive elements MUST be enabled by default in the HTML. Only disable them via JS after an action makes them redundant. All code must be self-contained.
 
-    **MANDATE 2: FLAWLESS INTERACTIVITY**
-
-    THE GOLDEN RULE: Every user action must produce an immediate, obvious, and informative reaction. A silent or invisible action is a critical failure.
-
-    1.  **Element Binding Protocol (No Dead Elements):**
-        *   **A: Assign IDs:** In the HTML, every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute.
-        *   **B: Query & Guard:** In the JavaScript, for EACH \`id\` you created, you MUST have a corresponding \`document.querySelector('#your-id')\`. This query MUST be immediately followed by a null-check guard (\`if (element) { ... }\`). Failing to do this is a critical error.
-        *   **C: Attach Listener:** Inside the \`if (element)\` block, you MUST attach an event listener.
-
-    2.  **Visual Feedback Protocol (No Silent Actions):**
-        *   **A: Visible Reaction:** Inside EVERY event listener, the VERY FIRST priority is to cause an immediate and obvious visual change within the '#interactive-stage'. An element MUST appear, move, change color, animate, or be added/removed.
-        *   **B: CSS Sync:** If you add a class (e.g., \`el.classList.add('active')\`), you MUST ensure a corresponding, functional CSS rule exists in your CSS output. An unused or non-functional class is a bug.
-        *   **C: Textual Explanation:** After the visual change, you MUST update the \`innerHTML\` of '#explanation-panel' to describe what just happened visually and what it means for the concept. Use short paragraphs and \`<strong>\` tags for clarity.
-
-    3.  **Safety & Robustness Protocol:**
-        *   **No Obscuring Elements:** Your CSS MUST NOT place any other element on top of your interactive elements, making them unclickable. Check \`z-index\`, \`position\`, etc.
-        *   **Enabled by Default:** Interactive elements MUST be enabled from the start. DO NOT use the \`disabled\` attribute in the initial HTML. Disable them via JS only after a user action makes them redundant.
-        *   **Self-Contained Code:** All code must be self-contained. Do not assume any external libraries beyond standard browser APIs.
+    **4. Explanation: Clear & Scannable Initial State**
+    *   The 'explanation' field in the JSON is for the *initial state* of the explanation panel.
+    *   It must be a brief introduction to the concept that prompts the user to perform their first interaction.
+    *   **CRUCIAL FORMATTING:** AVOID long paragraphs or "walls of text." Use headings, bullet points, and bold text to make it easy to scan and understand in seconds.
 
     ---
     **FINAL CHECK: Before generating the JSON, perform this mental code review.**
@@ -68,8 +64,9 @@ function getPrompt(concept: string): string {
 
     1.  **HTML-JS Link:** Does every \`id\` in my HTML have a corresponding, guarded \`querySelector\` and event listener in my JS?
     2.  **JS-CSS Link:** Does every class I add in JS have a visible effect defined in my CSS?
-    3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? What about the second button? Is the flow logical?
+    3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? Is the flow logical?
     4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it consistent with a dark theme?
+    5.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
 
     Now, generate the raw JSON object for the concept: "${concept}".
     Your entire response must be ONLY the JSON object, starting with { and ending with }. Do not wrap it in markdown fences (e.g., \`\`\`json) or add any other text before or after the object.
