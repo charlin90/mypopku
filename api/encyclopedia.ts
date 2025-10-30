@@ -1,3 +1,4 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { EncyclopediaEntry } from '../types.js';
@@ -16,15 +17,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Fetch the JSON string from the key 'entries'
-    const dataString = await redis.get<string>('entries');
+    // CORRECTED: Use `redis.get()` to fetch the value of the key, which is a JSON object.
+    // The SDK will handle parsing the JSON string into a JavaScript object.
+    const dataObject = await redis.get<Record<string, EncyclopediaEntry>>('entries');
 
-    if (!dataString) {
-      return res.status(404).json({ error: 'Encyclopedia data not found.' });
+    if (!dataObject) {
+      return res.status(404).json({ error: 'Encyclopedia data not found or key is empty.' });
     }
 
-    // The data is stored as an object with numeric keys, let's parse and convert to an array
-    const dataObject = JSON.parse(dataString);
+    // The result from `get` is an object like {"0": {...}, "1": {...}}.
+    // We need to convert the values of this object into an array.
     const entriesArray: EncyclopediaEntry[] = Object.values(dataObject);
     
     // Set cache headers for performance
@@ -35,6 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Error fetching from Redis:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+    
     return res.status(500).json({ error: 'Failed to fetch encyclopedia data.', details: message });
   }
 }
