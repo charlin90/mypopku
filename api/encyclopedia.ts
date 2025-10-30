@@ -17,22 +17,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // CORRECTED: Use `redis.get()` to fetch the value of the key, which is a JSON object.
-    // The SDK will handle parsing the JSON string into a JavaScript object.
-    const dataObject = await redis.get<Record<string, EncyclopediaEntry>>('entries');
+    // The `WRONGTYPE` error with `redis.get()` suggests the key does not hold a simple string.
+    // Since the data is JSON but not a Hash, it might be stored using the RedisJSON module.
+    // We will now use `redis.json.get` which is the correct command for that data type.
+    const entries = await redis.json.get('entries');
 
-    if (!dataObject) {
+    if (!entries) {
       return res.status(404).json({ error: 'Encyclopedia data not found or key is empty.' });
     }
 
-    // The result from `get` is an object like {"0": {...}, "1": {...}}.
-    // We need to convert the values of this object into an array.
-    const entriesArray: EncyclopediaEntry[] = Object.values(dataObject);
+    // `redis.json.get` automatically deserializes the data. We ensure it's an array.
+    if (!Array.isArray(entries)) {
+        return res.status(500).json({ error: 'Fetched data is not in the expected array format.' });
+    }
     
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=60');
 
-    return res.status(200).json(entriesArray);
+    return res.status(200).json(entries as EncyclopediaEntry[]);
 
   } catch (error) {
     console.error('Error fetching from Redis:', error);
