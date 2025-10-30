@@ -292,11 +292,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                           className="group bg-gray-800/50 border border-gray-700 rounded-lg text-left transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105 disabled:opacity-50 disabled:pointer-events-none overflow-hidden flex flex-col h-full"
                           disabled={isLoading}
                         >
-                          <div className="w-full aspect-video bg-gray-700 overflow-hidden">
+                          <div className="w-full aspect-video bg-gray-900 overflow-hidden">
                             <img
                               src={concept.imageUrl}
                               alt={`Preview for ${concept.name}`}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
                               loading="lazy"
                             />
                           </div>
