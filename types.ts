@@ -5,3 +5,15 @@ export interface GeneratedConcept {
   js: string;
   explanation: string;
 }
+
+export interface EncyclopediaEntry {
+  id: string;
+  title: string;
+  description: string;
+  previewImageUrl: string;
+  category: string;
+  blobUrl: string;
+  gotItCount: number;
+  creatorUsername: string;
+  createdAt: string;
+}

@@ -39,6 +39,37 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
+  
+  const [hasClickedAha, setHasClickedAha] = useState(false);
+  const [panelPulsing, setPanelPulsing] = useState(false);
+
+  const handleAhaClick = () => {
+    if (hasClickedAha) return;
+    setHasClickedAha(true);
+    setPanelPulsing(true);
+    
+    // Remove the class after the animation is done
+    setTimeout(() => setPanelPulsing(false), 700);
+
+    // Fire and forget the save operation to Vercel Blob.
+    // This happens in the background and doesn't affect the user's experience.
+    fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(content),
+    })
+    .then(async (response) => {
+        if (response.ok) {
+            console.log('Concept saved successfully after "Aha!" click.');
+        } else {
+            const errorData = await response.json().catch(() => ({ details: 'Could not parse error JSON.' }));
+            console.error('Failed to save concept:', errorData.details || 'Unknown server error');
+        }
+    })
+    .catch((error) => {
+        console.error('Network error while trying to save concept:', error);
+    });
+  };
 
   const handleShareClick = async () => {
     setShowShareModal(true);
@@ -154,6 +185,47 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
 
   return (
     <>
+       <style>{`
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.5);
+                border-color: rgba(45, 212, 191, 0.9);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(45, 212, 191, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
+                border-color: rgba(45, 212, 191, 0.9);
+            }
+        }
+        .pulse-border-animation {
+            animation: pulse-border 0.7s ease-out;
+        }
+
+        @keyframes fly-out {
+            0% {
+                transform: translate(0, 0) scale(var(--s, 1));
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+        .particle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background-color: #5eead4; /* teal-300 */
+            border-radius: 50%;
+            animation: fly-out var(--d, 0.5s) ease-out forwards;
+            margin-left: -4px;
+            margin-top: -4px;
+        }
+       `}</style>
       <div className="fixed top-0 left-0 w-full h-full p-5 grid grid-cols-1 lg:grid-cols-3 gap-5 box-border bg-gray-900">
         <div className="absolute top-7 left-7 flex gap-3 z-20">
             <button 
@@ -181,13 +253,48 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
           ></div>
         </div>
         
-        <div 
-          id="explanation-panel"
-          ref={panelRef}
-          className="col-span-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md"
-          dangerouslySetInnerHTML={{ __html: initialHtml }}
-        >
+        <div className="relative col-span-1">
+          <div 
+            id="explanation-panel"
+            ref={panelRef}
+            className={`h-full col-span-1 bg-gray-800/50 backdrop-blur-sm border rounded-2xl p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md pb-28 transition-colors duration-300 ${panelPulsing ? 'pulse-border-animation' : 'border-gray-700'}`}
+            dangerouslySetInnerHTML={{ __html: initialHtml }}
+          >
+          </div>
+           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-auto flex justify-center">
+                <button
+                    onClick={handleAhaClick}
+                    disabled={hasClickedAha}
+                    className={`relative overflow-hidden flex items-center justify-center gap-3 w-48 h-14 rounded-full font-semibold transition-all duration-300 group ${hasClickedAha
+                            ? 'bg-teal-500 text-gray-900 cursor-not-allowed'
+                            : 'border-2 border-teal-400/50 text-teal-300 hover:bg-teal-400/10 hover:border-teal-400 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)]'
+                        }`}
+                    aria-live="polite"
+                >
+                    {hasClickedAha && Array.from({ length: 15 }).map((_, i) => {
+                        const angle = Math.random() * 360;
+                        const distance = 50 + Math.random() * 40;
+                        const x = Math.cos(angle * Math.PI / 180) * distance;
+                        const y = Math.sin(angle * Math.PI / 180) * distance;
+                        return (
+                            <div
+                                key={i}
+                                className="particle"
+                                style={{
+                                    '--x': `${x}px`,
+                                    '--y': `${y}px`,
+                                    '--s': `${0.5 + Math.random() * 0.5}`,
+                                    '--d': `${0.4 + Math.random() * 0.3}s`
+                                } as React.CSSProperties}
+                            />
+                        );
+                    })}
+                    <span className="relative z-10 text-2xl transition-transform duration-300 group-hover:scale-125">💡</span>
+                    <span className="relative z-10 text-lg">{hasClickedAha ? 'Awesome!' : 'I get it!'}</span>
+                </button>
+            </div>
         </div>
+
       </div>
 
       {showShareModal && (

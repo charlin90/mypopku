@@ -5,8 +5,9 @@ import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
 import { generateInteractiveConcept } from './services/geminiService.js';
 import type { GeneratedConcept } from './types.js';
+import { BlobExplainerView } from './components/BlobExplainerView.js';
 
-type View = 'home' | 'explainer';
+type View = 'home' | 'explainer' | 'blobExplainer';
 
 const SAVED_CONCEPTS_KEY = 'concept-lab-saved-concepts';
 
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
+  const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
 
   useEffect(() => {
@@ -62,9 +64,16 @@ const App: React.FC = () => {
     setView('explainer');
   }, []);
 
+  const handleLoadBlobConcept = useCallback((blobUrl: string) => {
+    setError(null);
+    setBlobUrlToLoad(blobUrl);
+    setView('blobExplainer');
+  }, []);
+
   const handleGoBack = useCallback(() => {
     setView('home');
     setGeneratedContent(null);
+    setBlobUrlToLoad(null);
     setError(null);
   }, []);
 
@@ -91,6 +100,7 @@ const App: React.FC = () => {
         <HomeScreen 
           onConceptSubmit={handleConceptSubmit}
           onLoadPreset={handleLoadPreset}
+          onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
           savedConcepts={savedConcepts}
@@ -102,6 +112,12 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {generatedContent && view === 'explainer' && (
           <ExplainerView content={generatedContent} onBack={handleGoBack} />
+        )}
+      </div>
+
+      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'blobExplainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {blobUrlToLoad && view === 'blobExplainer' && (
+          <BlobExplainerView blobUrl={blobUrlToLoad} onBack={handleGoBack} />
         )}
       </div>
     </div>

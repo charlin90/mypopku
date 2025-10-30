@@ -12,6 +12,11 @@ export async function generateInteractiveConcept(concept: string): Promise<Gener
 
   // 2. Check if the API call was successful.
   if (!response.ok) {
+    // Handle specific 503 error for model overload with a user-friendly message.
+    if (response.status === 503) {
+      throw new Error("The AI model is currently overloaded. We're sorry for the inconvenience. Please try again in a few moments.");
+    }
+
     // Get the raw text of the error response to provide better debugging.
     const errorText = await response.text();
     
