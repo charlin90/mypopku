@@ -359,9 +359,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <DiscordIcon />
                 Join our Discord
             </a>
-            <a href="mailto:lethituyet98221@gmail.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+            <a href="mailto:intelliflux.ltd@gmail.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
                 <EmailIcon />
-                lethituyet98221@gmail.com
+                intelliflux.ltd@gmail.com
             </a>
         </div>
       </footer>
