@@ -39,14 +39,14 @@ function getPrompt(concept: string): string {
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
-    *   You MUST include a reset button with \`id="reset-btn"\` to allow the user to restart the experiment from the beginning.
+    *   You MUST include a reset button with \`id="reset-btn"\` and the visible text "Reset" to allow the user to restart the experiment.
 
     **2. CSS: Modern, Dark, & Elegant Design**
     *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered, both horizontally and vertically, within the '#interactive-stage' container. Use modern CSS like Flexbox or Grid on a single root container element inside your HTML to achieve this.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
     *   Pay meticulous attention to spacing, sizing, and color harmony. Avoid cluttered or dated designs.
-    *   The reset button should be styled subtly but clearly, perhaps positioned in a corner of the interactive stage.
+    *   The reset button should be styled consistently with other controls and grouped logically with them (e.g., in a controls panel), not isolated in a corner.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
 
     **3. JavaScript: Flawless, Real-time Interactivity**

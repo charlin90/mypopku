@@ -30,6 +30,15 @@ const App: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // When switching to a full-screen view, reset the window's scroll position.
+    // This prevents the new view from appearing already scrolled down if the
+    // user had scrolled on the home page.
+    if (view === 'explainer' || view === 'blobExplainer') {
+      window.scrollTo(0, 0);
+    }
+  }, [view]);
+
   const handleConceptSubmit = useCallback(async (concept: string) => {
     if (!concept.trim()) return;
     
@@ -96,7 +105,7 @@ const App: React.FC = () => {
     <div className="relative w-full h-screen">
       {isLoading && <LoadingSpinner />}
       
-      <div className={`transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
           onConceptSubmit={handleConceptSubmit}
           onLoadPreset={handleLoadPreset}
