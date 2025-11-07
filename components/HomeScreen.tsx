@@ -355,7 +355,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </main>
       <footer className="w-full p-6 text-center text-gray-500 text-sm flex-shrink-0">
         <div className="flex justify-center items-center gap-x-8 gap-y-2 flex-wrap">
-            <a href="https://discord.gg/sCuEr8QB" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
+            <a href="https://discord.gg/x4am4gaRZY" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
                 <DiscordIcon />
                 Join our Discord
             </a>

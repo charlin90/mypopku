@@ -1,3 +1,4 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
 import { nanoid } from 'nanoid';
@@ -25,6 +26,42 @@ async function createSavableHtml(concept: GeneratedConcept): Promise<string> {
         body { font-family: 'Inter', sans-serif; }
         /* Generated CSS from AI */
         ${concept.css}
+      </style>
+      <style id="base-styles">
+        /* 
+          This block provides fallback styles for common interactive elements
+          to ensure they look good in the standalone saved file, mimicking
+          the main app's aesthetic.
+        */
+        button {
+          background-color: #2d3748;
+          color: white;
+          border: 1px solid #4a5568;
+          padding: 10px 15px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: background-color 0.2s ease-in-out;
+        }
+        button:hover {
+          background-color: #4a5568;
+        }
+        button:disabled {
+          background-color: #1a202c;
+          color: #718096;
+          cursor: not-allowed;
+        }
+        select {
+          background-color: #2d3748;
+          color: white;
+          border: 1px solid #4a5568;
+          padding: 0.5rem;
+          border-radius: 4px;
+        }
+        label {
+          color: #a0aec0;
+          margin-right: 0.5rem;
+        }
       </style>
       <style id="typography-fix">
         /* Manually adds Tailwind Typography styles for the shared/saved page */

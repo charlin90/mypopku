@@ -39,11 +39,14 @@ function getPrompt(concept: string): string {
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
+    *   You MUST include a reset button with \`id="reset-btn"\` to allow the user to restart the experiment from the beginning.
 
     **2. CSS: Modern, Dark, & Elegant Design**
+    *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered, both horizontally and vertically, within the '#interactive-stage' container. Use modern CSS like Flexbox or Grid on a single root container element inside your HTML to achieve this.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
     *   Pay meticulous attention to spacing, sizing, and color harmony. Avoid cluttered or dated designs.
+    *   The reset button should be styled subtly but clearly, perhaps positioned in a corner of the interactive stage.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
 
     **3. JavaScript: Flawless, Real-time Interactivity**
@@ -51,6 +54,7 @@ function getPrompt(concept: string): string {
     *   **Query & Guard:** For EACH \`id\` you created in the HTML, you MUST have a corresponding \`document.querySelector('#your-id')\`. This query MUST be immediately followed by a null-check guard (\`if (element) { ... }\`) before attaching an event listener.
     *   **Visual Feedback:** Inside EVERY event listener, you MUST cause an immediate visual change within '#interactive-stage'. An element must appear, move, change color, etc.
     *   **Explanation Update:** After the visual change, you MUST update the \`innerHTML\` of '#explanation-panel' to describe what just happened and what it means for the concept. Use short, clear paragraphs and \`<strong>\` tags.
+    *   **Reset Functionality:** You MUST implement the logic for the reset button. The event listener for '#reset-btn' must restore the entire experiment to its original, initial state. This includes resetting all visual elements, re-enabling any disabled controls, and critically, resetting the '#explanation-panel' innerHTML back to the original explanation provided in the JSON.
     *   **Robustness:** Interactive elements MUST be enabled by default in the HTML. Only disable them via JS after an action makes them redundant. All code must be self-contained.
 
     **4. Explanation: Clear & Scannable Initial State**
@@ -65,8 +69,9 @@ function getPrompt(concept: string): string {
     1.  **HTML-JS Link:** Does every \`id\` in my HTML have a corresponding, guarded \`querySelector\` and event listener in my JS?
     2.  **JS-CSS Link:** Does every class I add in JS have a visible effect defined in my CSS?
     3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? Is the flow logical?
-    4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it consistent with a dark theme?
+    4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it perfectly centered? Is it consistent with a dark theme?
     5.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
+    6.  **Reset:** Does the reset button correctly return the experiment to its exact starting state, including visuals and the explanation text?
 
     Now, generate the raw JSON object for the concept: "${concept}".
     Your entire response must be ONLY the JSON object, starting with { and ending with }. Do not wrap it in markdown fences (e.g., \`\`\`json) or add any other text before or after the object.
