@@ -267,7 +267,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
           <div 
             id="interactive-stage"
             ref={stageRef}
-            className="w-full h-full"
+            className="w-full min-h-full flex items-start justify-center p-4 sm:p-8 box-border"
             dangerouslySetInnerHTML={{ __html: content.html }}
           ></div>
         </div>
