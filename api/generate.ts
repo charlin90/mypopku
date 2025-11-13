@@ -50,6 +50,7 @@ function getPrompt(concept: string): string {
     *   **CRITICAL LAYOUT RULES:**
         *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls to the bottom.
         *   **Controls Layout:** The user controls MUST stack vertically by default for mobile. Inside a \`@media (min-width: 768px)\` media query, you MUST lay out the controls horizontally.
+        *   **BACKGROUNDS:** All child \`div\` elements of your main container MUST have a transparent background. Only give backgrounds to elements that semantically represent a specific object (e.g., a sun, a card), not to general containers.
     *   **SCROLLING BEHAVIOR:** For mobile, the content can be taller than the screen and scroll vertically. **For viewports 768px and wider (desktop), the entire experiment MUST fit on one screen without scrolling.** Design your layout accordingly.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
