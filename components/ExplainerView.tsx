@@ -245,7 +245,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
             margin-top: -4px;
         }
        `}</style>
-      <div className="fixed top-0 left-0 w-full h-full p-5 grid grid-cols-1 lg:grid-cols-3 gap-5 box-border bg-gray-900">
+      <div className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5 box-border bg-gray-900">
         <div className="absolute top-7 left-7 flex gap-3 z-20">
             <button 
                 onClick={onBack} 
@@ -276,7 +276,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
           <div 
             id="explanation-panel"
             ref={panelRef}
-            className={`h-full col-span-1 bg-gray-800/50 backdrop-blur-sm border rounded-2xl p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md pb-28 transition-colors duration-300 ${panelPulsing ? 'pulse-border-animation' : 'border-gray-700'}`}
+            className={`h-full col-span-1 bg-gray-800/50 backdrop-blur-sm border rounded-2xl p-4 md:p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md pb-28 transition-colors duration-300 ${panelPulsing ? 'pulse-border-animation' : 'border-gray-700'}`}
             dangerouslySetInnerHTML={{ __html: initialHtml }}
           >
           </div>

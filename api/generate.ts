@@ -45,15 +45,18 @@ function getPrompt(concept: string): string {
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
     *   You MUST include a reset button with \`id="reset-btn"\` and the visible text "Reset" to allow the user to restart the experiment.
 
-    **2. CSS: Modern, Dark, & Elegant Design**
-    *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered, both horizontally and vertically, within the '#interactive-stage' container. Use modern CSS like Flexbox or Grid on a single root container element inside your HTML to achieve this.
+    **2. CSS: Mobile-First, Responsive, & Elegant Design**
+    *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered and responsive. It must look great on a small mobile screen and adapt gracefully to a large desktop.
+    *   **MOBILE-FIRST IS MANDATORY:** You MUST design for a narrow screen first. Use simple layouts (like a single column using flexbox \`flex-direction: column\`) as the default. Controls MUST be stacked vertically for easy tapping on mobile.
+    *   **USE MEDIA QUERIES:** After the mobile styles, you MUST use a media query like \`@media (min-width: 768px) { ... }\` to create more complex layouts for larger screens (e.g., switching to \`flex-direction: row\`, arranging elements side-by-side).
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
-    *   Pay meticulous attention to spacing, sizing, and color harmony. Avoid cluttered or dated designs.
+    *   Ensure font sizes and tap targets are large enough for mobile usability.
     *   The reset button should be styled consistently with other controls and grouped logically with them (e.g., in a controls panel), not isolated in a corner.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
 
     **3. JavaScript: Flawless, Real-time Interactivity**
+    *   Your JS should function flawlessly on both mobile and desktop. Event listeners (e.g., 'click') work universally. Be mindful of hover effects which are not available on touch devices.
     *   **THE GOLDEN RULE:** Every user action must produce an immediate, obvious, and informative reaction.
     *   **Query & Guard:** For EACH \`id\` you created in the HTML, you MUST have a corresponding \`document.querySelector('#your-id')\`. This query MUST be immediately followed by a null-check guard (\`if (element) { ... }\`) before attaching an event listener.
     *   **Visual Feedback:** Inside EVERY event listener, you MUST cause an immediate visual change within '#interactive-stage'. An element must appear, move, change color, etc.
@@ -76,10 +79,11 @@ function getPrompt(concept: string): string {
     1.  **HTML-JS Link:** Does every \`id\` in my HTML have a corresponding, guarded \`querySelector\` and event listener in my JS?
     2.  **JS-CSS Link:** Does every class I add in JS have a visible effect defined in my CSS?
     3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? Is the flow logical?
-    4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it perfectly centered? Is it consistent with a dark theme?
-    5.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
-    6.  **Reset:** Does the reset button correctly return the experiment to its exact starting state, including visuals and the explanation text?
-    7.  **Library:** If I used \`libraryUrl\`, is the URL correct and is my JS code written to use that library?
+    4.  **Responsiveness:** Does the layout stack and rearrange correctly on a narrow viewport? Is it legible and usable on a phone?
+    5.  **Aesthetics:** Does this look modern, clean, and elegant? Is it perfectly centered? Is it consistent with a dark theme?
+    6.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
+    7.  **Reset:** Does the reset button correctly return the experiment to its exact starting state, including visuals and the explanation text?
+    8.  **Library:** If I used \`libraryUrl\`, is the URL correct and is my JS code written to use that library?
 
     Now, generate the raw JSON object for the concept: "${concept}".
     Your entire response must be ONLY the JSON object, starting with { and ending with }. Do not wrap it in markdown fences (e.g., \`\`\`json) or add any other text before or after the object.
