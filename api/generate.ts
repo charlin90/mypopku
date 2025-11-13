@@ -43,19 +43,18 @@ function getPrompt(concept: string): string {
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
-    *   You MUST group all user controls (buttons, sliders, inputs) inside a single container element, like \`<div id="controls-panel">\`.
+    *   All visual elements and interactive controls (buttons, sliders) MUST be contained within a single root div. Do not create a separate container for controls.
     *   You MUST include a reset button with \`id="reset-btn"\` and the visible text "Reset" to allow the user to restart the experiment.
 
     **2. CSS: Mobile-First, Responsive, & Elegant Design**
     *   **CRITICAL LAYOUT RULES:**
-        *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls panel to the bottom.
-        *   **Controls Panel (Mobile):** The \`#controls-panel\` container MUST stack controls vertically by default for mobile. Use \`display: flex; flex-direction: column; gap: 1rem; align-items: center;\`.
-        *   **Controls Panel (Desktop):** Inside a \`@media (min-width: 768px)\` media query, you MUST change the controls panel to \`flex-direction: row;\` to lay out controls horizontally.
+        *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls to the bottom.
+        *   **Controls Layout:** The user controls MUST stack vertically by default for mobile. Inside a \`@media (min-width: 768px)\` media query, you MUST lay out the controls horizontally.
     *   **SCROLLING BEHAVIOR:** For mobile, the content can be taller than the screen and scroll vertically. **For viewports 768px and wider (desktop), the entire experiment MUST fit on one screen without scrolling.** Design your layout accordingly.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
     *   Ensure font sizes and tap targets are large enough for mobile usability.
-    *   The reset button should be styled consistently with other controls and grouped logically with them (e.g., in a controls panel), not isolated in a corner.
+    *   The reset button should be styled consistently with other controls and grouped logically with them, not isolated in a corner.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
 
     **3. JavaScript: Flawless, Real-time Interactivity**
