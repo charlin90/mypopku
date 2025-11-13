@@ -51,7 +51,7 @@ function getPrompt(concept: string): string {
         *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls panel to the bottom.
         *   **Controls Panel (Mobile):** The \`#controls-panel\` container MUST stack controls vertically by default for mobile. Use \`display: flex; flex-direction: column; gap: 1rem; align-items: center;\`.
         *   **Controls Panel (Desktop):** Inside a \`@media (min-width: 768px)\` media query, you MUST change the controls panel to \`flex-direction: row;\` to lay out controls horizontally.
-    *   **SCROLLING BEHAVIOR:** The container for your HTML (\`#interactive-stage\`) allows vertical scrolling (\`overflow-y: auto\`). It is acceptable for your mobile layout to be taller than the viewport. Prioritize clear, tappable controls over cramming everything onto one screen.
+    *   **SCROLLING BEHAVIOR:** For mobile, the content can be taller than the screen and scroll vertically. **For viewports 768px and wider (desktop), the entire experiment MUST fit on one screen without scrolling.** Design your layout accordingly.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
     *   Ensure font sizes and tap targets are large enough for mobile usability.
