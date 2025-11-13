@@ -43,12 +43,14 @@ function getPrompt(concept: string): string {
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
+    *   You MUST group all user controls (buttons, sliders, inputs) inside a single container element, like \`<div id="controls-panel">\`.
     *   You MUST include a reset button with \`id="reset-btn"\` and the visible text "Reset" to allow the user to restart the experiment.
 
     **2. CSS: Mobile-First, Responsive, & Elegant Design**
-    *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered and responsive. It must look great on a small mobile screen and adapt gracefully to a large desktop.
-    *   **MOBILE-FIRST IS MANDATORY:** You MUST design for a narrow screen first. Use simple layouts (like a single column using flexbox \`flex-direction: column\`) as the default. Controls MUST be stacked vertically for easy tapping on mobile.
-    *   **USE MEDIA QUERIES:** After the mobile styles, you MUST use a media query like \`@media (min-width: 768px) { ... }\` to create more complex layouts for larger screens (e.g., switching to \`flex-direction: row\`, arranging elements side-by-side).
+    *   **CRITICAL LAYOUT RULES:**
+        *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls panel to the bottom.
+        *   **Controls Panel (Mobile):** The \`#controls-panel\` container MUST stack controls vertically by default for mobile. Use \`display: flex; flex-direction: column; gap: 1rem; align-items: center;\`.
+        *   **Controls Panel (Desktop):** Inside a \`@media (min-width: 768px)\` media query, you MUST change the controls panel to \`flex-direction: row;\` to lay out controls horizontally.
     *   **SCROLLING BEHAVIOR:** The container for your HTML (\`#interactive-stage\`) allows vertical scrolling (\`overflow-y: auto\`). It is acceptable for your mobile layout to be taller than the viewport. Prioritize clear, tappable controls over cramming everything onto one screen.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
@@ -80,7 +82,7 @@ function getPrompt(concept: string): string {
     1.  **HTML-JS Link:** Does every \`id\` in my HTML have a corresponding, guarded \`querySelector\` and event listener in my JS?
     2.  **JS-CSS Link:** Does every class I add in JS have a visible effect defined in my CSS?
     3.  **User Flow:** If a user clicks the first button, will they see something change AND see the explanation update? Is the flow logical?
-    4.  **Responsiveness:** Does the layout stack and rearrange correctly on a narrow viewport? Is it legible and usable on a phone?
+    4.  **Responsiveness:** Does the layout stack and rearrange correctly on a narrow viewport? Is it legible and usable on a phone? Are my controls at the bottom?
     5.  **Aesthetics:** Does this look modern, clean, and elegant? Is it perfectly centered? Is it consistent with a dark theme?
     6.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
     7.  **Reset:** Does the reset button correctly return the experiment to its exact starting state, including visuals and the explanation text?

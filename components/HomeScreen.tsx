@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import type { GeneratedConcept, EncyclopediaEntry } from '../types.js';
-import { PRESET_CONCEPTS } from '../data/presets.js';
 
 // --- TYPE DEFINITIONS ---
 // These interfaces define the structure for the dynamically processed encyclopedia data
@@ -22,7 +21,6 @@ export interface EncyclopediaCategory {
 // --- PROPS INTERFACE ---
 interface HomeScreenProps {
   onConceptSubmit: (concept: string) => void;
-  onLoadPreset: (concept: GeneratedConcept) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
   isLoading: boolean;
   error: string | null;
@@ -106,7 +104,6 @@ const processEntriesIntoCategories = (entries: EncyclopediaEntry[]): Encyclopedi
 // --- MAIN COMPONENT ---
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
   onConceptSubmit, 
-  onLoadPreset,
   onLoadBlobConcept,
   isLoading, 
   error,
@@ -155,7 +152,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
 
   const savedConceptKeys = Object.keys(savedConcepts);
-  const presetKeys = Object.keys(PRESET_CONCEPTS);
   
   const currentCategory = encyclopediaCategories.find(cat => cat.name === selectedCategory);
   
@@ -171,14 +167,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     e.preventDefault();
     if (inputValue && !isLoading) {
       onConceptSubmit(inputValue);
-    }
-  };
-
-  const handlePresetClick = (conceptName: string) => {
-    if (isLoading) return;
-    const presetData = PRESET_CONCEPTS[conceptName];
-    if (presetData) {
-      onLoadPreset(presetData);
     }
   };
   
@@ -226,20 +214,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       </pre>
                     </div>
                 )}
-                <div className="mt-8 text-gray-500">
-                  <p>Or try some preset concepts:</p>
-                  <div className="flex flex-wrap justify-center gap-4 mt-2">
-                      {presetKeys.map(key => (
-                        <button 
-                          key={key}
-                          onClick={() => handlePresetClick(key)} 
-                          className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full text-sm disabled:opacity-50"
-                          disabled={isLoading}
-                        >
-                          {key}
-                        </button>
-                      ))}
-                  </div>
+                <div className="mt-8">
+                    <a href="https://discord.gg/x4am4gaRZY" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-teal-500/20 transform hover:-translate-y-1">
+                        <DiscordIcon />
+                        <span>Join our Discord</span>
+                    </a>
                 </div>
               </div>
             </div>

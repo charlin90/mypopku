@@ -67,12 +67,6 @@ const App: React.FC = () => {
     }
   }, [savedConcepts]);
   
-  const handleLoadPreset = useCallback((conceptData: GeneratedConcept) => {
-    setError(null);
-    setGeneratedContent(conceptData);
-    setView('explainer');
-  }, []);
-
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
     setBlobUrlToLoad(blobUrl);
@@ -108,7 +102,6 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
           onConceptSubmit={handleConceptSubmit}
-          onLoadPreset={handleLoadPreset}
           onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
