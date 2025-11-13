@@ -49,6 +49,7 @@ function getPrompt(concept: string): string {
     *   **CRITICAL LAYOUT RULE:** The entire interactive visualization MUST be perfectly centered and responsive. It must look great on a small mobile screen and adapt gracefully to a large desktop.
     *   **MOBILE-FIRST IS MANDATORY:** You MUST design for a narrow screen first. Use simple layouts (like a single column using flexbox \`flex-direction: column\`) as the default. Controls MUST be stacked vertically for easy tapping on mobile.
     *   **USE MEDIA QUERIES:** After the mobile styles, you MUST use a media query like \`@media (min-width: 768px) { ... }\` to create more complex layouts for larger screens (e.g., switching to \`flex-direction: row\`, arranging elements side-by-side).
+    *   **SCROLLING BEHAVIOR:** The container for your HTML (\`#interactive-stage\`) allows vertical scrolling (\`overflow-y: auto\`). It is acceptable for your mobile layout to be taller than the viewport. Prioritize clear, tappable controls over cramming everything onto one screen.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
     *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
     *   Ensure font sizes and tap targets are large enough for mobile usability.
