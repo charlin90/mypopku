@@ -21,6 +21,10 @@ const responseSchema = {
       type: Type.STRING,
       description: "A string of text in markdown format that serves as the *initial* state for the explanation panel. It should be very brief: introduce the concept and prompt the user to perform their first interaction. The detailed explanations are handled by the JavaScript.",
     },
+    libraryUrl: {
+      type: Type.STRING,
+      description: "An optional CDN URL for a single, well-known JavaScript library (like D3.js, Three.js, etc.) if it is essential for the experiment. If not needed, this field should be omitted.",
+    },
   },
   required: ["html", "css", "js", "explanation"],
 };
@@ -55,12 +59,15 @@ function getPrompt(concept: string): string {
     *   **Visual Feedback:** Inside EVERY event listener, you MUST cause an immediate visual change within '#interactive-stage'. An element must appear, move, change color, etc.
     *   **Explanation Update:** After the visual change, you MUST update the \`innerHTML\` of '#explanation-panel' to describe what just happened and what it means for the concept. Use short, clear paragraphs and \`<strong>\` tags.
     *   **Reset Functionality:** You MUST implement the logic for the reset button. The event listener for '#reset-btn' must restore the entire experiment to its original, initial state. This includes resetting all visual elements, re-enabling any disabled controls, and critically, resetting the '#explanation-panel' innerHTML back to the original explanation provided in the JSON.
-    *   **Robustness:** Interactive elements MUST be enabled by default in the HTML. Only disable them via JS after an action makes them redundant. All code must be self-contained.
+    *   **Robustness:** Interactive elements MUST be enabled by default in the HTML. Only disable them via JS after an action makes them redundant. The JS code can assume that any library specified in \`libraryUrl\` has been loaded before it runs. If you don't provide a library, the code must be self-contained vanilla JavaScript.
 
     **4. Explanation: Clear & Scannable Initial State**
     *   The 'explanation' field in the JSON is for the *initial state* of the explanation panel.
     *   It must be a brief introduction to the concept that prompts the user to perform their first interaction.
     *   **CRUCIAL FORMATTING:** AVOID long paragraphs or "walls of text." Use headings, bullet points, and bold text to make it easy to scan and understand in seconds.
+
+    **5. External Libraries (Optional)**
+    *   If the concept is best demonstrated with a popular, well-known library (e.g., D3.js for data visualization, Three.js for 3D), you may provide a single, reputable CDN URL in the \`libraryUrl\` field. DO NOT use this for trivial cases. Only when the library is core to the concept's visualization.
 
     ---
     **FINAL CHECK: Before generating the JSON, perform this mental code review.**
@@ -72,6 +79,7 @@ function getPrompt(concept: string): string {
     4.  **Aesthetics:** Does this look modern, clean, and elegant? Is it perfectly centered? Is it consistent with a dark theme?
     5.  **Explanation:** Is my initial explanation short, scannable, and does it guide the user to their first action?
     6.  **Reset:** Does the reset button correctly return the experiment to its exact starting state, including visuals and the explanation text?
+    7.  **Library:** If I used \`libraryUrl\`, is the URL correct and is my JS code written to use that library?
 
     Now, generate the raw JSON object for the concept: "${concept}".
     Your entire response must be ONLY the JSON object, starting with { and ending with }. Do not wrap it in markdown fences (e.g., \`\`\`json) or add any other text before or after the object.

@@ -139,7 +139,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
   useEffect(() => {
     if (!content) return;
 
-    // Guard against running in a strange environment or after DOM destruction by AI script
     if (!document.head || !document.body) {
       console.error("DOM not ready or has been destroyed. Cannot inject dynamic content.");
       return;
@@ -151,35 +150,55 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
     styleElement.innerHTML = content.css;
     document.head.appendChild(styleElement);
 
-    // This is a more robust way to execute the AI-generated script.
-    // Instead of injecting a <script> tag, we use a timeout to execute the code.
-    // The 100ms delay is imperceptible to the user but gives the browser
-    // a guaranteed window to finish rendering and layout, preventing race conditions
-    // where the script tries to find an element that isn't fully ready.
+    let libraryScriptElement: HTMLScriptElement | null = null;
     let scriptRunnerTimeoutId: number | undefined;
-    if (content.js) {
-        try {
-            const runScript = new Function(`
-                try {
-                    ${content.js}
-                } catch(e) {
-                    console.error('Error executing dynamic concept script:', e);
-                }
-            `);
-            scriptRunnerTimeoutId = window.setTimeout(runScript, 100);
-        } catch (e) {
-            console.error("Syntax error in AI-generated JavaScript:", e);
-        }
-    }
 
+    const runAiScript = () => {
+      if (content.js) {
+        try {
+          const runScript = new Function(`
+            try {
+              ${content.js}
+            } catch(e) {
+              console.error('Error executing dynamic concept script:', e);
+            }
+          `);
+          // Use timeout to ensure DOM is ready after script load
+          scriptRunnerTimeoutId = window.setTimeout(runScript, 100);
+        } catch (e) {
+          console.error("Syntax error in AI-generated JavaScript:", e);
+        }
+      }
+    };
+
+    if (content.libraryUrl) {
+      libraryScriptElement = document.createElement('script');
+      libraryScriptElement.id = 'dynamic-concept-library';
+      libraryScriptElement.src = content.libraryUrl;
+      libraryScriptElement.async = true; // Load async to not block rendering
+      libraryScriptElement.onload = () => {
+        console.log(`Library loaded: ${content.libraryUrl}`);
+        runAiScript();
+      };
+      libraryScriptElement.onerror = () => {
+        console.error(`Failed to load library: ${content.libraryUrl}`);
+      };
+      document.body.appendChild(libraryScriptElement);
+    } else {
+      // No library, just run the script directly.
+      runAiScript();
+    }
 
     return () => {
       // Cleanup on unmount
       const style = document.getElementById('dynamic-concept-styles');
       if (style) style.remove();
-       if (scriptRunnerTimeoutId) {
-            clearTimeout(scriptRunnerTimeoutId);
-        }
+
+      if (libraryScriptElement) libraryScriptElement.remove();
+      
+      if (scriptRunnerTimeoutId) {
+        clearTimeout(scriptRunnerTimeoutId);
+      }
     };
   }, [content]);
 

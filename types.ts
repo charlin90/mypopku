@@ -4,6 +4,7 @@ export interface GeneratedConcept {
   css: string;
   js: string;
   explanation: string;
+  libraryUrl?: string;
 }
 
 export interface EncyclopediaEntry {

@@ -88,6 +88,7 @@ async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
           color: #e5e7eb; /* A readable code color */
         }
       </style>
+      ${concept.libraryUrl ? `<script src="${concept.libraryUrl}"></script>` : ''}
     </head>
     <body class="bg-gray-900 text-gray-100">
       <main class="fixed top-0 left-0 w-full h-full p-5 grid grid-cols-1 lg:grid-cols-3 gap-5 box-border">
