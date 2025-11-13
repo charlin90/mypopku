@@ -89,7 +89,7 @@ async function createSavableHtml(concept: GeneratedConcept): Promise<string> {
     </head>
     <body class="bg-gray-900 text-gray-100">
       <main class="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5 box-border">
-        <div class="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-hidden shadow-2xl border border-gray-800">
+        <div class="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-y-auto shadow-2xl border border-gray-800">
           <div id="interactive-stage" class="w-full h-full">
             ${concept.html}
           </div>

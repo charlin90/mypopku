@@ -263,7 +263,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
             </button>
         </div>
 
-        <div className="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-hidden shadow-2xl border border-gray-800">
+        <div className="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-y-auto shadow-2xl border border-gray-800">
           <div 
             id="interactive-stage"
             ref={stageRef}
