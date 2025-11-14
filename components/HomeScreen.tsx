@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { GeneratedConcept, EncyclopediaEntry } from '../types.js';
+import { generateCreativePage } from '../services/creativeService.js';
 
 // --- TYPE DEFINITIONS ---
 // These interfaces define the structure for the dynamically processed encyclopedia data
@@ -112,16 +113,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onDelete
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const [activeTab, setActiveTab] = useState<'lab' | 'encyclopedia'>('lab');
+  const [activeMode, setActiveMode] = useState<'learn' | 'create' | 'encyclopedia'>('learn');
   const [searchQuery, setSearchQuery] = useState('');
 
   // State for dynamically loaded encyclopedia data
   const [encyclopediaCategories, setEncyclopediaCategories] = useState<EncyclopediaCategory[]>([]);
-  const [isEncyclopediaLoading, setIsEncyclopediaLoading] = useState(true);
+  const [isEncyclopediaLoading, setIsEncyclopediaLoading] = useState(false);
   const [encyclopediaError, setEncyclopediaError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  // Fetch encyclopedia data when the tab is active and data hasn't been loaded yet.
+  // State for Create mode
+  const [createPrompt, setCreatePrompt] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
+  const createFormRef = useRef<HTMLFormElement>(null);
+
+  // Fetch encyclopedia data when the mode is active and data hasn't been loaded yet.
   useEffect(() => {
     const fetchEncyclopedia = async () => {
         setIsEncyclopediaLoading(true);
@@ -145,10 +153,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         }
     };
 
-    if (activeTab === 'encyclopedia' && encyclopediaCategories.length === 0) {
+    if (activeMode === 'encyclopedia' && encyclopediaCategories.length === 0 && !isEncyclopediaLoading) {
         fetchEncyclopedia();
     }
-  }, [activeTab, encyclopediaCategories.length]);
+  }, [activeMode, encyclopediaCategories.length, isEncyclopediaLoading]);
 
 
   const savedConceptKeys = Object.keys(savedConcepts);
@@ -163,19 +171,62 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     );
   }) ?? [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLearnSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue && !isLoading) {
       onConceptSubmit(inputValue);
     }
   };
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createPrompt.trim() || isCreating) return;
+
+    setIsCreating(true);
+    setCreateError(null);
+    setGeneratedHtml(null);
+
+    try {
+      const html = await generateCreativePage(createPrompt);
+      setGeneratedHtml(html);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setCreateError(message);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCreateKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (createFormRef.current) {
+        createFormRef.current.requestSubmit();
+      }
+    }
+  };
   
-  const descriptionText = activeTab === 'lab' 
-    ? "Enter a concept, and the AI will create an interactive experiment to help you understand it." 
+  const descriptionText = activeMode === 'learn'
+    ? "Enter a concept, and the AI will create an interactive experiment to help you understand it."
+    : activeMode === 'create'
+    ? "Describe an interactive component, and let the AI bring it to life from scratch."
     : "Explore our interactive encyclopedia. Search or browse by category.";
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-900">
+    <div className="flex flex-col w-full min-h-screen bg-gray-900 relative">
+      <header className="absolute top-6 right-6 z-10">
+        <button
+          onClick={() => setActiveMode('encyclopedia')}
+          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all border ${
+            activeMode === 'encyclopedia'
+              ? 'bg-teal-500 text-white border-transparent'
+              : 'text-gray-400 bg-gray-800/80 border-gray-700 hover:bg-gray-700/50 backdrop-blur-sm'
+          }`}
+        >
+          Encyclopedia
+        </button>
+      </header>
+
       <main className="flex-grow w-full p-4 overflow-y-auto flex flex-col items-center">
         <div className="flex flex-col items-center text-center w-full max-w-7xl pt-24 pb-0 flex-shrink-0">
           <div className="mb-6">
@@ -188,16 +239,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </h1>
           <p className="text-lg text-gray-400 mb-8 max-w-2xl">{descriptionText}</p>
           
-          <div className="bg-gray-800 p-1 rounded-full flex items-center space-x-1 mb-8 shadow-inner">
-            <button onClick={() => setActiveTab('lab')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeTab === 'lab' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Lab</button>
-            <button onClick={() => setActiveTab('encyclopedia')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeTab === 'encyclopedia' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Encyclopedia</button>
-          </div>
+          {activeMode !== 'encyclopedia' && (
+            <div className="bg-gray-800 p-1 rounded-full flex items-center space-x-1 mb-8 shadow-inner">
+              <button onClick={() => setActiveMode('learn')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeMode === 'learn' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Learn</button>
+              <button onClick={() => setActiveMode('create')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeMode === 'create' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Create</button>
+            </div>
+          )}
 
-          <div className="relative w-full max-w-7xl min-h-[300px]">
-            {/* LAB VIEW */}
-            <div className={`absolute inset-0 transition-opacity duration-500 ${activeTab === 'lab' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="w-full max-w-7xl min-h-[300px]">
+            {/* LEARN VIEW */}
+            {activeMode === 'learn' && (
               <div className="flex flex-col items-center w-full">
-                <form onSubmit={handleSubmit} className="w-full max-w-lg">
+                <form onSubmit={handleLearnSubmit} className="w-full max-w-lg">
                   <input
                     type="text"
                     value={inputValue}
@@ -221,88 +274,130 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </a>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* CREATE VIEW */}
+            {activeMode === 'create' && (
+              <div className="flex flex-col items-center w-full">
+                <form ref={createFormRef} onSubmit={handleCreateSubmit} className="w-full max-w-2xl">
+                    <textarea
+                        value={createPrompt}
+                        onChange={(e) => setCreatePrompt(e.target.value)}
+                        onKeyDown={handleCreateKeyDown}
+                        placeholder="Describe an interactive experience... e.g., a relaxing particle simulation that reacts to mouse movement. Press Enter to generate."
+                        className="w-full px-6 py-4 text-lg text-gray-100 bg-gray-800 border-2 border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow resize-none h-32"
+                        rows={3}
+                        disabled={isCreating}
+                    />
+                </form>
+                {isCreating && (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                )}
+                {createError && (
+                    <div className="w-full max-w-2xl mt-4 text-left">
+                        <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
+                        <code>{createError}</code>
+                        </pre>
+                    </div>
+                )}
+                {generatedHtml && (
+                    <div className="mt-8 w-full max-w-5xl h-[70vh] bg-gray-950 border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+                        <iframe
+                            srcDoc={generatedHtml}
+                            title="Generated AI Content"
+                            className="w-full h-full border-none"
+                            sandbox="allow-scripts"
+                        />
+                    </div>
+                )}
+              </div>
+            )}
+
 
             {/* ENCYCLOPEDIA VIEW */}
-            <div className={`absolute inset-0 transition-opacity duration-500 ${activeTab === 'encyclopedia' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              {isEncyclopediaLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-              ) : encyclopediaError ? (
-                  <div className="text-center py-10 text-red-400 bg-red-900/20 border border-red-800 rounded-lg max-w-md mx-auto">
-                      <p className="text-lg font-semibold">Could not load encyclopedia</p>
-                      <p className="mt-1 text-red-300">{encyclopediaError}</p>
-                  </div>
-              ) : (
-                <div className="flex flex-col items-center w-full">
-                  <div className="w-full max-w-lg mb-6">
-                    <input
-                        type="search"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={`Search for a concept in ${selectedCategory}...`}
-                        className="w-full px-5 py-3 text-base text-gray-100 bg-gray-800/80 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow"
-                    />
-                  </div>
-                  
-                  <div className="flex flex-wrap justify-center gap-3 mb-8">
-                    {encyclopediaCategories.map((category) => (
-                      <button 
-                        key={category.name} 
-                        onClick={() => {
-                            setSelectedCategory(category.name);
-                            setSearchQuery('');
-                        }} 
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${selectedCategory === category.name ? 'bg-teal-400/10 border-teal-400 text-teal-300' : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/80 hover:border-gray-600'}`}
-                      >
-                        <category.icon className="w-5 h-5" />
-                        <span>{category.name}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {filteredConcepts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                      {filteredConcepts.map((concept) => (
+            {activeMode === 'encyclopedia' && (
+              <>
+                {isEncyclopediaLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                      <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : encyclopediaError ? (
+                    <div className="text-center py-10 text-red-400 bg-red-900/20 border border-red-800 rounded-lg max-w-md mx-auto">
+                        <p className="text-lg font-semibold">Could not load encyclopedia</p>
+                        <p className="mt-1 text-red-300">{encyclopediaError}</p>
+                    </div>
+                ) : (
+                  <div className="flex flex-col items-center w-full">
+                    <div className="w-full max-w-lg mb-6">
+                      <input
+                          type="search"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder={`Search for a concept in ${selectedCategory}...`}
+                          className="w-full px-5 py-3 text-base text-gray-100 bg-gray-800/80 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-wrap justify-center gap-3 mb-8">
+                      {encyclopediaCategories.map((category) => (
                         <button 
-                          key={concept.name} 
-                          onClick={() => onLoadBlobConcept(concept.blobUrl)} 
-                          className="group bg-gray-800/50 border border-gray-700 rounded-lg text-left transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105 disabled:opacity-50 disabled:pointer-events-none overflow-hidden flex flex-col h-full"
-                          disabled={isLoading}
+                          key={category.name} 
+                          onClick={() => {
+                              setSelectedCategory(category.name);
+                              setSearchQuery('');
+                          }} 
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${selectedCategory === category.name ? 'bg-teal-400/10 border-teal-400 text-teal-300' : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/80 hover:border-gray-600'}`}
                         >
-                          <div className="w-full aspect-video bg-gray-900 overflow-hidden">
-                            <img
-                              src={concept.imageUrl}
-                              alt={`Preview for ${concept.name}`}
-                              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                              loading="lazy"
-                            />
-                          </div>
-                          <div className="p-4 flex flex-col flex-grow text-center">
-                            <h3 className="text-lg font-bold text-gray-200 group-hover:text-teal-300 mb-1">
-                              {concept.name}
-                            </h3>
-                            <p className="text-sm text-gray-400 flex-grow">
-                              {concept.description}
-                            </p>
-                          </div>
+                          <category.icon className="w-5 h-5" />
+                          <span>{category.name}</span>
                         </button>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-10 text-gray-500">
-                        <p className="text-lg font-semibold">No concepts found</p>
-                        <p className="mt-1">Try adjusting your search query.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+
+                    {filteredConcepts.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                        {filteredConcepts.map((concept) => (
+                          <button 
+                            key={concept.name} 
+                            onClick={() => onLoadBlobConcept(concept.blobUrl)} 
+                            className="group bg-gray-800/50 border border-gray-700 rounded-lg text-left transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105 disabled:opacity-50 disabled:pointer-events-none overflow-hidden flex flex-col h-full"
+                            disabled={isLoading}
+                          >
+                            <div className="w-full aspect-video bg-gray-900 overflow-hidden">
+                              <img
+                                src={concept.imageUrl}
+                                alt={`Preview for ${concept.name}`}
+                                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="p-4 flex flex-col flex-grow text-center">
+                              <h3 className="text-lg font-bold text-gray-200 group-hover:text-teal-300 mb-1">
+                                {concept.name}
+                              </h3>
+                              <p className="text-sm text-gray-400 flex-grow">
+                                {concept.description}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 text-gray-500">
+                          <p className="text-lg font-semibold">No concepts found</p>
+                          <p className="mt-1">Try adjusting your search query.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        {activeTab === 'lab' && savedConceptKeys.length > 0 && (
+        {activeMode === 'learn' && savedConceptKeys.length > 0 && (
           <div className="w-full max-w-5xl mt-16 border-t border-gray-800 pt-12 pb-24">
             <h2 className="text-xl font-bold text-gray-300 text-center mb-8">Saved Experiments</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
