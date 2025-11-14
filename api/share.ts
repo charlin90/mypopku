@@ -122,8 +122,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = req.body;
     let htmlContent: string;
 
-    // A full HTML doc from 'create' mode will have a doctype, while a concept fragment won't.
-    if (typeof body.html === 'string' && body.html.trim().toLowerCase().startsWith('<!doctype html>')) {
+    // "Create" mode sends a body with just a full `html` document string.
+    // "Learn" mode sends a full `GeneratedConcept` object with html, css, js, etc.
+    // We differentiate based on the presence of other fields.
+    if (body.html && !body.css && !body.explanation && typeof body.html === 'string') {
       htmlContent = body.html;
     } else {
       const conceptData: GeneratedConcept = body;

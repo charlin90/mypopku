@@ -12,6 +12,7 @@ import { CreativeView } from './components/CreativeView.js';
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
 
 const SAVED_CONCEPTS_KEY = 'concept-lab-saved-concepts';
+const SAVED_CREATIVE_KEY = 'concept-lab-saved-creative-pages';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
+  const [savedCreativePages, setSavedCreativePages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
@@ -28,8 +30,12 @@ const App: React.FC = () => {
       if (saved) {
         setSavedConcepts(JSON.parse(saved));
       }
+      const savedCreative = localStorage.getItem(SAVED_CREATIVE_KEY);
+      if (savedCreative) {
+        setSavedCreativePages(JSON.parse(savedCreative));
+      }
     } catch (e) {
-      console.error("Failed to load saved concepts from localStorage", e);
+      console.error("Failed to load saved items from localStorage", e);
     }
   }, []);
 
@@ -80,6 +86,11 @@ const App: React.FC = () => {
     try {
         const html = await generateCreativePage(prompt);
         setCreativeHtml(html);
+
+        const newSavedCreativePages = { ...savedCreativePages, [prompt]: html };
+        setSavedCreativePages(newSavedCreativePages);
+        localStorage.setItem(SAVED_CREATIVE_KEY, JSON.stringify(newSavedCreativePages));
+        
         setView('creativeView');
     } catch (err) {
         console.error("Creative page generation failed:", err);
@@ -89,7 +100,7 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [savedCreativePages]);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
@@ -120,6 +131,21 @@ const App: React.FC = () => {
     localStorage.setItem(SAVED_CONCEPTS_KEY, JSON.stringify(newSavedConcepts));
   }, [savedConcepts]);
 
+  const handleLoadSavedCreative = useCallback((promptKey: string) => {
+    const htmlData = savedCreativePages[promptKey];
+    if (htmlData) {
+      setCreativeHtml(htmlData);
+      setView('creativeView');
+    }
+  }, [savedCreativePages]);
+
+  const handleDeleteCreative = useCallback((promptKey: string) => {
+    const newSavedCreativePages = { ...savedCreativePages };
+    delete newSavedCreativePages[promptKey];
+    setSavedCreativePages(newSavedCreativePages);
+    localStorage.setItem(SAVED_CREATIVE_KEY, JSON.stringify(newSavedCreativePages));
+  }, [savedCreativePages]);
+
   return (
     <div className="relative w-full h-screen">
       {isLoading && <LoadingSpinner />}
@@ -134,6 +160,9 @@ const App: React.FC = () => {
           savedConcepts={savedConcepts}
           onLoadSaved={handleLoadSavedConcept}
           onDelete={handleDeleteConcept}
+          savedCreativePages={savedCreativePages}
+          onLoadSavedCreative={handleLoadSavedCreative}
+          onDeleteCreative={handleDeleteCreative}
         />
       </div>
 

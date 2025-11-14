@@ -28,6 +28,9 @@ interface HomeScreenProps {
   savedConcepts: Record<string, GeneratedConcept>;
   onLoadSaved: (conceptKey: string) => void;
   onDelete: (conceptKey: string) => void;
+  savedCreativePages: Record<string, string>;
+  onLoadSavedCreative: (promptKey: string) => void;
+  onDeleteCreative: (promptKey: string) => void;
 }
 
 // --- SVG ICONS ---
@@ -111,7 +114,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   error,
   savedConcepts,
   onLoadSaved,
-  onDelete
+  onDelete,
+  savedCreativePages,
+  onLoadSavedCreative,
+  onDeleteCreative,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [activeMode, setActiveMode] = useState<'learn' | 'create' | 'encyclopedia'>('learn');
@@ -158,6 +164,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
 
   const savedConceptKeys = Object.keys(savedConcepts);
+  const savedCreativeKeys = Object.keys(savedCreativePages);
   
   const currentCategory = encyclopediaCategories.find(cat => cat.name === selectedCategory);
   
@@ -386,6 +393,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(key);
+                    }}
+                    className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                    aria-label={`Delete ${key}`}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {activeMode === 'create' && savedCreativeKeys.length > 0 && (
+          <div className="w-full max-w-5xl mt-16 border-t border-gray-800 pt-12 pb-24">
+            <h2 className="text-xl font-bold text-gray-300 text-center mb-8">Saved Creations</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedCreativeKeys.map((key) => (
+                <div 
+                  key={key} 
+                  onClick={() => onLoadSavedCreative(key)}
+                  className="group relative bg-gray-800/50 border border-gray-700 rounded-xl p-6 flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105"
+                  aria-label={`Load ${key}`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-200 group-hover:text-teal-300 truncate w-full" title={key}>
+                    {key}
+                  </h3>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteCreative(key);
                     }}
                     className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     aria-label={`Delete ${key}`}
