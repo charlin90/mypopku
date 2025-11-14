@@ -119,14 +119,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const conceptData: GeneratedConcept = req.body;
+    const body = req.body;
+    let htmlContent: string;
 
-    // Validate incoming data
-    if (!conceptData.html || !conceptData.css || !conceptData.js || !conceptData.explanation) {
-      return res.status(400).json({ error: 'Incomplete concept data provided.' });
+    // A full HTML doc from 'create' mode will have a doctype, while a concept fragment won't.
+    if (typeof body.html === 'string' && body.html.trim().toLowerCase().startsWith('<!doctype html>')) {
+      htmlContent = body.html;
+    } else {
+      const conceptData: GeneratedConcept = body;
+
+      // Validate incoming data for 'learn' mode
+      if (!conceptData.html || !conceptData.css || !conceptData.js || !conceptData.explanation) {
+        return res.status(400).json({ error: 'Incomplete concept data provided for learn mode.' });
+      }
+      htmlContent = await createShareableHtml(conceptData);
     }
 
-    const htmlContent = await createShareableHtml(conceptData);
     const pathname = `${nanoid(12)}.html`;
 
     const blob = await put(pathname, htmlContent, {

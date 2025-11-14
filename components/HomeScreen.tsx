@@ -202,14 +202,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     <div className="flex flex-col w-full min-h-screen bg-gray-900 relative">
       <header className="absolute top-6 right-6 z-10">
         <button
-          onClick={() => setActiveMode('encyclopedia')}
+          onClick={() => {
+            if (activeMode === 'encyclopedia') {
+              setActiveMode('learn');
+            } else {
+              setActiveMode('encyclopedia');
+            }
+          }}
           className={`px-6 py-2 rounded-full text-sm font-semibold transition-all border ${
             activeMode === 'encyclopedia'
               ? 'bg-teal-500 text-white border-transparent'
               : 'text-gray-400 bg-gray-800/80 border-gray-700 hover:bg-gray-700/50 backdrop-blur-sm'
           }`}
         >
-          Encyclopedia
+          {activeMode === 'encyclopedia' ? 'Back' : 'Encyclopedia'}
         </button>
       </header>
 
