@@ -4,10 +4,12 @@ import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
 import { generateInteractiveConcept } from './services/geminiService.js';
+import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
+import { CreativeView } from './components/CreativeView.js';
 
-type View = 'home' | 'explainer' | 'blobExplainer';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
 
 const SAVED_CONCEPTS_KEY = 'concept-lab-saved-concepts';
 
@@ -17,6 +19,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
+  const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
 
   useEffect(() => {
@@ -34,7 +37,7 @@ const App: React.FC = () => {
     // When switching to a full-screen view, reset the window's scroll position.
     // This prevents the new view from appearing already scrolled down if the
     // user had scrolled on the home page.
-    if (view === 'explainer' || view === 'blobExplainer') {
+    if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
       window.scrollTo(0, 0);
     }
   }, [view]);
@@ -67,6 +70,27 @@ const App: React.FC = () => {
     }
   }, [savedConcepts]);
   
+  const handleCreativeSubmit = useCallback(async (prompt: string) => {
+    if (!prompt.trim()) return;
+
+    setIsLoading(true);
+    setError(null);
+    setCreativeHtml(null);
+
+    try {
+        const html = await generateCreativePage(prompt);
+        setCreativeHtml(html);
+        setView('creativeView');
+    } catch (err) {
+        console.error("Creative page generation failed:", err);
+        const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
+        setError(message);
+        setView('home'); // Stay on home screen if there's an error
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
+
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
     setBlobUrlToLoad(blobUrl);
@@ -77,6 +101,7 @@ const App: React.FC = () => {
     setView('home');
     setGeneratedContent(null);
     setBlobUrlToLoad(null);
+    setCreativeHtml(null);
     setError(null);
   }, []);
 
@@ -102,6 +127,7 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
           onConceptSubmit={handleConceptSubmit}
+          onCreativeSubmit={handleCreativeSubmit}
           onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
@@ -120,6 +146,12 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'blobExplainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {blobUrlToLoad && view === 'blobExplainer' && (
           <BlobExplainerView blobUrl={blobUrlToLoad} onBack={handleGoBack} />
+        )}
+      </div>
+
+      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'creativeView' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {creativeHtml && view === 'creativeView' && (
+          <CreativeView html={creativeHtml} onBack={handleGoBack} />
         )}
       </div>
     </div>

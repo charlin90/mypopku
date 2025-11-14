@@ -22,6 +22,7 @@ export interface EncyclopediaCategory {
 // --- PROPS INTERFACE ---
 interface HomeScreenProps {
   onConceptSubmit: (concept: string) => void;
+  onCreativeSubmit: (prompt: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
   isLoading: boolean;
   error: string | null;
@@ -104,7 +105,8 @@ const processEntriesIntoCategories = (entries: EncyclopediaEntry[]): Encyclopedi
 
 // --- MAIN COMPONENT ---
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
-  onConceptSubmit, 
+  onConceptSubmit,
+  onCreativeSubmit,
   onLoadBlobConcept,
   isLoading, 
   error,
@@ -124,9 +126,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // State for Create mode
   const [createPrompt, setCreatePrompt] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
   const createFormRef = useRef<HTMLFormElement>(null);
 
   // Fetch encyclopedia data when the mode is active and data hasn't been loaded yet.
@@ -178,22 +177,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
+  const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createPrompt.trim() || isCreating) return;
-
-    setIsCreating(true);
-    setCreateError(null);
-    setGeneratedHtml(null);
-
-    try {
-      const html = await generateCreativePage(createPrompt);
-      setGeneratedHtml(html);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setCreateError(message);
-    } finally {
-      setIsCreating(false);
+    if (createPrompt.trim() && !isLoading) {
+      onCreativeSubmit(createPrompt);
     }
   };
 
@@ -246,6 +233,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
+          {error && (
+            <div className="w-full max-w-2xl mb-6 text-left">
+              <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
+                <code>{error}</code>
+              </pre>
+            </div>
+          )}
+
           <div className="w-full max-w-7xl min-h-[300px]">
             {/* LEARN VIEW */}
             {activeMode === 'learn' && (
@@ -260,13 +255,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     disabled={isLoading}
                   />
                 </form>
-                {error && (
-                    <div className="w-full max-w-lg mt-4 text-left">
-                      <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
-                        <code>{error}</code>
-                      </pre>
-                    </div>
-                )}
                 <div className="mt-8">
                     <a href="https://discord.gg/x4am4gaRZY" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-teal-500/20 transform hover:-translate-y-1">
                         <DiscordIcon />
@@ -287,31 +275,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         placeholder="Describe an interactive experience... e.g., a relaxing particle simulation that reacts to mouse movement. Press Enter to generate."
                         className="w-full px-6 py-4 text-lg text-gray-100 bg-gray-800 border-2 border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow resize-none h-32"
                         rows={3}
-                        disabled={isCreating}
+                        disabled={isLoading}
                     />
                 </form>
-                {isCreating && (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
-                {createError && (
-                    <div className="w-full max-w-2xl mt-4 text-left">
-                        <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
-                        <code>{createError}</code>
-                        </pre>
-                    </div>
-                )}
-                {generatedHtml && (
-                    <div className="mt-8 w-full max-w-5xl h-[70vh] bg-gray-950 border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
-                        <iframe
-                            srcDoc={generatedHtml}
-                            title="Generated AI Content"
-                            className="w-full h-full border-none"
-                            sandbox="allow-scripts"
-                        />
-                    </div>
-                )}
               </div>
             )}
 
