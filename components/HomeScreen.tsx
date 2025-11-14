@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { GeneratedConcept, EncyclopediaEntry } from '../types.js';
-import { generateCreativePage } from '../services/creativeService.js';
 
 // --- TYPE DEFINITIONS ---
 // These interfaces define the structure for the dynamically processed encyclopedia data
