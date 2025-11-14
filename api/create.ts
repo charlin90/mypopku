@@ -14,7 +14,7 @@ function getPrompt(prompt: string): string {
     ---
     1.  **Single File:** Your entire output must be a single block of HTML code. All CSS must be inside a \`<style>\` tag in the \`<head>\`, and all JavaScript must be inside a \`<script>\` tag at the end of the \`<body>\`. Do not use external files.
     2.  **Dark Theme:** The design must use a modern, elegant dark theme. Use a color palette based on dark grays or blues (e.g., body background #111827) with a vibrant accent color for interactive elements. Text should be a light color for contrast.
-    3.  **Responsiveness:** The layout must be fully responsive and look great on both mobile devices and large desktop screens. Use modern CSS like flexbox or grid for layout.
+    3.  **Responsiveness:** The layout must be fully responsive and look great on both mobile devices and large desktop screens. Employ a mobile-first design approach: style for mobile by default, then use \`@media (min-width: ...)\` queries to add complexity for larger screens. Use modern CSS like flexbox or grid for layout.
     4.  **Interactivity:** The output must be interactive. Use JavaScript to respond to user actions like clicks, mouse movements, or input changes. The experience should be engaging.
     5.  **Visual Appeal:** The final result should be visually stunning. Use smooth transitions and animations where appropriate to enhance the user experience.
     6.  **Libraries:** Prioritize vanilla HTML, CSS, and JavaScript. However, for complex requests where a library is the best tool for the job (e.g., 3D scenes with Three.js, data visualizations with D3.js, or complex UIs with Tailwind CSS), you MUST use it. Include the library from a reputable CDN in the HTML \`<head>\`.
