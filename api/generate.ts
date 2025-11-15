@@ -33,7 +33,7 @@ function getPrompt(concept: string): string {
     return `
     You are an expert frontend developer, visionary UI/UX designer, and creative science communicator.
 
-    Your task is to create a simple, elegant, and interactive learning module for the concept: "${concept}".
+    Your task is to create a complete, elegant, and interactive learning module for the concept: "${concept}".
     The module follows a "Guided Discovery" philosophy: the user learns by doing, and every action is explained in real-time.
     Generate a JSON object that strictly adheres to the provided schema.
 
