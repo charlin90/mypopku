@@ -48,12 +48,13 @@ function getPrompt(concept: string): string {
 
     **2. CSS: Mobile-First, Responsive, & Elegant Design**
     *   **CRITICAL LAYOUT RULES:**
-        *   **Main Container:** Your root HTML element MUST act as a full-height flex column to position content. Style it with: \`display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 100%; width: 100%; box-sizing: border-box; padding: 2rem;\`. This pushes your visualization area towards the top and the controls to the bottom.
+        *   **Main Container:** Your root HTML element MUST be a flex column that centers its content. The main visualization area should appear first, followed by the controls directly underneath it, with a clear visual separation (e.g., a margin or gap). The layout must prevent any visual elements from overlapping the controls.
+        *   **Visualization Area:** To prevent overlap, the container for the visualization itself (the direct child of the main container) MUST have a defined height (min-height: 300px) to properly contain any absolutely positioned elements within it.
         *   **Controls Layout:** The user controls MUST stack vertically by default for mobile. Inside a \`@media (min-width: 768px)\` media query, you MUST lay out the controls horizontally.
         *   **BACKGROUNDS:** All child \`div\` elements of your main container MUST have a transparent background. Only give backgrounds to elements that semantically represent a specific object (e.g., a sun, a card), not to general containers.
-    *   **SCROLLING BEHAVIOR:** For mobile, the content can be taller than the screen and scroll vertically. **For viewports 768px and wider (desktop), the entire experiment MUST fit on one screen without scrolling.** Design your layout accordingly.
+        *   **Others:** Prioritize a spacious, uncluttered, and balanced layout. Use generous whitespace to guide the user's focus. On desktop, the primary interaction should be immediately visible, but it is acceptable and even encouraged for the layout to use vertical space and require scrolling if it enhances clarity and aesthetics.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
-    *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, a single vibrant accent color (e.g., teal), and smooth animations.
+    *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, and smooth animations. Animations should be meaningful, physics-based, and enhance the user's understanding of the concept. UI element transitions should use subtle easing functions to feel natural and responsive. Animations that illustrate the scientific process itself should be more expressive to tell a story.
     *   Ensure font sizes and tap targets are large enough for mobile usability.
     *   The reset button should be styled consistently with other controls and grouped logically with them, not isolated in a corner.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
