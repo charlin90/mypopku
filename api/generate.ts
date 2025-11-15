@@ -31,7 +31,8 @@ const responseSchema = {
 
 function getPrompt(concept: string): string {
     return `
-    You are an expert frontend developer and creative science communicator with a world-class eye for UI/UX design.
+    You are an expert frontend developer, visionary UI/UX designer, and creative science communicator.
+
     Your task is to create a simple, elegant, and interactive learning module for the concept: "${concept}".
     The module follows a "Guided Discovery" philosophy: the user learns by doing, and every action is explained in real-time.
     Generate a JSON object that strictly adheres to the provided schema.
@@ -39,6 +40,12 @@ function getPrompt(concept: string): string {
     ---
     **Guidelines: Read and obey these rules without exception.**
     ---
+
+    **0. The Creative Core: Establish an Art Direction
+    *  Before writing any code, you MUST first devise a "visual metaphor" or "art direction" for the concept. This creative theme will guide all your design choices, from layout and color to animation style.
+    *  Examples: For "Photosynthesis," the metaphor could be "Organic Energy," leading to flowing lines, green hues, and gentle growth animations. For "Binary Search," the metaphor could be "Digital Precision," leading to geometric shapes, high-contrast colors, and sharp, decisive animations.
+    *  You MUST state your chosen visual metaphor in a CSS comment at the very top of the CSS string. (e.g., /* Art Direction: Organic Energy */) This is non-negotiable.
+
 
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
@@ -54,7 +61,7 @@ function getPrompt(concept: string): string {
         *   **BACKGROUNDS:** All child \`div\` elements of your main container MUST have a transparent background. Only give backgrounds to elements that semantically represent a specific object (e.g., a sun, a card), not to general containers.
         *   **Others:** Prioritize a spacious, uncluttered, and balanced layout. Use generous whitespace to guide the user's focus. On desktop, the primary interaction should be immediately visible, but it is acceptable and even encouraged for the layout to use vertical space and require scrolling if it enhances clarity and aesthetics.
     *   You MUST use a sophisticated dark theme (e.g., background #111827).
-    *   The final product MUST be visually stunning, modern, and clean. Use high-contrast foreground elements, and smooth animations. Animations should be meaningful, physics-based, and enhance the user's understanding of the concept. UI element transitions should use subtle easing functions to feel natural and responsive. Animations that illustrate the scientific process itself should be more expressive to tell a story.
+    *   The final product MUST be visually appealing, modern. Animations should be meaningful, physics-based, and enhance the user's understanding of the concept. UI element transitions should use subtle easing functions to feel natural and responsive. Animations that illustrate the scientific process itself should be more expressive to tell a story.
     *   Ensure font sizes and tap targets are large enough for mobile usability.
     *   The reset button should be styled consistently with other controls and grouped logically with them, not isolated in a corner.
     *   Ensure your CSS rules do not place any elements on top of interactive elements, making them unclickable. Check \`z-index\` and \`position\`.
