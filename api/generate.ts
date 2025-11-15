@@ -41,12 +41,6 @@ function getPrompt(concept: string): string {
     **Guidelines: Read and obey these rules without exception.**
     ---
 
-    **0. The Creative Core: Establish an Art Direction
-    *  Before writing any code, you MUST first devise a "visual metaphor" or "art direction" for the concept. This creative theme will guide all your design choices, from layout and color to animation style.
-    *  Examples: For "Photosynthesis," the metaphor could be "Organic Energy," leading to flowing lines, green hues, and gentle growth animations. For "Binary Search," the metaphor could be "Digital Precision," leading to geometric shapes, high-contrast colors, and sharp, decisive animations.
-    *  You MUST state your chosen visual metaphor in a CSS comment at the very top of the CSS string. (e.g., /* Art Direction: Organic Energy */) This is non-negotiable.
-
-
     **1. HTML: Semantic & Interactive Foundation**
     *   Create semantic and minimal HTML for the visualization. The root elements will be injected into a container div '#interactive-stage'.
     *   **CRITICAL BINDING RULE:** Every single interactive element (button, slider, input, etc.) MUST have a simple, unique \`id\` attribute. This is non-negotiable for the JavaScript to function.
