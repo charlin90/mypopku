@@ -245,7 +245,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, onBack })
             margin-top: -4px;
         }
        `}</style>
-      <div className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5 box-border bg-gray-900">
+      <div className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-3 sm:gap-5 box-border bg-gray-900">
         <div className="absolute top-7 left-7 flex gap-3 z-20">
             <button 
                 onClick={onBack} 
