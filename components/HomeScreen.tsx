@@ -262,7 +262,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="e.g., Photosynthesis, CSS Flexbox, Black Holes"
+                    placeholder="e.g., CSS Flexbox, Black Holes"
                     className="w-full px-6 py-4 text-lg text-center text-gray-100 bg-gray-800 border-2 border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow"
                     disabled={isLoading}
                   />
