@@ -207,7 +207,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-900 relative">
-      <header className="absolute top-6 right-6 z-10">
+      <header className="absolute top-6 right-6 z-10 flex items-center space-x-4">
+        <a
+          href="https://discord.gg/x4am4gaRZY"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-2 rounded-full text-sm font-semibold transition-all border text-gray-400 bg-gray-800/80 border-gray-700 hover:bg-gray-700/50 backdrop-blur-sm"
+        >
+          Community
+        </a>
         <button
           onClick={() => {
             if (activeMode === 'encyclopedia') {

@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
+  const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
   const [savedCreativePages, setSavedCreativePages] = useState<Record<string, string>>({});
 
@@ -86,6 +87,7 @@ const App: React.FC = () => {
     try {
         const html = await generateCreativePage(prompt);
         setCreativeHtml(html);
+        setCreativePrompt(prompt);
 
         const newSavedCreativePages = { ...savedCreativePages, [prompt]: html };
         setSavedCreativePages(newSavedCreativePages);
@@ -113,6 +115,7 @@ const App: React.FC = () => {
     setGeneratedContent(null);
     setBlobUrlToLoad(null);
     setCreativeHtml(null);
+    setCreativePrompt(null);
     setError(null);
   }, []);
 
@@ -135,6 +138,7 @@ const App: React.FC = () => {
     const htmlData = savedCreativePages[promptKey];
     if (htmlData) {
       setCreativeHtml(htmlData);
+      setCreativePrompt(promptKey);
       setView('creativeView');
     }
   }, [savedCreativePages]);
@@ -180,7 +184,7 @@ const App: React.FC = () => {
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'creativeView' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {creativeHtml && view === 'creativeView' && (
-          <CreativeView html={creativeHtml} onBack={handleGoBack} />
+          <CreativeView html={creativeHtml} prompt={creativePrompt!} onBack={handleGoBack} />
         )}
       </div>
     </div>

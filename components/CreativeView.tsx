@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 interface CreativeViewProps {
   html: string;
+  prompt: string;
   onBack: () => void;
 }
 
@@ -14,12 +15,13 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, onBack }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack }) => {
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
+  const [showPromptModal, setShowPromptModal] = useState(false);
   
   // Auto-save the generated content when the component mounts.
   useEffect(() => {
@@ -108,6 +110,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, onBack }) => {
             >
                 Share
             </button>
+            <button 
+                onClick={() => setShowPromptModal(true)} 
+                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                aria-label="Show prompt"
+            >
+                Prompt
+            </button>
         </div>
         <iframe
           srcDoc={html}
@@ -145,6 +154,20 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, onBack }) => {
                     </div>
                 )}
                  <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
+                    Close
+                </button>
+            </div>
+        </div>
+      )}
+
+      {showPromptModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
+            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-2xl font-bold text-white">Generation Prompt</h2>
+                <div className="bg-gray-900 border border-gray-700 rounded-md p-4 text-gray-300 max-h-96 overflow-y-auto">
+                    <p className="whitespace-pre-wrap">{prompt}</p>
+                </div>
+                <button onClick={() => setShowPromptModal(false)} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
                     Close
                 </button>
             </div>
