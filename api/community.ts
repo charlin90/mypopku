@@ -18,7 +18,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fetch all items from the list. For large lists, consider pagination.
     const data = await redis.lrange('community:shares', 0, -1);
 
-    const shares: CommunityShare[] = data.map(item => JSON.parse(item as string));
+    // FIX: `redis.lrange` returns an array of JSON strings, not objects. We must parse each one.
+    const shares: CommunityShare[] = (data as string[]).map((item) => JSON.parse(item));
     
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
