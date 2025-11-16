@@ -18,7 +18,7 @@ const LoadingSpinnerInline: React.FC = () => (
 
 
 export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack }) => {
-  const viewRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -62,15 +62,20 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     setScreenshotUrl(null);
 
     try {
-        const screenshotCanvas = viewRef.current
-            ? await html2canvas(viewRef.current, { 
-                useCORS: true, 
-                backgroundColor: '#111827',
-                logging: false,
-                // Allow iframes to be captured. Works for srcDoc.
-                allowTaint: true, 
-              })
-            : null;
+        const iframe = iframeRef.current;
+        const iframeDoc = iframe?.contentWindow?.document;
+
+        if (!iframeDoc?.body) {
+            throw new Error("Could not access the content of the experiment to take a screenshot.");
+        }
+
+        const screenshotCanvas = await html2canvas(iframeDoc.body, { 
+            useCORS: true, 
+            backgroundColor: '#111827',
+            logging: false,
+            // Allow iframes to be captured. Works for srcDoc.
+            allowTaint: true, 
+          });
         
         const screenshotDataUrl = screenshotCanvas ? screenshotCanvas.toDataURL('image/jpeg', 0.9) : null;
         setScreenshotUrl(screenshotDataUrl);
@@ -125,7 +130,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   return (
     <>
-      <div ref={viewRef} className="w-full h-screen bg-gray-900 flex flex-col">
+      <div className="w-full h-screen bg-gray-900 flex flex-col">
         <header className="flex-shrink-0 p-7 z-10">
             <div className="flex gap-3">
                 <button
@@ -153,6 +158,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         </header>
         <main className="flex-grow min-h-0">
             <iframe
+                ref={iframeRef}
                 srcDoc={html}
                 title="Generated AI Content"
                 className="w-full h-full border-none"
