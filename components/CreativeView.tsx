@@ -125,36 +125,40 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   return (
     <>
-      <div ref={viewRef} className="w-full h-full bg-gray-900 relative">
-        <div className="absolute top-7 left-7 flex gap-3 z-20">
-          <button
-            onClick={onBack}
-            className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-2xl hover:bg-gray-700 transition-colors"
-            aria-label="Go back"
-          >
-            ←
-          </button>
-          <button 
-                onClick={handleShareClick} 
-                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
-                aria-label="Share experiment"
-            >
-                Share
-            </button>
-            <button 
-                onClick={() => setShowPromptModal(true)} 
-                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
-                aria-label="Show prompt"
-            >
-                Prompt
-            </button>
-        </div>
-        <iframe
-          srcDoc={html}
-          title="Generated AI Content"
-          className="w-full h-full border-none"
-          sandbox="allow-scripts allow-same-origin"
-        />
+      <div ref={viewRef} className="w-full h-screen bg-gray-900 flex flex-col">
+        <header className="flex-shrink-0 p-7 z-10">
+            <div className="flex gap-3">
+                <button
+                    onClick={onBack}
+                    className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-2xl hover:bg-gray-700 transition-colors"
+                    aria-label="Go back"
+                >
+                    ←
+                </button>
+                <button 
+                    onClick={handleShareClick} 
+                    className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    aria-label="Share experiment"
+                >
+                    Share
+                </button>
+                <button 
+                    onClick={() => setShowPromptModal(true)} 
+                    className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    aria-label="Show prompt"
+                >
+                    Prompt
+                </button>
+            </div>
+        </header>
+        <main className="flex-grow min-h-0">
+            <iframe
+                srcDoc={html}
+                title="Generated AI Content"
+                className="w-full h-full border-none"
+                sandbox="allow-scripts allow-same-origin"
+            />
+        </main>
       </div>
 
       {showShareModal && (
