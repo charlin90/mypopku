@@ -7,8 +7,8 @@ import type { GeneratedConcept } from '../types.js';
 
 // Minimal HTML template to host the shared concept
 async function createShareableHtml(concept: GeneratedConcept & { prompt?: string }): Promise<string> {
-  // Parse the initial markdown explanation to HTML
-  const explanationHtml = await marked.parse(concept.explanation);
+  // Parse the initial markdown explanation to HTML, with a fallback.
+  const explanationHtml = await marked.parse(concept.explanation || "*No explanation was provided for this concept.*");
   const hasPrompt = concept.prompt && concept.prompt.trim() !== '';
 
   return `
@@ -137,46 +137,58 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
       ` : ''}
 
       <script type="module">
-        ${concept.js}
-        
-        ${hasPrompt ? `
-        const showPromptBtn = document.getElementById('show-prompt-btn');
-        const promptModal = document.getElementById('prompt-modal');
-        const closePromptBtn = document.getElementById('close-prompt-btn');
-        const copyPromptBtn = document.getElementById('copy-prompt-btn');
-        const promptText = \`${concept.prompt?.replace(/\\/g, "\\\\").replace(/`/g, "\\`")}\`;
-
-        if (showPromptBtn && promptModal) {
-            showPromptBtn.addEventListener('click', () => {
-                promptModal.style.display = 'flex';
-            });
-        }
-        
-        if (promptModal) {
-            promptModal.addEventListener('click', (e) => {
-                if (e.target === promptModal) {
-                    promptModal.style.display = 'none';
-                }
-            });
-        }
-
-        if (closePromptBtn && promptModal) {
-            closePromptBtn.addEventListener('click', () => {
-                promptModal.style.display = 'none';
-            });
-        }
-
-        if (copyPromptBtn) {
-            copyPromptBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(promptText);
-                copyPromptBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyPromptBtn.textContent = 'Copy';
-                }, 2000);
-            });
-        }
-        ` : ''}
+        document.addEventListener('DOMContentLoaded', () => {
+          try {
+            ${concept.js}
+          } catch(e) {
+            console.error("Error executing AI-generated interactive script:", e);
+          }
+        });
       </script>
+      
+      ${hasPrompt ? `
+      <script type="module">
+        try {
+          const showPromptBtn = document.getElementById('show-prompt-btn');
+          const promptModal = document.getElementById('prompt-modal');
+          const closePromptBtn = document.getElementById('close-prompt-btn');
+          const copyPromptBtn = document.getElementById('copy-prompt-btn');
+          const promptText = \`${concept.prompt?.replace(/\\/g, "\\\\").replace(/`/g, "\\`")}\`;
+
+          if (showPromptBtn && promptModal) {
+              showPromptBtn.addEventListener('click', () => {
+                  promptModal.style.display = 'flex';
+              });
+          }
+          
+          if (promptModal) {
+              promptModal.addEventListener('click', (e) => {
+                  if (e.target === promptModal) {
+                      promptModal.style.display = 'none';
+                  }
+              });
+          }
+
+          if (closePromptBtn && promptModal) {
+              closePromptBtn.addEventListener('click', () => {
+                  promptModal.style.display = 'none';
+              });
+          }
+
+          if (copyPromptBtn) {
+              copyPromptBtn.addEventListener('click', () => {
+                  navigator.clipboard.writeText(promptText);
+                  copyPromptBtn.textContent = 'Copied!';
+                  setTimeout(() => {
+                      copyPromptBtn.textContent = 'Copy';
+                  }, 2000);
+              });
+          }
+        } catch(e) {
+          console.error("Error setting up prompt modal:", e);
+        }
+      </script>
+      ` : ''}
     </body>
     </html>
   `;
