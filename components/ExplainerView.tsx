@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
+// @ts-ignore
 import html2canvas from 'html2canvas';
 
 interface ExplainerViewProps {
@@ -94,7 +95,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                 useCORS: true, 
                 backgroundColor: '#111827', // Match app background
                 logging: false, // Suppress library console logs
-              }).then(canvas => canvas.toDataURL('image/jpeg', 0.9))
+              }).then((canvas: HTMLCanvasElement) => canvas.toDataURL('image/jpeg', 0.9))
             : Promise.resolve(null);
             
         const responsePromise = fetch('/api/share', {
