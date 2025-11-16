@@ -57,7 +57,7 @@ export default async function handler(
         },
     });
 
-    const htmlContent = response.text;
+    let htmlContent = response.text;
 
     if (!htmlContent) {
       const finishReason = response.candidates?.[0]?.finishReason;
@@ -66,6 +66,15 @@ export default async function handler(
         errorMessage = "The request was blocked for safety reasons. Please try a different prompt.";
       }
       return res.status(500).json({ error: errorMessage });
+    }
+    
+    // Robust parsing: clean potential markdown fences before sending.
+    htmlContent = htmlContent.trim();
+    const codeBlockRegex = /```(?:html)?\s*([\s\S]*?)\s*```/;
+    const match = htmlContent.match(codeBlockRegex);
+
+    if (match && match[1]) {
+      htmlContent = match[1];
     }
     
     return res.status(200).json({ html: htmlContent });

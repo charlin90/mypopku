@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
+import html2canvas from 'html2canvas';
 
 interface ExplainerViewProps {
   content: GeneratedConcept;
@@ -34,11 +35,13 @@ marked.setOptions({
 export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, onBack }) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
   const [initialHtml, setInitialHtml] = useState('');
 
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
   
@@ -83,13 +86,24 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     setIsSharing(true);
     setShareError(null);
     setCopyButtonText('Copy');
+    setScreenshotUrl(null);
 
     try {
-        const response = await fetch('/api/share', {
+        const screenshotPromise = viewRef.current
+            ? html2canvas(viewRef.current, { 
+                useCORS: true, 
+                backgroundColor: '#111827', // Match app background
+                logging: false, // Suppress library console logs
+              }).then(canvas => canvas.toDataURL('image/jpeg', 0.9))
+            : Promise.resolve(null);
+            
+        const responsePromise = fetch('/api/share', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...content, prompt }),
         });
+
+        const [screenshotData, response] = await Promise.all([screenshotPromise, responsePromise]);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -97,6 +111,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         }
 
         const data = await response.json();
+        setScreenshotUrl(screenshotData);
         setShareUrl(data.url);
     } catch (err) {
         const message = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -119,6 +134,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     setShareUrl(null);
     setShareError(null);
     setIsSharing(false);
+    setScreenshotUrl(null);
   };
 
   const handleCopyPrompt = () => {
@@ -256,7 +272,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
             margin-top: -4px;
         }
        `}</style>
-      <div className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-3 sm:gap-5 box-border bg-gray-900">
+      <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-3 sm:gap-5 box-border bg-gray-900">
         <div className="absolute top-7 left-7 flex gap-3 z-20">
             <button 
                 onClick={onBack} 
@@ -338,24 +354,37 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
             <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold text-white">Share Experiment</h2>
+
                 {isSharing && (
-                    <div className="flex items-center justify-center gap-3 p-4 text-lg text-gray-300">
-                        <LoadingSpinnerInline />
-                        <span>Generating shareable link...</span>
+                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg text-gray-300">
+                        <div className="w-full aspect-video bg-gray-700/50 rounded-lg flex items-center justify-center animate-pulse">
+                            <svg className="w-10 h-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2">
+                            <LoadingSpinnerInline />
+                            <span>Generating preview & link...</span>
+                        </div>
                     </div>
                 )}
+                
                 {shareError && (
                     <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
                         <p className="font-bold">Could not create link</p>
                         <p className="text-sm mt-1">{shareError}</p>
                     </div>
                 )}
-                {shareUrl && (
-                    <div className="flex flex-col gap-2">
-                        <p className="text-gray-400">Your unique link is ready. Anyone with this link can view the experiment.</p>
-                        <div className="flex items-center gap-2 mt-2">
+
+                {!isSharing && shareUrl && (
+                     <div className="flex flex-col gap-3">
+                        {screenshotUrl && (
+                          <div className="border border-gray-700 rounded-lg overflow-hidden shadow-lg">
+                            <img src={screenshotUrl} alt="A screenshot of the interactive experiment" className="w-full h-auto object-contain" />
+                          </div>
+                        )}
+                        <p className="text-gray-400 text-sm">Your unique link is ready. Anyone with this link can view the experiment.</p>
+                        <div className="flex items-center gap-2">
                             <input type="text" readOnly value={shareUrl} className="w-full px-4 py-2 text-gray-100 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                            <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+                            <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center flex-shrink-0">
                                 {copyButtonText}
                             </button>
                         </div>
