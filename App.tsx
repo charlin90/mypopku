@@ -19,10 +19,10 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
+  const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
-  const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
   const [savedCreativePages, setSavedCreativePages] = useState<Record<string, string>>({});
 
@@ -56,12 +56,12 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setGeneratedContent(null);
-    setConceptPrompt(concept);
 
     try {
       const content = await generateInteractiveConcept(concept);
       // The service now performs robust validation, so we can be more confident here.
       setGeneratedContent(content);
+      setConceptPrompt(concept);
       
       const newSavedConcepts = { ...savedConcepts, [concept]: content };
       setSavedConcepts(newSavedConcepts);
@@ -72,7 +72,6 @@ const App: React.FC = () => {
       console.error("Concept generation failed:", err);
       // The message from geminiService is designed to be user-facing.
       const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
-      setConceptPrompt(null); // Clear prompt on error
       setError(message);
       setView('home'); // Stay on home screen if there's an error
     } finally {
@@ -116,10 +115,10 @@ const App: React.FC = () => {
   const handleGoBack = useCallback(() => {
     setView('home');
     setGeneratedContent(null);
+    setConceptPrompt(null);
     setBlobUrlToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
-    setConceptPrompt(null);
     setError(null);
   }, []);
 
@@ -177,7 +176,7 @@ const App: React.FC = () => {
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {generatedContent && conceptPrompt && view === 'explainer' && (
-          <ExplainerView content={generatedContent} onBack={handleGoBack} prompt={conceptPrompt} />
+          <ExplainerView content={generatedContent} prompt={conceptPrompt} onBack={handleGoBack} />
         )}
       </div>
 
