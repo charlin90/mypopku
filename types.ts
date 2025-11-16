@@ -18,3 +18,12 @@ export interface EncyclopediaEntry {
   creatorUsername: string;
   createdAt: string;
 }
+
+export interface CommunityShare {
+  id: string;
+  type: 'learn' | 'create';
+  prompt: string;
+  screenshotUrl: string;
+  blobUrl: string;
+  createdAt: number;
+}

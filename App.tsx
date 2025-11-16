@@ -8,8 +8,9 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
+import { CommunityView } from './components/CommunityView.js';
 
-type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'community';
 
 const SAVED_CONCEPTS_KEY = 'concept-lab-saved-concepts';
 const SAVED_CREATIVE_KEY = 'concept-lab-saved-creative-pages';
@@ -45,7 +46,7 @@ const App: React.FC = () => {
     // When switching to a full-screen view, reset the window's scroll position.
     // This prevents the new view from appearing already scrolled down if the
     // user had scrolled on the home page.
-    if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
+    if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView' || view === 'community') {
       window.scrollTo(0, 0);
     }
   }, [view]);
@@ -122,6 +123,10 @@ const App: React.FC = () => {
     setError(null);
   }, []);
 
+  const handleShowCommunity = useCallback(() => {
+    setView('community');
+  }, []);
+
   const handleLoadSavedConcept = useCallback((conceptKey: string) => {
     const conceptData = savedConcepts[conceptKey];
     if (conceptData) {
@@ -163,6 +168,7 @@ const App: React.FC = () => {
           onConceptSubmit={handleConceptSubmit}
           onCreativeSubmit={handleCreativeSubmit}
           onLoadBlobConcept={handleLoadBlobConcept}
+          onShowCommunity={handleShowCommunity}
           isLoading={isLoading} 
           error={error}
           savedConcepts={savedConcepts}
@@ -189,6 +195,12 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'creativeView' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {creativeHtml && view === 'creativeView' && (
           <CreativeView html={creativeHtml} prompt={creativePrompt!} onBack={handleGoBack} />
+        )}
+      </div>
+
+      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'community' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {view === 'community' && (
+          <CommunityView onBack={handleGoBack} onLoadBlobConcept={handleLoadBlobConcept} />
         )}
       </div>
     </div>

@@ -1,9 +1,18 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+// FIX: Import Buffer to make it available for TypeScript.
+import { Buffer } from 'buffer';
 import { put } from '@vercel/blob';
 import { nanoid } from 'nanoid';
 import { marked } from 'marked';
-import type { GeneratedConcept } from '../types.js';
+import type { GeneratedConcept, CommunityShare } from '../types.js';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
+
 
 // Minimal HTML template to host the shared concept
 async function createShareableHtml(concept: GeneratedConcept & { prompt?: string }): Promise<string> {
@@ -305,6 +314,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = req.body;
     let htmlContent: string;
+    const { screenshot, type, prompt } = body;
+
+    if (!prompt || !type) {
+      return res.status(400).json({ error: 'Invalid payload. Prompt and type are required.' });
+    }
 
     // "Learn" mode sends a full `GeneratedConcept` object with html, css, js, etc.
     // "Create" mode sends a body with `html` and optionally `prompt`.
@@ -324,21 +338,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
        return res.status(400).json({ error: 'Invalid payload. Must contain either a full concept object or an html string.' });
     }
 
-    const pathname = `${nanoid(12)}.html`;
+    const htmlPathname = `${nanoid(12)}.html`;
 
-    const blob = await put(pathname, htmlContent, {
+    const htmlBlob = await put(htmlPathname, htmlContent, {
       access: 'public',
       contentType: 'text/html; charset=utf-8',
       token: process.env.conceptxlab_READ_WRITE_TOKEN,
       addRandomSuffix: false, // Use the exact pathname we generated
     });
+    
+    let screenshotUrl = '';
+    if (screenshot && typeof screenshot === 'string') {
+        const imageBuffer = Buffer.from(screenshot.split(',')[1], 'base64');
+        const imagePathname = `images/${nanoid(16)}.jpeg`;
+        const imageBlob = await put(imagePathname, imageBuffer, {
+            access: 'public',
+            contentType: 'image/jpeg',
+            token: process.env.conceptxlab_READ_WRITE_TOKEN,
+            addRandomSuffix: false,
+        });
+        screenshotUrl = imageBlob.url;
+    }
 
-    // Construct the user-friendly URL
+    // Construct the user-friendly URL for the interactive content
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const host = req.headers.host; // Use the host from the request for reliability
-    const shareUrl = `${protocol}://${host}/s/${blob.pathname}`;
+    const blobUrl = `${protocol}://${host}/s/${htmlBlob.pathname}`;
 
-    return res.status(200).json({ url: shareUrl });
+    // Save metadata to Redis for the community page
+    const shareData: CommunityShare = {
+        id: nanoid(),
+        type,
+        prompt,
+        screenshotUrl,
+        blobUrl,
+        createdAt: Date.now()
+    };
+    await redis.lpush('community:shares', JSON.stringify(shareData));
+
+
+    return res.status(200).json({ url: blobUrl });
 
   } catch (error) {
     console.error("Error in /api/share:", error);

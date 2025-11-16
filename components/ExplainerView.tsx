@@ -90,21 +90,27 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     setScreenshotUrl(null);
 
     try {
-        const screenshotPromise = viewRef.current
-            ? html2canvas(viewRef.current, { 
+        const screenshotCanvas = viewRef.current
+            ? await html2canvas(viewRef.current, { 
                 useCORS: true, 
                 backgroundColor: '#111827', // Match app background
                 logging: false, // Suppress library console logs
-              }).then((canvas: HTMLCanvasElement) => canvas.toDataURL('image/jpeg', 0.9))
-            : Promise.resolve(null);
-            
-        const responsePromise = fetch('/api/share', {
+              })
+            : null;
+        
+        const screenshotDataUrl = screenshotCanvas ? screenshotCanvas.toDataURL('image/jpeg', 0.9) : null;
+        setScreenshotUrl(screenshotDataUrl);
+        
+        const response = await fetch('/api/share', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...content, prompt }),
+            body: JSON.stringify({ 
+                ...content, 
+                prompt,
+                type: 'learn',
+                screenshot: screenshotDataUrl,
+             }),
         });
-
-        const [screenshotData, response] = await Promise.all([screenshotPromise, responsePromise]);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -112,7 +118,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         }
 
         const data = await response.json();
-        setScreenshotUrl(screenshotData);
         setShareUrl(data.url);
     } catch (err) {
         const message = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -382,7 +387,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                             <img src={screenshotUrl} alt="A screenshot of the interactive experiment" className="w-full h-auto object-contain" />
                           </div>
                         )}
-                        <p className="text-gray-400 text-sm">Your unique link is ready. Anyone with this link can view the experiment.</p>
+                        <p className="text-gray-400 text-sm">Your unique link is ready. Sharing will add your creation to the public community page.</p>
                         <div className="flex items-center gap-2">
                             <input type="text" readOnly value={shareUrl} className="w-full px-4 py-2 text-gray-100 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" />
                             <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center flex-shrink-0">
