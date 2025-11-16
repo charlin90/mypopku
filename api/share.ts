@@ -102,7 +102,7 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
     </head>
     <body class="bg-gray-900 text-gray-100">
       ${hasPrompt ? `
-        <div class="absolute top-7 left-7 flex gap-3 z-20">
+        <div class="absolute top-7 left-48 flex gap-3 z-20">
             <button 
                 id="show-prompt-btn"
                 class="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
@@ -218,7 +218,7 @@ function injectPromptButtonIntoHtml(html: string, prompt: string): string {
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
       </style>
-      <div style="position: fixed; top: 1.75rem; left: 1.75rem; display: flex; gap: 0.75rem; z-index: 2147483647; font-family: 'Inter', sans-serif;">
+      <div style="position: fixed; top: 1.75rem; left: 12rem; display: flex; gap: 0.75rem; z-index: 2147483647; font-family: 'Inter', sans-serif;">
           <button 
               id="show-prompt-btn-injected"
               style="height: 3rem; padding: 0 1.5rem; background-color: rgba(31, 41, 55, 0.8); border: 1px solid #4b5563; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 0.875rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px);"

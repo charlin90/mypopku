@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import type { CommunityShare } from '../types.js';
 
@@ -45,6 +44,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ onBack, onLoadBlob
   const [shares, setShares] = useState<CommunityShare[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'learn' | 'create'>('learn');
 
   useEffect(() => {
     const fetchCommunityShares = async () => {
@@ -57,7 +57,8 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ onBack, onLoadBlob
           throw new Error(errorData.error || 'Failed to load community creations.');
         }
         const data: CommunityShare[] = await response.json();
-        setShares(data);
+        // Sort by newest first
+        setShares(data.sort((a, b) => b.createdAt - a.createdAt));
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -67,8 +68,7 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ onBack, onLoadBlob
     fetchCommunityShares();
   }, []);
 
-  const learnShares = shares.filter(s => s.type === 'learn');
-  const createShares = shares.filter(s => s.type === 'create');
+  const displayedShares = shares.filter(s => s.type === activeTab);
 
   return (
     <>
@@ -93,11 +93,17 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ onBack, onLoadBlob
         <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-teal-300 via-sky-400 to-indigo-400 text-transparent bg-clip-text">
             Community Gallery
         </h1>
-        {/* Placeholder for potential future controls like sorting */}
         <div className="w-12"></div> 
       </header>
 
       <main className="w-full max-w-7xl mx-auto">
+        <div className="flex justify-center mb-8">
+            <div className="bg-gray-800 p-1 rounded-full flex items-center space-x-1 shadow-inner">
+              <button onClick={() => setActiveTab('learn')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeTab === 'learn' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Learn</button>
+              <button onClick={() => setActiveTab('create')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeTab === 'create' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Create</button>
+            </div>
+        </div>
+
         {isLoading ? (
             <div className="flex justify-center items-center h-96">
                 <LoadingSpinner />
@@ -108,32 +114,29 @@ export const CommunityView: React.FC<CommunityViewProps> = ({ onBack, onLoadBlob
                 <p className="mt-1 text-red-300">{error}</p>
             </div>
         ) : (
-          <div className="space-y-16">
-            <section>
-              <h2 className="text-2xl font-bold text-gray-300 border-b-2 border-gray-700 pb-2 mb-6">From Learn Mode</h2>
-              {learnShares.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {learnShares.map(item => (
-                    <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No 'Learn' experiments have been shared yet. Be the first!</p>
-              )}
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold text-gray-300 border-b-2 border-gray-700 pb-2 mb-6">From Create Mode</h2>
-              {createShares.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {createShares.map(item => (
-                    <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No 'Create' experiments have been shared yet. Go make something amazing!</p>
-              )}
-            </section>
+          <div>
+            {displayedShares.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {displayedShares.map(item => (
+                  <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-gray-500">
+                <p className="text-lg font-semibold">
+                  {activeTab === 'learn' 
+                    ? "No 'Learn' experiments have been shared yet."
+                    : "No 'Create' experiments have been shared yet."
+                  }
+                </p>
+                <p className="mt-1">
+                  {activeTab === 'learn'
+                    ? "Be the first!"
+                    : "Go make something amazing!"
+                  }
+                </p>
+              </div>
+            )}
           </div>
         )}
       </main>
