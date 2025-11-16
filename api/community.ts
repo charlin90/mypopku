@@ -21,11 +21,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // --- DEBUGGING ---
     // Log the raw data structure from Redis to see what we're working with.
     // The `lrange` command returns an array of strings for a list.
-    console.log('Raw data from Redis:', JSON.stringify(data, null, 2));
+    // console.log('Raw data from Redis:', JSON.stringify(data, null, 2));
     
     // FIX: The `lrange` method returns an array of JSON strings that must be parsed.
     // The previous direct cast was incorrect.
-    const shares: CommunityShare[] = data.map(item => JSON.parse(item as string));
+    // const shares: CommunityShare[] = data.map(item => JSON.parse(item as string));
+    const shares: CommunityShare[] = data as CommunityShare[];
     
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
