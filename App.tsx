@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
+  const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
   const [savedCreativePages, setSavedCreativePages] = useState<Record<string, string>>({});
 
@@ -55,6 +56,7 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setGeneratedContent(null);
+    setConceptPrompt(concept);
 
     try {
       const content = await generateInteractiveConcept(concept);
@@ -70,6 +72,7 @@ const App: React.FC = () => {
       console.error("Concept generation failed:", err);
       // The message from geminiService is designed to be user-facing.
       const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
+      setConceptPrompt(null); // Clear prompt on error
       setError(message);
       setView('home'); // Stay on home screen if there's an error
     } finally {
@@ -116,6 +119,7 @@ const App: React.FC = () => {
     setBlobUrlToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
+    setConceptPrompt(null);
     setError(null);
   }, []);
 
@@ -123,6 +127,7 @@ const App: React.FC = () => {
     const conceptData = savedConcepts[conceptKey];
     if (conceptData) {
       setGeneratedContent(conceptData);
+      setConceptPrompt(conceptKey);
       setView('explainer');
     }
   }, [savedConcepts]);
@@ -171,8 +176,8 @@ const App: React.FC = () => {
       </div>
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {generatedContent && view === 'explainer' && (
-          <ExplainerView content={generatedContent} onBack={handleGoBack} />
+        {generatedContent && conceptPrompt && view === 'explainer' && (
+          <ExplainerView content={generatedContent} onBack={handleGoBack} prompt={conceptPrompt} />
         )}
       </div>
 

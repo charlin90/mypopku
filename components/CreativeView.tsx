@@ -22,6 +22,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
   const [showPromptModal, setShowPromptModal] = useState(false);
+  const [copyPromptButtonText, setCopyPromptButtonText] = useState('Copy');
   
   // Auto-save the generated content when the component mounts.
   useEffect(() => {
@@ -84,6 +85,14 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
       setTimeout(() => setCopyButtonText('Copy'), 2000);
     }
   };
+  
+  const handleCopyPrompt = () => {
+    if (prompt) {
+      navigator.clipboard.writeText(prompt);
+      setCopyPromptButtonText('Copied!');
+      setTimeout(() => setCopyPromptButtonText('Copy'), 2000);
+    }
+  };
 
   const closeShareModal = () => {
     setShowShareModal(false);
@@ -111,7 +120,10 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
                 Share
             </button>
             <button 
-                onClick={() => setShowPromptModal(true)} 
+                onClick={() => {
+                  setShowPromptModal(true);
+                  setCopyPromptButtonText('Copy');
+                }}
                 className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
                 aria-label="Show prompt"
             >
@@ -163,7 +175,12 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
       {showPromptModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
             <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Generation Prompt</h2>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-white">Generation Prompt</h2>
+                    <button onClick={handleCopyPrompt} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+                        {copyPromptButtonText}
+                    </button>
+                </div>
                 <div className="bg-gray-900 border border-gray-700 rounded-md p-4 text-gray-300 max-h-96 overflow-y-auto">
                     <p className="whitespace-pre-wrap">{prompt}</p>
                 </div>
