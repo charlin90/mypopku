@@ -26,13 +26,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   // Auto-save the generated content when the component mounts.
   useEffect(() => {
-    if (html) {
+    if (html && prompt) {
       // This is a "fire and forget" operation. We don't block the UI.
       // We'll log the outcome to the console for debugging.
       fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html }),
+        body: JSON.stringify({ html, prompt }),
       })
       .then(async (response) => {
         if (response.ok) {
@@ -46,7 +46,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         console.error('Network error while auto-saving creative experiment:', error);
       });
     }
-  }, [html]);
+  }, [html, prompt]);
   
   const handleShareClick = async () => {
     setShowShareModal(true);
@@ -60,7 +60,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         const response = await fetch('/api/share', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html }),
+            body: JSON.stringify({ html, prompt }),
         });
 
         if (!response.ok) {

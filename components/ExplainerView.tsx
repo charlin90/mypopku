@@ -61,7 +61,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(content),
+        body: JSON.stringify({ ...content, prompt }),
     })
     .then(async (response) => {
         if (response.ok) {
@@ -88,7 +88,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         const response = await fetch('/api/share', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(content),
+            body: JSON.stringify({ ...content, prompt }),
         });
 
         if (!response.ok) {

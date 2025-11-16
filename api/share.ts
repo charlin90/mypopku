@@ -6,9 +6,10 @@ import { marked } from 'marked';
 import type { GeneratedConcept } from '../types.js';
 
 // Minimal HTML template to host the shared concept
-async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
+async function createShareableHtml(concept: GeneratedConcept & { prompt?: string }): Promise<string> {
   // Parse the initial markdown explanation to HTML
   const explanationHtml = await marked.parse(concept.explanation);
+  const hasPrompt = concept.prompt && concept.prompt.trim() !== '';
 
   return `
     <!DOCTYPE html>
@@ -91,6 +92,17 @@ async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
       ${concept.libraryUrl ? `<script src="${concept.libraryUrl}"></script>` : ''}
     </head>
     <body class="bg-gray-900 text-gray-100">
+      ${hasPrompt ? `
+        <div class="absolute top-7 left-7 flex gap-3 z-20">
+            <button 
+                id="show-prompt-btn"
+                class="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                aria-label="Show prompt"
+            >
+                Prompt
+            </button>
+        </div>
+      ` : ''}
       <main class="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5 box-border">
         <div class="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-y-auto shadow-2xl border border-gray-800">
           <div id="interactive-stage" class="w-full min-h-full flex items-center justify-center p-4 sm:p-8 box-border">
@@ -104,13 +116,173 @@ async function createShareableHtml(concept: GeneratedConcept): Promise<string> {
           ${explanationHtml}
         </div>
       </main>
+
+      ${hasPrompt ? `
+      <div id="prompt-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-50" style="display: none;">
+          <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-lg flex flex-col gap-4" onclick="event.stopPropagation()">
+              <h2 class="text-2xl font-bold text-white">Generation Prompt</h2>
+              <div class="bg-gray-900 border border-gray-700 rounded-md p-4 text-gray-300 max-h-96 overflow-y-auto">
+                  <p class="whitespace-pre-wrap">${concept.prompt?.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+              </div>
+              <div class="flex justify-end gap-3 mt-4">
+                  <button id="copy-prompt-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+                      Copy
+                  </button>
+                  <button id="close-prompt-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors">
+                      Close
+                  </button>
+              </div>
+          </div>
+      </div>
+      ` : ''}
+
       <script type="module">
         ${concept.js}
+        
+        ${hasPrompt ? `
+        const showPromptBtn = document.getElementById('show-prompt-btn');
+        const promptModal = document.getElementById('prompt-modal');
+        const closePromptBtn = document.getElementById('close-prompt-btn');
+        const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        const promptText = \`${concept.prompt?.replace(/\\/g, "\\\\").replace(/`/g, "\\`")}\`;
+
+        if (showPromptBtn && promptModal) {
+            showPromptBtn.addEventListener('click', () => {
+                promptModal.style.display = 'flex';
+            });
+        }
+        
+        if (promptModal) {
+            promptModal.addEventListener('click', (e) => {
+                if (e.target === promptModal) {
+                    promptModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (closePromptBtn && promptModal) {
+            closePromptBtn.addEventListener('click', () => {
+                promptModal.style.display = 'none';
+            });
+        }
+
+        if (copyPromptBtn) {
+            copyPromptBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(promptText);
+                copyPromptBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyPromptBtn.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+        ` : ''}
       </script>
     </body>
     </html>
   `;
 }
+
+function injectPromptButtonIntoHtml(html: string, prompt: string): string {
+    const sanitizedPrompt = prompt
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    
+    const escapedJsPrompt = prompt.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
+
+    const promptButtonAndModal = `
+      <!-- Injected by ConceptLab -->
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+      </style>
+      <div style="position: fixed; top: 1.75rem; left: 1.75rem; display: flex; gap: 0.75rem; z-index: 2147483647; font-family: 'Inter', sans-serif;">
+          <button 
+              id="show-prompt-btn-injected"
+              style="height: 3rem; padding: 0 1.5rem; background-color: rgba(31, 41, 55, 0.8); border: 1px solid #4b5563; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 0.875rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px);"
+          >
+              Prompt
+          </button>
+      </div>
+      <div id="prompt-modal-injected" style="position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2147483647; font-family: 'Inter', sans-serif;">
+          <div style="background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 2rem; width: 90%; max-width: 36rem; display: flex; flex-direction: column; gap: 1rem;">
+              <h2 style="font-size: 1.5rem; font-weight: 700; color: white; margin: 0;">Generation Prompt</h2>
+              <div style="background-color: #111827; border: 1px solid #374151; border-radius: 0.375rem; padding: 1rem; color: #d1d5db; max-height: 24rem; overflow-y: auto;">
+                  <p style="white-space: pre-wrap; margin: 0;">${sanitizedPrompt}</p>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+                  <button id="copy-prompt-btn-injected" style="background-color: #14b8a6; color: white; font-weight: 700; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; transition: background-color 0.2s; cursor: pointer; width: 7rem; text-align: center;">
+                      Copy
+                  </button>
+                  <button id="close-prompt-btn-injected" style="background-color: #374151; color: white; font-weight: 700; padding: 0.5rem 1.5rem; border: none; border-radius: 0.375rem; transition: background-color 0.2s; cursor: pointer;">
+                      Close
+                  </button>
+              </div>
+          </div>
+      </div>
+      <!-- End Injected by ConceptLab -->`;
+    
+    const promptScript = `
+        <script type="module">
+        // Injected by ConceptLab
+        (function() {
+            try {
+                const showPromptBtn = document.getElementById('show-prompt-btn-injected');
+                const promptModal = document.getElementById('prompt-modal-injected');
+                const closePromptBtn = document.getElementById('close-prompt-btn-injected');
+                const copyPromptBtn = document.getElementById('copy-prompt-btn-injected');
+                const promptText = \`${escapedJsPrompt}\`;
+
+                if (showPromptBtn && promptModal) {
+                    showPromptBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        promptModal.style.display = 'flex';
+                    });
+                }
+                
+                if (promptModal) {
+                    const modalContent = promptModal.querySelector('div');
+                    promptModal.addEventListener('click', () => {
+                        promptModal.style.display = 'none';
+                    });
+                    if (modalContent) {
+                       modalContent.addEventListener('click', (e) => e.stopPropagation());
+                    }
+                }
+
+                if (closePromptBtn && promptModal) {
+                    closePromptBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        promptModal.style.display = 'none';
+                    });
+                }
+
+                if (copyPromptBtn) {
+                    copyPromptBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(promptText);
+                        copyPromptBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyPromptBtn.textContent = 'Copy';
+                        }, 2000);
+                    });
+                }
+            } catch (e) {
+                console.error('Error in injected ConceptLab script:', e);
+            }
+        })();
+        </script>
+    `;
+
+    // Inject just after <body> tag
+    let injectedHtml = html.replace(/<body[^>]*>/i, `$&${promptButtonAndModal}`);
+    // Inject just before </body> tag
+    injectedHtml = injectedHtml.replace(/<\/body>/i, `${promptScript}</body>`);
+    
+    return injectedHtml;
+}
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -122,19 +294,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = req.body;
     let htmlContent: string;
 
-    // "Create" mode sends a body with just a full `html` document string.
     // "Learn" mode sends a full `GeneratedConcept` object with html, css, js, etc.
-    // We differentiate based on the presence of other fields.
-    if (body.html && !body.css && !body.explanation && typeof body.html === 'string') {
-      htmlContent = body.html;
-    } else {
-      const conceptData: GeneratedConcept = body;
-
-      // Validate incoming data for 'learn' mode
-      if (!conceptData.html || !conceptData.css || !conceptData.js || !conceptData.explanation) {
-        return res.status(400).json({ error: 'Incomplete concept data provided for learn mode.' });
-      }
+    // "Create" mode sends a body with `html` and optionally `prompt`.
+    // We differentiate based on the presence of css/js/explanation.
+    if (body.html && body.css && body.js && body.explanation) {
+      const conceptData: GeneratedConcept & { prompt?: string } = body;
       htmlContent = await createShareableHtml(conceptData);
+    } else if (body.html && typeof body.html === 'string') {
+      // This is "Create" mode
+      const { html, prompt } = body;
+      if (prompt) {
+        htmlContent = injectPromptButtonIntoHtml(html, prompt);
+      } else {
+        htmlContent = html;
+      }
+    } else {
+       return res.status(400).json({ error: 'Invalid payload. Must contain either a full concept object or an html string.' });
     }
 
     const pathname = `${nanoid(12)}.html`;
