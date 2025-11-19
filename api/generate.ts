@@ -134,7 +134,7 @@ export default async function handler(
         config: {
           responseMimeType: "application/json",
           responseSchema: responseSchema,
-          temperature: 0.7,
+          temperature: 1.0,
         },
     });
 
