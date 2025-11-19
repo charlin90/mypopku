@@ -129,7 +129,7 @@ export default async function handler(
   try {
     const prompt = getPrompt(concept);
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-3-pro-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
