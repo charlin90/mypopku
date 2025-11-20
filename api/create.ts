@@ -5,6 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 function getPrompt(prompt: string): string {
     return `
     You are a world-class frontend developer with a flair for creating creative and interactive content. Your response must be only the HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not wrap it in markdown fences (\`\`\`) or add any other explanatory text.
+    User Prompt: "${prompt}"
   `;
 }
 
