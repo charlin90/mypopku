@@ -117,8 +117,8 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   return (
     <>
-      <div className="w-full h-screen bg-gray-900 relative">
-        <div className="absolute top-4 left-4 flex gap-4 z-10">
+      <div className="w-full h-full bg-gray-900 relative">
+        <div className="absolute top-4 left-4 flex gap-4 z-20">
             <button
                 onClick={onBack}
                 className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
@@ -141,15 +141,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
                 Prompt
             </button>
         </div>
-        <main className="w-full h-full">
-            <iframe
-                ref={iframeRef}
-                srcDoc={html}
-                title="Generated AI Content"
-                className="w-full h-full border-none"
-                sandbox="allow-scripts allow-same-origin"
-            />
-        </main>
+        <iframe
+            ref={iframeRef}
+            srcDoc={html}
+            title="Generated AI Content"
+            className="w-full h-full border-none"
+            sandbox="allow-scripts allow-same-origin"
+        />
       </div>
 
       {showShareModal && (
