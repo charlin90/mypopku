@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface BlobExplainerViewProps {
@@ -31,17 +30,17 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
   return (
     <>
       <div className="w-full h-full bg-gray-900 relative">
-          <div className="absolute top-7 left-7 flex gap-3 z-20">
+          <div className="absolute top-4 left-4 flex gap-4 z-20">
               <button
                   onClick={onBack}
-                  className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-2xl hover:bg-gray-700 transition-colors"
+                  className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                   aria-label="Go back"
               >
-                  ←
+                  Back
               </button>
               <button 
                   onClick={handleShareClick} 
-                  className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                   aria-label="Share experiment"
               >
                   Share

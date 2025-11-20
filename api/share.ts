@@ -101,17 +101,6 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
       ${concept.libraryUrl ? `<script src="${concept.libraryUrl}"></script>` : ''}
     </head>
     <body class="bg-gray-900 text-gray-100">
-      ${hasPrompt ? `
-        <div class="absolute top-7 left-52 flex gap-3 z-20">
-            <button 
-                id="show-prompt-btn"
-                class="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
-                aria-label="Show prompt"
-            >
-                Prompt
-            </button>
-        </div>
-      ` : ''}
       <main class="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5 box-border">
         <div class="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-y-auto shadow-2xl border border-gray-800">
           <div id="interactive-stage" class="w-full min-h-full flex items-center justify-center p-4 sm:p-8 box-border">
@@ -218,14 +207,6 @@ function injectPromptButtonIntoHtml(html: string, prompt: string): string {
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
       </style>
-      <div style="position: fixed; top: 1.75rem; left: 13rem; display: flex; gap: 0.75rem; z-index: 2147483647; font-family: 'Inter', sans-serif;">
-          <button 
-              id="show-prompt-btn-injected"
-              style="height: 3rem; padding: 0 1.5rem; background-color: rgba(31, 41, 55, 0.8); border: 1px solid #4b5563; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 0.875rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px);"
-          >
-              Prompt
-          </button>
-      </div>
       <div id="prompt-modal-injected" style="position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2147483647; font-family: 'Inter', sans-serif;">
           <div style="background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 2rem; width: 90%; max-width: 36rem; display: flex; flex-direction: column; gap: 1rem;">
               <h2 style="font-size: 1.5rem; font-weight: 700; color: white; margin: 0;">Generation Prompt</h2>

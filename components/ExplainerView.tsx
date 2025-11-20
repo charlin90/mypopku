@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -260,24 +259,24 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         }
        `}</style>
       <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-3 sm:gap-5 box-border bg-gray-900">
-        <div className="absolute top-7 left-7 flex gap-3 z-20">
+        <div className="absolute top-4 left-4 flex gap-4 z-20">
             <button 
                 onClick={onBack} 
-                className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-2xl hover:bg-gray-700 transition-colors"
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="Go back"
             >
-                ←
+                Back
             </button>
             <button 
                 onClick={handleShareClick} 
-                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="Share experiment"
             >
                 Share
             </button>
             <button 
                 onClick={() => setShowPromptModal(true)} 
-                className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="Show prompt"
             >
                 Prompt

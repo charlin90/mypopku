@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -119,25 +118,25 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   return (
     <>
       <div className="w-full h-screen bg-gray-900 flex flex-col">
-        <header className="flex-shrink-0 p-7 z-10">
-            <div className="flex gap-3">
+        <header className="flex-shrink-0 p-4 z-10">
+            <div className="flex gap-4">
                 <button
                     onClick={onBack}
-                    className="w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-2xl hover:bg-gray-700 transition-colors"
+                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                     aria-label="Go back"
                 >
-                    ←
+                    Back
                 </button>
                 <button 
                     onClick={handleShareClick} 
-                    className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                     aria-label="Share experiment"
                 >
                     Share
                 </button>
                 <button 
                     onClick={() => setShowPromptModal(true)} 
-                    className="h-12 px-6 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
                     aria-label="Show prompt"
                 >
                     Prompt
