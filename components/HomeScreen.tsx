@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { GeneratedConcept, EncyclopediaEntry } from '../types.js';
+import type { EncyclopediaEntry } from '../types.js';
 
 // --- TYPE DEFINITIONS ---
 // These interfaces define the structure for the dynamically processed encyclopedia data
@@ -31,11 +31,6 @@ interface HomeScreenProps {
 
 // --- SVG ICONS ---
 // These icons are now defined locally as data/encyclopedia.ts has been removed.
-const TrashIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.067-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-  </svg>
-);
 const DiscordIcon: React.FC = () => (
     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
         <path d="M20.3 4.4c-1.4-.9-3-1.6-4.6-1.9a.7.7 0 0 0-.7.1l-.4 2.1a15.2 15.2 0 0 0-5.2 0l-.4-2.1a.7.7 0 0 0-.7-.1c-1.7.3-3.3.9-4.7 1.9a.7.7 0 0 0-.2.8l1.8 5.9a15.3 15.3 0 0 0-4.5 4.1.7.7 0 0 0 .2 1c2.8 1.8 5.2 2.2 7.4 2.2h.1c2.2 0 4.6-.4 7.4-2.2a.7.7 0 0 0 .2-1 15.3 15.3 0 0 0-4.5-4.1l1.8-5.9a.7.7 0 0 0-.2-.8zM12 15.4c-1.4 0-2.6-1.2-2.6-2.7s1.2-2.7 2.6-2.7c1.4 0 2.6 1.2 2.6 2.7s-1.2 2.7-2.6 2.7zm3.4-5.8c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7zm-6.8 0c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7z" />

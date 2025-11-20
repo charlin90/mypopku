@@ -59,25 +59,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     
     // Remove the class after the animation is done
     setTimeout(() => setPanelPulsing(false), 700);
-
-    // Fire and forget the save operation to Vercel Blob.
-    // This happens in the background and doesn't affect the user's experience.
-    fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...content, prompt }),
-    })
-    .then(async (response) => {
-        if (response.ok) {
-            console.log('Concept saved successfully after "Aha!" click.');
-        } else {
-            const errorData = await response.json().catch(() => ({ details: 'Could not parse error JSON.' }));
-            console.error('Failed to save concept:', errorData.details || 'Unknown server error');
-        }
-    })
-    .catch((error) => {
-        console.error('Network error while trying to save concept:', error);
-    });
   };
 
   const handleShareClick = async () => {
