@@ -117,33 +117,31 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   return (
     <>
-      <div className="w-full h-screen bg-gray-900 flex flex-col">
-        <header className="flex-shrink-0 p-4 z-10">
-            <div className="flex gap-4">
-                <button
-                    onClick={onBack}
-                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                    aria-label="Go back"
-                >
-                    Back
-                </button>
-                <button 
-                    onClick={handleShareClick} 
-                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                    aria-label="Share experiment"
-                >
-                    Share
-                </button>
-                <button 
-                    onClick={() => setShowPromptModal(true)} 
-                    className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                    aria-label="Show prompt"
-                >
-                    Prompt
-                </button>
-            </div>
-        </header>
-        <main className="flex-grow min-h-0">
+      <div className="w-full h-screen bg-gray-900 relative">
+        <div className="absolute top-4 left-4 flex gap-4 z-10">
+            <button
+                onClick={onBack}
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
+                aria-label="Go back"
+            >
+                Back
+            </button>
+            <button 
+                onClick={handleShareClick} 
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
+                aria-label="Share experiment"
+            >
+                Share
+            </button>
+            <button 
+                onClick={() => setShowPromptModal(true)} 
+                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
+                aria-label="Show prompt"
+            >
+                Prompt
+            </button>
+        </div>
+        <main className="w-full h-full">
             <iframe
                 ref={iframeRef}
                 srcDoc={html}
