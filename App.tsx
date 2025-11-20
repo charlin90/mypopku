@@ -12,9 +12,6 @@ import { CommunityView } from './components/CommunityView.js';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'community';
 
-const SAVED_CONCEPTS_KEY = 'concept-lab-saved-concepts';
-const SAVED_CREATIVE_KEY = 'concept-lab-saved-creative-pages';
-
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -24,23 +21,7 @@ const App: React.FC = () => {
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
-  const [savedConcepts, setSavedConcepts] = useState<Record<string, GeneratedConcept>>({});
-  const [savedCreativePages, setSavedCreativePages] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SAVED_CONCEPTS_KEY);
-      if (saved) {
-        setSavedConcepts(JSON.parse(saved));
-      }
-      const savedCreative = localStorage.getItem(SAVED_CREATIVE_KEY);
-      if (savedCreative) {
-        setSavedCreativePages(JSON.parse(savedCreative));
-      }
-    } catch (e) {
-      console.error("Failed to load saved items from localStorage", e);
-    }
-  }, []);
+  const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
 
   useEffect(() => {
     // When switching to a full-screen view, reset the window's scroll position.
@@ -63,11 +44,6 @@ const App: React.FC = () => {
       // The service now performs robust validation, so we can be more confident here.
       setGeneratedContent(content);
       setConceptPrompt(concept);
-      
-      const newSavedConcepts = { ...savedConcepts, [concept]: content };
-      setSavedConcepts(newSavedConcepts);
-      localStorage.setItem(SAVED_CONCEPTS_KEY, JSON.stringify(newSavedConcepts));
-      
       setView('explainer');
     } catch (err) {
       console.error("Concept generation failed:", err);
@@ -78,7 +54,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [savedConcepts]);
+  }, []);
   
   const handleCreativeSubmit = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -91,11 +67,6 @@ const App: React.FC = () => {
         const html = await generateCreativePage(prompt);
         setCreativeHtml(html);
         setCreativePrompt(prompt);
-
-        const newSavedCreativePages = { ...savedCreativePages, [prompt]: html };
-        setSavedCreativePages(newSavedCreativePages);
-        localStorage.setItem(SAVED_CREATIVE_KEY, JSON.stringify(newSavedCreativePages));
-        
         setView('creativeView');
     } catch (err) {
         console.error("Creative page generation failed:", err);
@@ -105,7 +76,45 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, [savedCreativePages]);
+  }, []);
+
+  const handleFileUpload = useCallback(async (htmlContent: string, fileName: string, screenshotDataUrl: string) => {
+    setIsLoading(true);
+    setError(null);
+    const promptKey = `Uploaded: ${fileName}`;
+    
+    try {
+        const response = await fetch('/api/share', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              html: htmlContent, 
+              prompt: promptKey,
+              type: 'create',
+              screenshot: screenshotDataUrl,
+            }),
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to share uploaded HTML');
+        }
+
+        const data = await response.json();
+        setShareUrlOnLoad(data.url); // Set the URL to be passed to CreativeView
+
+        setCreativeHtml(htmlContent);
+        setCreativePrompt(promptKey);
+        setView('creativeView');
+    } catch (err) {
+        console.error("File upload and share failed:", err);
+        const message = err instanceof Error ? err.message : 'An unknown error occurred during upload. Please try again.';
+        setError(message);
+        setView('home'); 
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
@@ -120,44 +129,13 @@ const App: React.FC = () => {
     setBlobUrlToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
+    setShareUrlOnLoad(null);
     setError(null);
   }, []);
 
   const handleShowCommunity = useCallback(() => {
     setView('community');
   }, []);
-
-  const handleLoadSavedConcept = useCallback((conceptKey: string) => {
-    const conceptData = savedConcepts[conceptKey];
-    if (conceptData) {
-      setGeneratedContent(conceptData);
-      setConceptPrompt(conceptKey);
-      setView('explainer');
-    }
-  }, [savedConcepts]);
-
-  const handleDeleteConcept = useCallback((conceptKey: string) => {
-    const newSavedConcepts = { ...savedConcepts };
-    delete newSavedConcepts[conceptKey];
-    setSavedConcepts(newSavedConcepts);
-    localStorage.setItem(SAVED_CONCEPTS_KEY, JSON.stringify(newSavedConcepts));
-  }, [savedConcepts]);
-
-  const handleLoadSavedCreative = useCallback((promptKey: string) => {
-    const htmlData = savedCreativePages[promptKey];
-    if (htmlData) {
-      setCreativeHtml(htmlData);
-      setCreativePrompt(promptKey);
-      setView('creativeView');
-    }
-  }, [savedCreativePages]);
-
-  const handleDeleteCreative = useCallback((promptKey: string) => {
-    const newSavedCreativePages = { ...savedCreativePages };
-    delete newSavedCreativePages[promptKey];
-    setSavedCreativePages(newSavedCreativePages);
-    localStorage.setItem(SAVED_CREATIVE_KEY, JSON.stringify(newSavedCreativePages));
-  }, [savedCreativePages]);
 
   return (
     <div className="relative w-full h-screen">
@@ -167,16 +145,11 @@ const App: React.FC = () => {
         <HomeScreen 
           onConceptSubmit={handleConceptSubmit}
           onCreativeSubmit={handleCreativeSubmit}
+          onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
           onShowCommunity={handleShowCommunity}
           isLoading={isLoading} 
           error={error}
-          savedConcepts={savedConcepts}
-          onLoadSaved={handleLoadSavedConcept}
-          onDelete={handleDeleteConcept}
-          savedCreativePages={savedCreativePages}
-          onLoadSavedCreative={handleLoadSavedCreative}
-          onDeleteCreative={handleDeleteCreative}
         />
       </div>
 
@@ -194,7 +167,13 @@ const App: React.FC = () => {
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'creativeView' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {creativeHtml && view === 'creativeView' && (
-          <CreativeView html={creativeHtml} prompt={creativePrompt!} onBack={handleGoBack} />
+          <CreativeView 
+            html={creativeHtml} 
+            prompt={creativePrompt!} 
+            onBack={handleGoBack}
+            initialShareUrl={shareUrlOnLoad}
+            onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
+          />
         )}
       </div>
 

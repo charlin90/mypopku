@@ -22,16 +22,11 @@ export interface EncyclopediaCategory {
 interface HomeScreenProps {
   onConceptSubmit: (concept: string) => void;
   onCreativeSubmit: (prompt: string) => void;
+  onFileUpload: (htmlContent: string, fileName: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
   onShowCommunity: () => void;
   isLoading: boolean;
   error: string | null;
-  savedConcepts: Record<string, GeneratedConcept>;
-  onLoadSaved: (conceptKey: string) => void;
-  onDelete: (conceptKey: string) => void;
-  savedCreativePages: Record<string, string>;
-  onLoadSavedCreative: (promptKey: string) => void;
-  onDeleteCreative: (promptKey: string) => void;
 }
 
 // --- SVG ICONS ---
@@ -110,16 +105,11 @@ const processEntriesIntoCategories = (entries: EncyclopediaEntry[]): Encyclopedi
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
   onConceptSubmit,
   onCreativeSubmit,
+  onFileUpload,
   onLoadBlobConcept,
   onShowCommunity,
   isLoading, 
   error,
-  savedConcepts,
-  onLoadSaved,
-  onDelete,
-  savedCreativePages,
-  onLoadSavedCreative,
-  onDeleteCreative,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [activeMode, setActiveMode] = useState<'learn' | 'create' | 'encyclopedia'>('learn');
@@ -134,6 +124,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // State for Create mode
   const [createPrompt, setCreatePrompt] = useState('');
   const createFormRef = useRef<HTMLFormElement>(null);
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [htmlFile, setHtmlFile] = useState<File | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+
 
   // Fetch encyclopedia data when the mode is active and data hasn't been loaded yet.
   useEffect(() => {
@@ -164,9 +158,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, [activeMode, encyclopediaCategories.length, isEncyclopediaLoading]);
 
-
-  const savedConceptKeys = Object.keys(savedConcepts);
-  const savedCreativeKeys = Object.keys(savedCreativePages);
   
   const currentCategory = encyclopediaCategories.find(cat => cat.name === selectedCategory);
   
@@ -185,10 +176,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreativeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (createPrompt.trim() && !isLoading) {
       onCreativeSubmit(createPrompt);
+    }
+  };
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!htmlFile || !screenshotFile || isLoading) return;
+
+    try {
+      const [htmlContent, screenshotDataUrl] = await Promise.all([
+        htmlFile.text(),
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(screenshotFile);
+        })
+      ]);
+
+      onFileUpload(htmlContent, htmlFile.name, screenshotDataUrl);
+
+      setHtmlFile(null);
+      setScreenshotFile(null);
+      setShowUploadForm(false);
+    } catch (error) {
+      console.error("Error reading files for upload:", error);
     }
   };
 
@@ -287,7 +303,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             {/* CREATE VIEW */}
             {activeMode === 'create' && (
               <div className="flex flex-col items-center w-full">
-                <form ref={createFormRef} onSubmit={handleCreateSubmit} className="w-full max-w-2xl">
+                <form ref={createFormRef} onSubmit={handleCreativeSubmit} className="w-full max-w-2xl">
                     <textarea
                         value={createPrompt}
                         onChange={(e) => setCreatePrompt(e.target.value)}
@@ -298,6 +314,71 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         disabled={isLoading}
                     />
                 </form>
+                {!showUploadForm ? (
+                  <div className="mt-4 text-sm text-gray-400">
+                    Don't need AI?{' '}
+                    <button
+                      onClick={() => setShowUploadForm(true)}
+                      className="underline hover:text-teal-400 transition-colors focus:outline-none"
+                    >
+                      Upload existing html file
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleUploadSubmit} className="mt-6 w-full max-w-lg bg-gray-800 border border-gray-700 rounded-lg p-6 flex flex-col gap-4 animate-fade-in">
+                    <h3 className="text-lg font-semibold text-center text-gray-200">Upload Your Creation</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2 text-left">HTML File*</label>
+                      <div className="flex items-center">
+                        <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-full border-0 text-sm font-semibold bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-colors shrink-0">
+                          Choose File
+                        </label>
+                        <input
+                          id="html-upload"
+                          type="file"
+                          onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                          accept="text/html,.html"
+                          required
+                        />
+                        <span className="ml-4 text-sm text-gray-400 truncate">
+                          {htmlFile ? htmlFile.name : 'No file chosen'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2 text-left">Screenshot Image*</label>
+                       <div className="flex items-center">
+                        <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-full border-0 text-sm font-semibold bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-colors shrink-0">
+                          Choose File
+                        </label>
+                        <input
+                          id="screenshot-upload"
+                          type="file"
+                          onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                          accept="image/*"
+                          required
+                        />
+                         <span className="ml-4 text-sm text-gray-400 truncate">
+                          {screenshotFile ? screenshotFile.name : 'No file chosen'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-2">
+                      <button type="button" onClick={() => setShowUploadForm(false)} className="px-4 py-2 rounded-md text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!htmlFile || !screenshotFile || isLoading}
+                        className="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                      >
+                        Upload & Share
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 
@@ -382,66 +463,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             )}
           </div>
         </div>
-
-        {activeMode === 'learn' && savedConceptKeys.length > 0 && (
-          <div className="w-full max-w-5xl mt-16 border-t border-gray-800 pt-12 pb-24">
-            <h2 className="text-xl font-bold text-gray-300 text-center mb-8">Saved Experiments</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {savedConceptKeys.map((key) => (
-                <div 
-                  key={key} 
-                  onClick={() => onLoadSaved(key)}
-                  className="group relative bg-gray-800/50 border border-gray-700 rounded-xl p-6 flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105"
-                  aria-label={`Load ${key}`}
-                >
-                  <h3 className="text-lg font-semibold text-gray-200 group-hover:text-teal-300 truncate w-full">
-                    {key}
-                  </h3>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(key);
-                    }}
-                    className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                    aria-label={`Delete ${key}`}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {activeMode === 'create' && savedCreativeKeys.length > 0 && (
-          <div className="w-full max-w-5xl mt-16 border-t border-gray-800 pt-12 pb-24">
-            <h2 className="text-xl font-bold text-gray-300 text-center mb-8">Saved Creations</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {savedCreativeKeys.map((key) => (
-                <div 
-                  key={key} 
-                  onClick={() => onLoadSavedCreative(key)}
-                  className="group relative bg-gray-800/50 border border-gray-700 rounded-xl p-6 flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105"
-                  aria-label={`Load ${key}`}
-                >
-                  <h3 className="text-lg font-semibold text-gray-200 group-hover:text-teal-300 truncate w-full" title={key}>
-                    {key}
-                  </h3>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteCreative(key);
-                    }}
-                    className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                    aria-label={`Delete ${key}`}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </main>
       <footer className="w-full p-6 text-center text-gray-500 text-sm flex-shrink-0">
         <div className="flex justify-center items-center gap-x-8 gap-y-2 flex-wrap">

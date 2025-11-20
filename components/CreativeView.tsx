@@ -7,6 +7,8 @@ interface CreativeViewProps {
   html: string;
   prompt: string;
   onBack: () => void;
+  initialShareUrl?: string | null;
+  onClearInitialShareUrl: () => void;
 }
 
 const LoadingSpinnerInline: React.FC = () => (
@@ -17,7 +19,7 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack, initialShareUrl, onClearInitialShareUrl }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -28,29 +30,12 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
-  // Auto-save the generated content when the component mounts.
   useEffect(() => {
-    if (html && prompt) {
-      // This is a "fire and forget" operation. We don't block the UI.
-      // We'll log the outcome to the console for debugging.
-      fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html, prompt }),
-      })
-      .then(async (response) => {
-        if (response.ok) {
-          console.log('Creative experiment auto-saved successfully.');
-        } else {
-          const errorData = await response.json().catch(() => ({ details: 'Could not parse error JSON.' }));
-          console.error('Failed to auto-save creative experiment:', errorData.details || 'Unknown server error');
-        }
-      })
-      .catch((error) => {
-        console.error('Network error while auto-saving creative experiment:', error);
-      });
+    if (initialShareUrl) {
+      setShareUrl(initialShareUrl);
+      setShowShareModal(true);
     }
-  }, [html, prompt]);
+  }, [initialShareUrl]);
   
   const handleShareClick = async () => {
     setShowShareModal(true);
@@ -120,6 +105,9 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     setShareError(null);
     setIsSharing(false);
     setScreenshotUrl(null);
+    if (initialShareUrl) {
+      onClearInitialShareUrl();
+    }
   };
 
   const handleCopyPrompt = () => {
