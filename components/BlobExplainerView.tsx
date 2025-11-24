@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 interface BlobExplainerViewProps {
@@ -9,11 +10,10 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
   const [showShareModal, setShowShareModal] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
 
-  // Since the encyclopedia entry already has a public URL, we use it directly.
   const shareableUrl = blobUrl;
 
   const handleShareClick = () => {
-    setCopyButtonText('Copy'); // Reset text in case it was 'Copied!'
+    setCopyButtonText('Copy');
     setShowShareModal(true);
   };
 
@@ -27,20 +27,22 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
     setShowShareModal(false);
   };
 
+  const btnStyle = "bg-white border-2 border-black text-black font-bold py-2 px-4 rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all";
+
   return (
     <>
-      <div className="w-full h-full bg-gray-900 relative">
+      <div className="w-full h-full bg-amber-50 relative">
           <div className="absolute top-4 left-4 flex gap-4 z-20">
               <button
                   onClick={onBack}
-                  className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
+                  className={btnStyle}
                   aria-label="Go back"
               >
                   Back
               </button>
               <button 
                   onClick={handleShareClick} 
-                  className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
+                  className={btnStyle}
                   aria-label="Share experiment"
               >
                   Share
@@ -55,19 +57,19 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
       </div>
       
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Share Experiment</h2>
-                <div className="flex flex-col gap-2">
-                    <p className="text-gray-400">Anyone with this link can view this experiment from the encyclopedia.</p>
-                    <div className="flex items-center gap-2 mt-2">
-                        <input type="text" readOnly value={shareableUrl} className="w-full px-4 py-2 text-gray-100 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                        <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-3xl font-black text-black">Share It!</h2>
+                <div className="flex flex-col gap-4">
+                    <p className="text-gray-600 font-medium">Anyone with this link can view this experiment.</p>
+                    <div className="flex items-center gap-2">
+                        <input type="text" readOnly value={shareableUrl} className="w-full px-4 py-3 text-black bg-gray-50 border-2 border-black rounded-xl focus:outline-none focus:ring-4 focus:ring-pink-200" />
+                        <button onClick={handleCopy} className="bg-teal-300 border-2 border-black text-black font-bold py-3 px-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex-shrink-0 w-24">
                             {copyButtonText}
                         </button>
                     </div>
                 </div>
-                 <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
+                 <button onClick={closeShareModal} className="mt-2 bg-gray-200 hover:bg-gray-300 text-black border-2 border-black font-bold py-2 px-6 rounded-xl self-end">
                     Close
                 </button>
             </div>

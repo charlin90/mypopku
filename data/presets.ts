@@ -1,3 +1,4 @@
+
 import type { GeneratedConcept } from '../types.js';
 
 export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
@@ -15,9 +16,10 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
         <div class="oxygen-molecule">O₂</div>
         <div class="sugar-molecule">C₆H₁₂O₆</div>
         <div class="controls">
-          <button id="sun-btn">Add Sunlight</button>
-          <button id="water-btn">Add Water</button>
-          <button id="co2-btn">Add CO₂</button>
+          <button id="sun-btn">Add Sunlight ☀️</button>
+          <button id="water-btn">Add Water 💧</button>
+          <button id="co2-btn">Add CO₂ ☁️</button>
+          <button id="reset-btn">Reset 🔄</button>
         </div>
       </div>
     `,
@@ -25,80 +27,94 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
       .photo-container {
         width: 100%;
         height: 100%;
-        background-color: #1a202c;
+        background-color: #f0f9ff;
         position: relative;
         overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-family: sans-serif;
+        font-family: 'Outfit', sans-serif;
+        border-radius: 16px;
       }
       .sun {
         width: 100px;
         height: 100px;
-        background: #f6e05e;
+        background: #facc15;
+        border: 2px solid black;
         border-radius: 50%;
         position: absolute;
         top: 20px;
         left: 20px;
-        opacity: 0;
-        transition: opacity 1s, box-shadow 1s;
+        opacity: 0.2;
+        transition: opacity 1s, transform 1s;
       }
       .sun.active {
         opacity: 1;
-        box-shadow: 0 0 50px #f6e05e;
+        box-shadow: 4px 4px 0px 0px black;
+        transform: scale(1.1);
       }
       .plant {
         position: absolute;
         bottom: 50px;
+        z-index: 10;
       }
       .stem {
-        width: 10px;
+        width: 12px;
         height: 100px;
-        background: #48bb78;
-        border-radius: 5px 5px 0 0;
+        background: #4ade80;
+        border: 2px solid black;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
       }
       .leaf {
         width: 50px;
         height: 50px;
-        background: #68d391;
+        background: #86efac;
+        border: 2px solid black;
         border-radius: 0 50% 0 50%;
         position: absolute;
-        bottom: 90px;
+        bottom: 80px;
         left: -20px;
         transform: rotate(-45deg);
         transform-origin: bottom right;
-        transition: transform 0.5s;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       .plant.growing .leaf {
-        transform: rotate(-45deg) scale(1.5);
+        transform: rotate(-45deg) scale(1.8);
       }
       .ground {
         width: 100%;
         height: 50px;
-        background: #4a5568;
+        background: #d1d5db;
+        border-top: 2px solid black;
         position: absolute;
         bottom: 0;
       }
       .water-droplet, .co2-molecule, .oxygen-molecule, .sugar-molecule {
         position: absolute;
         opacity: 0;
-        transition: all 2s;
-        color: white;
-        font-weight: bold;
+        transition: all 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        font-weight: 900;
         font-size: 1.5rem;
+        background: white;
+        padding: 4px 8px;
+        border: 2px solid black;
+        border-radius: 8px;
+        box-shadow: 2px 2px 0px black;
       }
       .water-droplet {
-        top: 60%; left: 10%; background-color: #63b3ed; width: 20px; height: 20px; border-radius: 50%;
+        top: 60%; left: 10%; color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; display:flex; justify-content:center;align-items:center;
       }
-      .co2-molecule { top: 50%; left: 20%; }
-      .oxygen-molecule { top: 40%; left: 70%; }
-      .sugar-molecule { bottom: 60px; left: 55%; }
+      .water-droplet::after { content: '💧'; font-size: 1.2rem; }
+
+      .co2-molecule { top: 50%; left: 20%; color: #6b7280; }
+      .oxygen-molecule { top: 40%; left: 70%; color: #ef4444; }
+      .sugar-molecule { bottom: 80px; left: 55%; color: #eab308; }
 
       .water-droplet.active { opacity: 1; transform: translate(150px, -80px); }
       .co2-molecule.active { opacity: 1; transform: translate(120px, -50px); }
-      .oxygen-molecule.active { opacity: 1; transform: translateX(100px); }
-      .sugar-molecule.active { opacity: 1; transform: scale(1.2); }
+      .oxygen-molecule.active { opacity: 1; transform: translateX(100px) rotate(15deg); }
+      .sugar-molecule.active { opacity: 1; transform: scale(1.2) rotate(-10deg); }
 
       .controls {
         position: absolute;
@@ -107,24 +123,29 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
         display: flex;
         flex-direction: column;
         gap: 10px;
+        z-index: 20;
       }
       .controls button {
-        background-color: #2d3748;
-        color: white;
-        border: 1px solid #4a5568;
+        background-color: white;
+        color: black;
+        border: 2px solid black;
         padding: 10px 15px;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        font-weight: bold;
+        box-shadow: 3px 3px 0px 0px black;
+        transition: all 0.2s;
       }
-      .controls button:hover { background-color: #4a5568; }
-      .controls button:disabled { background-color: #1a202c; color: #718096; cursor: not-allowed;}
+      .controls button:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0px 0px black; }
+      .controls button:active { transform: translate(0, 0); box-shadow: 1px 1px 0px 0px black; }
+      .controls button:disabled { background-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; border-color: #9ca3af; box-shadow: none; transform: none;}
     `,
     js: `
       const panel = document.querySelector('#explanation-panel');
       const sunBtn = document.querySelector('#sun-btn');
       const waterBtn = document.querySelector('#water-btn');
       const co2Btn = document.querySelector('#co2-btn');
+      const resetBtn = document.querySelector('#reset-btn');
       
       const sun = document.querySelector('.sun');
       const water = document.querySelector('.water-droplet');
@@ -139,7 +160,7 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
 
       function checkPhotosynthesis() {
         if (hasSun && hasWater && hasCO2) {
-          if (panel) panel.innerHTML = "<h2>Photosynthesis!</h2><p>With sunlight, water, and CO₂, the plant has produced oxygen (O₂) and glucose (C₆H₁₂O₆) for energy. This is the essence of photosynthesis.</p>";
+          if (panel) panel.innerHTML = "<h2>🎉 Photosynthesis!</h2><p>Boom! Light + Water + CO₂ = <strong>Oxygen</strong> and <strong>Sugar</strong>. The plant just made its own food!</p>";
           if (oxygen) oxygen.classList.add('active');
           if (sugar) sugar.classList.add('active');
           if (plant) plant.classList.add('growing');
@@ -151,7 +172,7 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
           hasSun = true;
           sun.classList.add('active');
           sunBtn.disabled = true;
-          if (panel) panel.innerHTML = "<p><strong>Sunlight added.</strong> The plant now has a source of energy.</p>";
+          if (panel) panel.innerHTML = "<p><strong>Sunlight!</strong> ☀️ The plant is soaking up energy.</p>";
           checkPhotosynthesis();
         });
       }
@@ -161,7 +182,7 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
           hasWater = true;
           water.classList.add('active');
           waterBtn.disabled = true;
-          if (panel) panel.innerHTML = "<p><strong>Water added.</strong> It travels from the roots to the leaves.</p>";
+          if (panel) panel.innerHTML = "<p><strong>Slurp!</strong> 💧 Roots are drinking up water.</p>";
           checkPhotosynthesis();
         });
       }
@@ -171,12 +192,26 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
           hasCO2 = true;
           co2.classList.add('active');
           co2Btn.disabled = true;
-          if (panel) panel.innerHTML = "<p><strong>Carbon Dioxide (CO₂) added.</strong> The plant takes this in from the air.</p>";
+          if (panel) panel.innerHTML = "<p><strong>Breathe in...</strong> ☁️ The plant takes CO₂ from the air.</p>";
           checkPhotosynthesis();
         });
       }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            hasSun = false; hasWater = false; hasCO2 = false;
+            sunBtn.disabled = false; waterBtn.disabled = false; co2Btn.disabled = false;
+            sun.classList.remove('active');
+            water.classList.remove('active');
+            co2.classList.remove('active');
+            oxygen.classList.remove('active');
+            sugar.classList.remove('active');
+            plant.classList.remove('growing');
+            if (panel) panel.innerHTML = "## Photosynthesis 🌿\n\nPlants eat light! Click the buttons to give the plant what it needs.";
+        });
+      }
     `,
-    explanation: "## Photosynthesis\n\nThis is the process plants use to convert light energy into chemical energy. Start by providing the necessary elements for the plant to grow."
+    explanation: "## Photosynthesis 🌿\n\nPlants eat light! Click the buttons to give the plant what it needs to make food."
   },
   "CSS Flexbox": {
     html: `
@@ -187,23 +222,28 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
           <div class="flex-item">3</div>
         </div>
         <div class="flex-controls">
-          <label for="justify-content">justify-content:</label>
-          <select id="justify-content">
-            <option value="flex-start">flex-start</option>
-            <option value="flex-end">flex-end</option>
-            <option value="center">center</option>
-            <option value="space-between">space-between</option>
-            <option value="space-around">space-around</option>
-            <option value="space-evenly">space-evenly</option>
-          </select>
-          <label for="align-items">align-items:</label>
-          <select id="align-items">
-            <option value="stretch">stretch</option>
-            <option value="flex-start">flex-start</option>
-            <option value="flex-end">flex-end</option>
-            <option value="center">center</option>
-            <option value="baseline">baseline</option>
-          </select>
+          <div>
+            <label for="justify-content">justify-content</label>
+            <select id="justify-content">
+                <option value="flex-start">flex-start</option>
+                <option value="flex-end">flex-end</option>
+                <option value="center">center</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+                <option value="space-evenly">space-evenly</option>
+            </select>
+          </div>
+          <div>
+            <label for="align-items">align-items</label>
+            <select id="align-items">
+                <option value="stretch">stretch</option>
+                <option value="flex-start">flex-start</option>
+                <option value="flex-end">flex-end</option>
+                <option value="center">center</option>
+                <option value="baseline">baseline</option>
+            </select>
+          </div>
+          <button id="reset-btn">Reset</button>
         </div>
       </div>
     `,
@@ -217,50 +257,78 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
         height: 100%;
         padding: 2rem;
         box-sizing: border-box;
+        font-family: 'Outfit', sans-serif;
       }
       .flex-container {
         display: flex;
         width: 100%;
         max-width: 600px;
-        height: 200px;
-        background-color: #2d3748;
-        border: 2px solid #4a5568;
-        border-radius: 8px;
+        height: 250px;
+        background-color: #fff;
+        border: 3px solid black;
+        border-radius: 16px;
         margin-bottom: 2rem;
-        transition: all 0.3s ease-in-out;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 6px 6px 0px 0px #e5e7eb;
+        padding: 10px;
       }
       .flex-item {
-        background-color: #4299e1;
-        color: white;
+        background-color: #f472b6; /* pink-400 */
+        color: black;
         font-size: 2rem;
-        font-weight: bold;
+        font-weight: 900;
         display: flex;
         justify-content: center;
         align-items: center;
         min-width: 80px;
-        margin: 10px;
-        border-radius: 4px;
+        min-height: 80px;
+        margin: 5px;
+        border: 2px solid black;
+        border-radius: 12px;
         flex-grow: 0;
+        box-shadow: 3px 3px 0px black;
       }
+      .flex-item:nth-child(2) { background-color: #22d3ee; /* cyan-400 */ }
+      .flex-item:nth-child(3) { background-color: #a3e635; /* lime-400 */ }
+      
       .flex-controls {
         display: flex;
+        flex-wrap: wrap;
         gap: 20px;
-        align-items: center;
-        background-color: #1a202c;
-        padding: 1rem;
-        border-radius: 8px;
+        align-items: flex-end;
+        background-color: #fff;
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 3px solid black;
+        box-shadow: 6px 6px 0px black;
       }
       .flex-controls label {
-        font-size: 1rem;
-        color: #a0aec0;
+        font-size: 0.9rem;
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
       .flex-controls select {
-        background-color: #2d3748;
-        color: white;
-        border: 1px solid #4a5568;
-        padding: 0.5rem;
-        border-radius: 4px;
+        background-color: #fff;
+        color: black;
+        border: 2px solid black;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
         font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 2px 2px 0px #ccc;
+      }
+      .flex-controls button {
+        background: #000;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
       }
     `,
     js: `
@@ -268,13 +336,14 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
       const justifyContentSelect = document.querySelector('#justify-content');
       const alignItemsSelect = document.querySelector('#align-items');
       const panel = document.querySelector('#explanation-panel');
+      const resetBtn = document.querySelector('#reset-btn');
 
       if (justifyContentSelect && container) {
         justifyContentSelect.addEventListener('change', (e) => {
           const value = e.target.value;
           container.style.justifyContent = value;
           if (panel) {
-            panel.innerHTML = \`<h2>justify-content: \${value}</h2><p>This property aligns the items along the main axis (horizontally, in this case). Try other values to see how they differ.</p>\`;
+            panel.innerHTML = \`<h2>↔️ Justify Content</h2><p>You set it to <strong>\${value}</strong>. This moves the boxes horizontally (the main axis).</p>\`;
           }
         });
       }
@@ -284,103 +353,21 @@ export const PRESET_CONCEPTS: Record<string, GeneratedConcept> = {
           const value = e.target.value;
           container.style.alignItems = value;
           if (panel) {
-            panel.innerHTML = \`<h2>align-items: \${value}</h2><p>This property aligns the items along the cross axis (vertically). 'stretch' makes them fill the container's height.</p>\`;
+            panel.innerHTML = \`<h2>↕️ Align Items</h2><p>You set it to <strong>\${value}</strong>. This moves the boxes vertically (the cross axis).</p>\`;
           }
         });
       }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            container.style.justifyContent = 'flex-start';
+            container.style.alignItems = 'stretch';
+            justifyContentSelect.value = 'flex-start';
+            alignItemsSelect.value = 'stretch';
+            if (panel) panel.innerHTML = "## CSS Flexbox 📦\n\nFlexbox is magic for layouts! Use the dropdowns below to tell the boxes where to go.";
+        });
+      }
     `,
-    explanation: "## CSS Flexbox\n\nFlexbox is a layout model for arranging items in a single dimension (a row or a column). Use the controls to change the container's properties and see how the items react."
+    explanation: "## CSS Flexbox 📦\n\nFlexbox is magic for layouts! Use the dropdowns below to tell the boxes where to go."
   },
-  "Black Holes": {
-    html: `
-      <div class="gravity-well">
-        <div id="black-hole" class="black-hole"></div>
-        <div id="star" class="star"></div>
-        <div class="controls-bh">
-          <label for="mass-slider">Black Hole Mass</label>
-          <input type="range" id="mass-slider" min="50" max="200" value="100">
-        </div>
-      </div>
-    `,
-    css: `
-      .gravity-well {
-        width: 100%;
-        height: 100%;
-        background-color: #000;
-        background-image: radial-gradient(white 0.5px, transparent 0);
-        background-size: 20px 20px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .black-hole {
-        width: 100px;
-        height: 100px;
-        background-color: black;
-        border-radius: 50%;
-        position: absolute;
-        border: 2px solid #4a5568;
-        box-shadow: 0 0 0 5px black, 0 0 10px 5px #4c1d95;
-        transition: width 0.5s, height 0.5s, box-shadow 0.5s;
-      }
-      .star {
-        width: 30px;
-        height: 30px;
-        background-color: #f6e05e;
-        border-radius: 50%;
-        position: absolute;
-        left: 50px;
-        top: 50%;
-        box-shadow: 0 0 20px #f6e05e;
-        animation: orbit 10s linear infinite;
-      }
-      @keyframes orbit {
-        from { transform: rotate(0deg) translateX(250px) rotate(0deg); }
-        to   { transform: rotate(360deg) translateX(250px) rotate(-360deg); }
-      }
-      .controls-bh {
-        position: absolute;
-        bottom: 30px;
-        background: rgba(20,20,20,0.7);
-        padding: 1rem;
-        border-radius: 8px;
-        color: white;
-      }
-    `,
-    js: `
-      const blackHole = document.querySelector('#black-hole');
-      const massSlider = document.querySelector('#mass-slider');
-      const panel = document.querySelector('#explanation-panel');
-      const star = document.querySelector('#star');
-
-      if (massSlider && blackHole && star) {
-        massSlider.addEventListener('input', (e) => {
-          const mass = e.target.value;
-          const newSize = mass;
-          const animationDuration = 15 - (mass / 20);
-
-          blackHole.style.width = \`\${newSize}px\`;
-          blackHole.style.height = \`\${newSize}px\`;
-          blackHole.style.boxShadow = \`0 0 0 5px black, 0 0 \${10 + mass / 10}px 5px #4c1d95\`;
-          
-          // This is a robust way to restart a CSS animation.
-          // It avoids the race-condition bug caused by cloning and replacing the node.
-          star.style.animation = 'none';
-          void star.offsetWidth; // Trigger a DOM reflow
-          star.style.animation = \`orbit \${animationDuration}s linear infinite\`;
-
-          if (panel) {
-            if (mass > 150) {
-              panel.innerHTML = \`<h2>High Mass!</h2><p>The black hole's immense gravity warps spacetime significantly, pulling the star into a tighter, faster orbit. The 'event horizon' (the black circle) is now much larger.</p>\`;
-            } else {
-              panel.innerHTML = \`<h2>Mass Changed</h2><p>As you increase the black hole's mass, its gravitational pull intensifies. Notice how the star's orbit is affected.</p>\`;
-            }
-          }
-        });
-      }
-    `,
-    explanation: "## Black Holes\n\nA black hole is a region of spacetime where gravity is so strong that nothing—no particles or even electromagnetic radiation such as light—can escape from it. Adjust the black hole's mass to see how its gravity affects a nearby star."
-  }
 };

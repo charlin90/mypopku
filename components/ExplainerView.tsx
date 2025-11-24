@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -11,17 +12,11 @@ interface ExplainerViewProps {
 }
 
 const LoadingSpinnerInline: React.FC = () => (
-    <svg className="animate-spin h-5 w-5 text-teal-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
+    <div className="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></div>
 );
 
 
-// Configure marked to be more robust by default.
 const renderer = new marked.Renderer();
-// FIX: The function signature for custom renderers has changed in recent versions of `marked`.
-// We now receive a `token` object instead of separate `text` and `level` arguments.
 renderer.heading = (token: Tokens.Heading) => {
   return `<h${token.depth}>${token.text}</h${token.depth}>`;
 };
@@ -55,8 +50,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     if (hasClickedAha) return;
     setHasClickedAha(true);
     setPanelPulsing(true);
-    
-    // Remove the class after the animation is done
     setTimeout(() => setPanelPulsing(false), 700);
   };
 
@@ -73,8 +66,8 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         const screenshotCanvas = viewRef.current
             ? await html2canvas(viewRef.current, { 
                 useCORS: true, 
-                backgroundColor: '#111827', // Match app background
-                logging: false, // Suppress library console logs
+                backgroundColor: '#fffbeb', // Match app background (amber-50)
+                logging: false, 
               })
             : null;
         
@@ -130,17 +123,14 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
 
-  // Effect to handle asynchronous markdown parsing
   useEffect(() => {
     if (content.explanation) {
-      // marked.parse is async, so we must await its result
       (async () => {
         try {
           const parsedHtml = await marked.parse(content.explanation);
           setInitialHtml(parsedHtml as string);
         } catch (error) {
-          console.error("Error parsing markdown:", error);
-          setInitialHtml("<p>Error loading initial explanation.</p>");
+          setInitialHtml("<p>Error loading explanation.</p>");
         }
       })();
     } else {
@@ -152,12 +142,8 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   useEffect(() => {
     if (!content) return;
 
-    if (!document.head || !document.body) {
-      console.error("DOM not ready or has been destroyed. Cannot inject dynamic content.");
-      return;
-    }
+    if (!document.head || !document.body) return;
 
-    // Inject CSS
     const styleElement = document.createElement('style');
     styleElement.id = 'dynamic-concept-styles';
     styleElement.innerHTML = content.css;
@@ -176,7 +162,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
               console.error('Error executing dynamic concept script:', e);
             }
           `);
-          // Use timeout to ensure DOM is ready after script load
           scriptRunnerTimeoutId = window.setTimeout(runScript, 100);
         } catch (e) {
           console.error("Syntax error in AI-generated JavaScript:", e);
@@ -188,62 +173,40 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
       libraryScriptElement = document.createElement('script');
       libraryScriptElement.id = 'dynamic-concept-library';
       libraryScriptElement.src = content.libraryUrl;
-      libraryScriptElement.async = true; // Load async to not block rendering
+      libraryScriptElement.async = true; 
       libraryScriptElement.onload = () => {
-        console.log(`Library loaded: ${content.libraryUrl}`);
         runAiScript();
-      };
-      libraryScriptElement.onerror = () => {
-        console.error(`Failed to load library: ${content.libraryUrl}`);
       };
       document.body.appendChild(libraryScriptElement);
     } else {
-      // No library, just run the script directly.
       runAiScript();
     }
 
     return () => {
-      // Cleanup on unmount
       const style = document.getElementById('dynamic-concept-styles');
       if (style) style.remove();
-
       if (libraryScriptElement) libraryScriptElement.remove();
-      
-      if (scriptRunnerTimeoutId) {
-        clearTimeout(scriptRunnerTimeoutId);
-      }
+      if (scriptRunnerTimeoutId) clearTimeout(scriptRunnerTimeoutId);
     };
   }, [content]);
+
+  const buttonStyle = "bg-white border-2 border-black text-black font-bold py-2 px-4 rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all";
 
   return (
     <>
        <style>{`
         @keyframes pulse-border {
-            0% {
-                box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.5);
-                border-color: rgba(45, 212, 191, 0.9);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(45, 212, 191, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
-                border-color: rgba(45, 212, 191, 0.9);
-            }
+            0% { box-shadow: 4px 4px 0px 0px #000; border-color: #000; }
+            50% { box-shadow: 0 0 0 8px rgba(253, 224, 71, 0.5); border-color: #000; } 
+            100% { box-shadow: 4px 4px 0px 0px #000; border-color: #000; }
         }
         .pulse-border-animation {
-            animation: pulse-border 0.7s ease-out;
+            animation: pulse-border 0.5s ease-out;
         }
 
         @keyframes fly-out {
-            0% {
-                transform: translate(0, 0) scale(var(--s, 1));
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--x), var(--y)) scale(0);
-                opacity: 0;
-            }
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
         .particle {
             position: absolute;
@@ -251,39 +214,26 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
             top: 50%;
             width: 8px;
             height: 8px;
-            background-color: #5eead4; /* teal-300 */
+            background-color: #f472b6; 
+            border: 1px solid black;
             border-radius: 50%;
             animation: fly-out var(--d, 0.5s) ease-out forwards;
-            margin-left: -4px;
-            margin-top: -4px;
         }
        `}</style>
-      <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-3 sm:gap-5 box-border bg-gray-900">
-        <div className="absolute top-4 left-4 flex gap-4 z-20">
-            <button 
-                onClick={onBack} 
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Go back"
-            >
+      <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-4 box-border bg-amber-50">
+        <div className="absolute top-4 left-4 flex gap-3 z-30">
+            <button onClick={onBack} className={buttonStyle} aria-label="Go back">
                 Back
             </button>
-            <button 
-                onClick={handleShareClick} 
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Share experiment"
-            >
+            <button onClick={handleShareClick} className={buttonStyle} aria-label="Share experiment">
                 Share
             </button>
-            <button 
-                onClick={() => setShowPromptModal(true)} 
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Show prompt"
-            >
+            <button onClick={() => setShowPromptModal(true)} className={buttonStyle} aria-label="Show prompt">
                 Prompt
             </button>
         </div>
 
-        <div className="col-span-1 lg:col-span-2 bg-gray-950 rounded-2xl relative overflow-y-auto shadow-2xl border border-gray-800">
+        <div className="col-span-1 lg:col-span-2 bg-white rounded-3xl relative overflow-y-auto shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
           <div 
             id="interactive-stage"
             ref={stageRef}
@@ -292,23 +242,22 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
           ></div>
         </div>
         
-        <div className="relative col-span-1">
+        <div className="relative col-span-1 flex flex-col h-full overflow-hidden">
           <div 
             id="explanation-panel"
             ref={panelRef}
-            className={`h-full col-span-1 bg-gray-800/50 backdrop-blur-sm border rounded-2xl p-4 md:p-8 overflow-y-auto prose prose-invert text-2xl leading-normal text-gray-300 [&>p]:mb-8 prose-headings:text-teal-300 prose-strong:text-gray-100 prose-code:bg-gray-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md pb-28 transition-colors duration-300 ${panelPulsing ? 'pulse-border-animation' : 'border-gray-700'}`}
+            className={`flex-grow bg-white border-4 border-black rounded-3xl p-6 overflow-y-auto prose prose-neutral text-lg leading-relaxed text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-colors duration-300 ${panelPulsing ? 'pulse-border-animation bg-yellow-50' : ''}`}
             dangerouslySetInnerHTML={{ __html: initialHtml }}
           >
           </div>
-           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-auto flex justify-center">
+           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-auto flex justify-center z-20">
                 <button
                     onClick={handleAhaClick}
                     disabled={hasClickedAha}
-                    className={`relative overflow-hidden flex items-center justify-center gap-3 w-48 h-14 rounded-full font-semibold transition-all duration-300 group ${hasClickedAha
-                            ? 'bg-teal-500 text-gray-900 cursor-not-allowed'
-                            : 'border-2 border-teal-400/50 text-teal-300 hover:bg-teal-400/10 hover:border-teal-400 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)]'
+                    className={`relative overflow-hidden flex items-center justify-center gap-2 w-48 h-14 rounded-2xl font-black text-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all ${hasClickedAha
+                            ? 'bg-yellow-300 text-black cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-x-[4px] translate-y-[4px]'
+                            : 'bg-white text-black hover:bg-yellow-200 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'
                         }`}
-                    aria-live="polite"
                 >
                     {hasClickedAha && Array.from({ length: 15 }).map((_, i) => {
                         const angle = Math.random() * 360;
@@ -322,14 +271,13 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                                 style={{
                                     '--x': `${x}px`,
                                     '--y': `${y}px`,
-                                    '--s': `${0.5 + Math.random() * 0.5}`,
-                                    '--d': `${0.4 + Math.random() * 0.3}s`
+                                    '--d': `${0.4 + Math.random() * 0.3}s`,
+                                    backgroundColor: ['#f472b6', '#a3e635', '#22d3ee'][Math.floor(Math.random()*3)]
                                 } as React.CSSProperties}
                             />
                         );
                     })}
-                    <span className="relative z-10 text-2xl transition-transform duration-300 group-hover:scale-125">💡</span>
-                    <span className="relative z-10 text-lg">{hasClickedAha ? 'Awesome!' : 'I get it!'}</span>
+                    <span>{hasClickedAha ? 'Awesome!' : 'I get it! 💡'}</span>
                 </button>
             </div>
         </div>
@@ -337,46 +285,45 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
       </div>
 
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Share Experiment</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-3xl font-black text-black">Share It!</h2>
 
                 {isSharing && (
-                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg text-gray-300">
-                        <div className="w-full aspect-video bg-gray-700/50 rounded-lg flex items-center justify-center animate-pulse">
-                            <svg className="w-10 h-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
+                         <div className="w-full aspect-video bg-gray-100 border-2 border-black rounded-lg flex items-center justify-center animate-pulse">
+                            📸 Snapping...
                         </div>
                         <div className="flex items-center gap-3 mt-2">
                             <LoadingSpinnerInline />
-                            <span>Generating preview & link...</span>
+                            <span>Creating your link...</span>
                         </div>
                     </div>
                 )}
                 
                 {shareError && (
-                    <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
-                        <p className="font-bold">Could not create link</p>
-                        <p className="text-sm mt-1">{shareError}</p>
+                    <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl font-bold">
+                        <p>Oops! {shareError}</p>
                     </div>
                 )}
 
                 {!isSharing && shareUrl && (
-                     <div className="flex flex-col gap-3">
+                     <div className="flex flex-col gap-4">
                         {screenshotUrl && (
-                          <div className="border border-gray-700 rounded-lg overflow-hidden shadow-lg">
-                            <img src={screenshotUrl} alt="A screenshot of the interactive experiment" className="w-full h-auto object-contain" />
+                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1">
+                            <img src={screenshotUrl} alt="Screenshot" className="w-full h-auto object-contain" />
                           </div>
                         )}
-                        <p className="text-gray-400 text-sm">Your unique link is ready. Sharing will add your creation to the public community page.</p>
+                        <p className="text-black font-medium">Here is your magic link:</p>
                         <div className="flex items-center gap-2">
-                            <input type="text" readOnly value={shareUrl} className="w-full px-4 py-2 text-gray-100 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                            <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center flex-shrink-0">
+                            <input type="text" readOnly value={shareUrl} className="w-full px-4 py-3 text-black bg-gray-50 border-2 border-black rounded-xl font-mono focus:outline-none focus:ring-4 focus:ring-pink-200" />
+                            <button onClick={handleCopy} className="bg-teal-300 border-2 border-black text-black font-bold py-3 px-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex-shrink-0 w-24">
                                 {copyButtonText}
                             </button>
                         </div>
                     </div>
                 )}
-                 <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
+                 <button onClick={closeShareModal} className="mt-2 bg-gray-200 hover:bg-gray-300 text-black border-2 border-black font-bold py-2 px-6 rounded-xl self-end">
                     Close
                 </button>
             </div>
@@ -384,17 +331,17 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
       )}
 
       {showPromptModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Generation Prompt</h2>
-                <div className="bg-gray-900 border border-gray-700 rounded-md p-4 text-gray-300 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-2xl font-black text-black">The Secret Recipe 🤫</h2>
+                <div className="bg-gray-50 border-2 border-black rounded-xl p-4 text-gray-800 max-h-96 overflow-y-auto font-mono text-sm shadow-inner">
                     <p className="whitespace-pre-wrap">{prompt}</p>
                 </div>
                 <div className="flex justify-end gap-3 mt-4">
-                    <button onClick={handleCopyPrompt} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+                    <button onClick={handleCopyPrompt} className="bg-lime-300 hover:bg-lime-400 border-2 border-black text-black font-bold py-2 px-4 rounded-xl shadow-[3px_3px_0px_0px_black] transition-all w-28">
                         {promptCopyButtonText}
                     </button>
-                    <button onClick={() => setShowPromptModal(false)} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors">
+                    <button onClick={() => setShowPromptModal(false)} className="bg-gray-200 hover:bg-gray-300 border-2 border-black text-black font-bold py-2 px-6 rounded-xl">
                         Close
                     </button>
                 </div>

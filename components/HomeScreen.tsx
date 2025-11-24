@@ -1,186 +1,134 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import type { EncyclopediaEntry } from '../types.js';
+import type { CommunityShare } from '../types.js';
+import { LoadingSpinner } from './LoadingSpinner.js';
 
-// --- TYPE DEFINITIONS ---
-// These interfaces define the structure for the dynamically processed encyclopedia data
-export interface EncyclopediaConcept {
-  name: string;
-  description: string;
-  imageUrl: string;
-  blobUrl: string;
-}
-
-export interface EncyclopediaCategory {
-  name: string;
-  icon: React.FC<{ className?: string }>;
-  concepts: EncyclopediaConcept[];
-}
-
-
-// --- PROPS INTERFACE ---
 interface HomeScreenProps {
-  onConceptSubmit: (concept: string) => void;
-  onCreativeSubmit: (prompt: string) => void;
-  onFileUpload: (htmlContent: string, fileName: string, screenshotDataUrl: string) => void;
+  onUnifiedSubmit: (input: string) => void;
+  onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
-  onShowCommunity: () => void;
   isLoading: boolean;
   error: string | null;
 }
 
-// --- SVG ICONS ---
-// These icons are now defined locally as data/encyclopedia.ts has been removed.
-const DiscordIcon: React.FC = () => (
-    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-        <path d="M20.3 4.4c-1.4-.9-3-1.6-4.6-1.9a.7.7 0 0 0-.7.1l-.4 2.1a15.2 15.2 0 0 0-5.2 0l-.4-2.1a.7.7 0 0 0-.7-.1c-1.7.3-3.3.9-4.7 1.9a.7.7 0 0 0-.2.8l1.8 5.9a15.3 15.3 0 0 0-4.5 4.1.7.7 0 0 0 .2 1c2.8 1.8 5.2 2.2 7.4 2.2h.1c2.2 0 4.6-.4 7.4-2.2a.7.7 0 0 0 .2-1 15.3 15.3 0 0 0-4.5-4.1l1.8-5.9a.7.7 0 0 0-.2-.8zM12 15.4c-1.4 0-2.6-1.2-2.6-2.7s1.2-2.7 2.6-2.7c1.4 0 2.6 1.2 2.6 2.7s-1.2 2.7-2.6 2.7zm3.4-5.8c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7zm-6.8 0c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7c.9 0 1.6.8 1.6 1.7s-.7 1.7-1.6 1.7z" />
-    </svg>
+const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = ({ item, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
+  >
+    <div className="absolute top-2 right-2 z-10">
+        <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
+            {item.type === 'learn' ? 'LEARN' : 'CREATE'}
+        </span>
+    </div>
+    <div className="w-full aspect-video bg-gray-100 border-b-2 border-black overflow-hidden relative">
+      {item.screenshotUrl ? (
+        <img
+          src={item.screenshotUrl}
+          alt={`Preview for ${item.prompt}`}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          loading="lazy"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-white">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-12 h-12">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+            </svg>
+        </div>
+      )}
+    </div>
+    <div className="p-4 flex flex-col flex-grow bg-white">
+      <p className="text-sm font-bold text-black flex-grow line-clamp-3 leading-snug" title={item.prompt}>
+        {item.prompt}
+      </p>
+      <div className="mt-3 text-xs font-mono text-gray-500 text-right">
+        {new Date(item.createdAt).toLocaleDateString()}
+      </div>
+    </div>
+  </button>
 );
-const EmailIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6" role="img" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-    </svg>
-);
-const PhysicsIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => React.createElement('svg',{xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24",strokeWidth:1.5,stroke:"currentColor",className:className},React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M11.25 4.5A7.5 7.5 0 0 1 18.75 12a7.5 7.5 0 0 1-7.5 7.5m-5.625-15A7.5 7.5 0 0 0 3.75 12a7.5 7.5 0 0 0 1.875 4.995M14.25 12a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"}));
-const BiologyIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => React.createElement('svg',{xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24",strokeWidth:1.5,stroke:"currentColor",className:className},React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M3.75 12.75c0-1.02.57-1.921 1.423-2.417C6.32 9.69 8.03 9 9.75 9h4.5c1.72 0 3.43.69 4.577 1.333 1.147.644 1.147 2.19 0 2.834C17.68 14.31 15.97 15 14.25 15h-4.5c-1.72 0-3.43-.69-4.577-1.333A2.625 2.625 0 0 1 3.75 12.75Z"}),React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M3.75 6.75c0-1.02.57-1.921 1.423-2.417C6.32 3.69 8.03 3 9.75 3h4.5c1.72 0 3.43.69 4.577 1.333 1.147.644 1.147 2.19 0 2.834C17.68 7.31 15.97 8 14.25 8h-4.5c-1.72 0-3.43-.69-4.577-1.333A2.625 2.625 0 0 1 3.75 6.75Z"}),React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M3.75 18.75c0-1.02.57-1.921 1.423-2.417C6.32 15.69 8.03 15 9.75 15h4.5c1.72 0 3.43.69 4.577 1.333 1.147.644 1.147 2.19 0 2.834C17.68 19.31 15.97 20 14.25 20h-4.5c-1.72 0-3.43-.69-4.577-1.333A2.625 2.625 0 0 1 3.75 18.75Z"}));
-const ComputerScienceIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => React.createElement('svg',{xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24",strokeWidth:1.5,stroke:"currentColor",className:className},React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"}));
-const GridIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => React.createElement('svg',{xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24",strokeWidth:1.5,stroke:"currentColor",className:className},React.createElement('path',{strokeLinecap:"round",strokeLinejoin:"round",d:"M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 8.25 20.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"}));
 
-// --- CATEGORY MAPPING ---
-// Maps category keys from the database to display names and icons.
-const categoryDetails: Record<string, { displayName: string, icon: React.FC<{ className?: string }> }> = {
-    'physics': { displayName: 'Physics', icon: PhysicsIcon },
-    'biology': { displayName: 'Biology', icon: BiologyIcon },
-    'programming': { displayName: 'Computer Science', icon: ComputerScienceIcon },
-};
-
-// --- DATA PROCESSING UTILITY ---
-// This function transforms the flat list of entries from the API into a structured array of categories.
-const processEntriesIntoCategories = (entries: EncyclopediaEntry[]): EncyclopediaCategory[] => {
-    const categoriesMap: Record<string, EncyclopediaConcept[]> = {};
-
-    entries.forEach(entry => {
-        if (!categoriesMap[entry.category]) {
-            categoriesMap[entry.category] = [];
-        }
-        categoriesMap[entry.category].push({
-            name: entry.title,
-            description: entry.description,
-            imageUrl: entry.previewImageUrl,
-            blobUrl: entry.blobUrl,
-        });
-    });
-
-    const baseCategories: EncyclopediaCategory[] = Object.keys(categoriesMap).map(categoryKey => {
-        const details = categoryDetails[categoryKey.toLowerCase()] || { displayName: categoryKey, icon: GridIcon };
-        return {
-            name: details.displayName,
-            icon: details.icon,
-            concepts: categoriesMap[categoryKey],
-        };
-    }).sort((a, b) => a.name.localeCompare(b.name));
-
-    const allConcepts = entries.map(entry => ({
-        name: entry.title,
-        description: entry.description,
-        imageUrl: entry.previewImageUrl,
-        blobUrl: entry.blobUrl,
-    }));
-
-    const allCategory: EncyclopediaCategory = {
-        name: 'All',
-        icon: GridIcon,
-        concepts: allConcepts,
-    };
-
-    return [allCategory, ...baseCategories];
-};
-
-// --- MAIN COMPONENT ---
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
-  onConceptSubmit,
-  onCreativeSubmit,
+  onUnifiedSubmit,
   onFileUpload,
   onLoadBlobConcept,
-  onShowCommunity,
   isLoading, 
   error,
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const [activeMode, setActiveMode] = useState<'learn' | 'create' | 'encyclopedia'>('learn');
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Community Feed State
+  const [shares, setShares] = useState<CommunityShare[]>([]);
+  const [isFeedLoading, setIsFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
 
-  // State for dynamically loaded encyclopedia data
-  const [encyclopediaCategories, setEncyclopediaCategories] = useState<EncyclopediaCategory[]>([]);
-  const [isEncyclopediaLoading, setIsEncyclopediaLoading] = useState(false);
-  const [encyclopediaError, setEncyclopediaError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-
-  // State for Create mode
-  const [createPrompt, setCreatePrompt] = useState('');
-  const createFormRef = useRef<HTMLFormElement>(null);
+  // Upload Modal State
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [htmlFile, setHtmlFile] = useState<File | null>(null);
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [uploadPrompt, setUploadPrompt] = useState('');
 
+  // Dropdown / Search State
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch encyclopedia data when the mode is active and data hasn't been loaded yet.
+  // Fetch community shares on mount
   useEffect(() => {
-    const fetchEncyclopedia = async () => {
-        setIsEncyclopediaLoading(true);
-        setEncyclopediaError(null);
-        try {
-            const response = await fetch('/api/encyclopedia');
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to load the encyclopedia.');
-            }
-            const entries: EncyclopediaEntry[] = await response.json();
-            const processed = processEntriesIntoCategories(entries);
-            setEncyclopediaCategories(processed);
-            if (processed.length > 0) {
-                setSelectedCategory(processed[0].name); // Default to 'All'
-            }
-        } catch (err) {
-            setEncyclopediaError(err instanceof Error ? err.message : String(err));
-        } finally {
-            setIsEncyclopediaLoading(false);
+    const fetchCommunityShares = async () => {
+      setIsFeedLoading(true);
+      setFeedError(null);
+      try {
+        const response = await fetch('/api/community');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to load community creations.');
         }
+        const data: CommunityShare[] = await response.json();
+        setShares(data.sort((a, b) => b.createdAt - a.createdAt));
+      } catch (err) {
+        setFeedError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setIsFeedLoading(false);
+      }
     };
+    fetchCommunityShares();
+  }, []);
 
-    if (activeMode === 'encyclopedia' && encyclopediaCategories.length === 0 && !isEncyclopediaLoading) {
-        fetchEncyclopedia();
-    }
-  }, [activeMode, encyclopediaCategories.length, isEncyclopediaLoading]);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  
-  const currentCategory = encyclopediaCategories.find(cat => cat.name === selectedCategory);
-  
-  const filteredConcepts = currentCategory?.concepts.filter(concept => {
-    const query = searchQuery.toLowerCase();
-    return (
-      concept.name.toLowerCase().includes(query) ||
-      concept.description.toLowerCase().includes(query)
-    );
-  }) ?? [];
+  const filteredShares = inputValue.trim().length > 1 
+    ? shares.filter(item => item.prompt.toLowerCase().includes(inputValue.toLowerCase().trim())).slice(0, 4)
+    : [];
 
-  const handleLearnSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputValue && !isLoading) {
-      onConceptSubmit(inputValue);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setShowDropdown(true);
   };
 
-  const handleCreativeSubmit = (e: React.FormEvent) => {
+  const handleExistingSelect = (blobUrl: string) => {
+    onLoadBlobConcept(blobUrl);
+    setShowDropdown(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (createPrompt.trim() && !isLoading) {
-      onCreativeSubmit(createPrompt);
+    setShowDropdown(false);
+    if (inputValue && !isLoading) {
+      onUnifiedSubmit(inputValue);
     }
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!htmlFile || !screenshotFile || isLoading) return;
+    if (!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading) return;
 
     try {
       const [htmlContent, screenshotDataUrl] = await Promise.all([
@@ -193,284 +141,221 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         })
       ]);
 
-      onFileUpload(htmlContent, htmlFile.name, screenshotDataUrl);
+      onFileUpload(htmlContent, uploadPrompt, screenshotDataUrl);
 
       setHtmlFile(null);
       setScreenshotFile(null);
+      setUploadPrompt('');
       setShowUploadForm(false);
     } catch (error) {
       console.error("Error reading files for upload:", error);
     }
   };
 
-  const handleCreateKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (createFormRef.current) {
-        createFormRef.current.requestSubmit();
-      }
-    }
-  };
-  
-  const descriptionText = activeMode === 'learn'
-    ? "Enter a concept, and the AI will create an interactive experiment to help you understand it."
-    : activeMode === 'create'
-    ? "Describe an interactive component, and let the AI bring it to life from scratch."
-    : "Explore our interactive encyclopedia. Search or browse by category.";
+  const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-gray-900 relative">
-      <header className="absolute top-6 right-6 z-10 flex items-center space-x-4">
-        <button
-          onClick={onShowCommunity}
-          className="px-6 py-2 rounded-full text-sm font-semibold transition-all border text-gray-400 bg-gray-800/80 border-gray-700 hover:bg-gray-700/50 backdrop-blur-sm"
-        >
-          Community
-        </button>
-        <button
-          onClick={() => {
-            if (activeMode === 'encyclopedia') {
-              setActiveMode('learn');
-            } else {
-              setActiveMode('encyclopedia');
-            }
-          }}
-          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all border ${
-            activeMode === 'encyclopedia'
-              ? 'bg-teal-500 text-white border-transparent'
-              : 'text-gray-400 bg-gray-800/80 border-gray-700 hover:bg-gray-700/50 backdrop-blur-sm'
-          }`}
-        >
-          {activeMode === 'encyclopedia' ? 'Back' : 'Encyclopedia'}
-        </button>
+    <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
+      
+      {/* Sticky Header */}
+      <header className="flex-none w-full h-20 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0">
+         {/* Left: Logo */}
+         <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2 flex-shrink-0">
+             <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
+                 X
+             </div>
+             <span className="hidden sm:inline">Concept Lab</span>
+         </div>
+
+         {/* Center: Unified Input Omni-box */}
+         <div className="flex-grow max-w-2xl mx-4 relative z-50" ref={searchContainerRef}>
+             <form onSubmit={handleSubmit} className="relative z-20">
+                 <input
+                     type="text"
+                     value={inputValue}
+                     onChange={handleInputChange}
+                     onFocus={() => setShowDropdown(true)}
+                     className="w-full h-12 rounded-full border-2 border-black px-6 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all bg-white hover:bg-gray-50 placeholder-gray-400"
+                     placeholder="Search or type to create..."
+                     disabled={isLoading}
+                 />
+                 <button type="submit" className="absolute right-2 top-1.5 bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors" disabled={isLoading}>
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                     </svg>
+                 </button>
+             </form>
+
+             {/* Omni-box Dropdown */}
+             {showDropdown && inputValue.trim().length > 1 && (
+                <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden z-10 flex flex-col animate-fade-in-up">
+                    {filteredShares.length > 0 && (
+                        <div className="flex flex-col border-b-2 border-black">
+                             <div className="px-4 py-2 bg-gray-50 border-b-2 border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Found in Gallery
+                             </div>
+                             {filteredShares.map(share => (
+                                <button 
+                                    key={share.id}
+                                    onClick={() => handleExistingSelect(share.blobUrl)}
+                                    className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
+                                >
+                                     <div className="w-10 h-8 bg-gray-200 rounded border border-black overflow-hidden flex-shrink-0">
+                                        {share.screenshotUrl ? <img src={share.screenshotUrl} alt="" className="w-full h-full object-cover" /> : null}
+                                     </div>
+                                     <div className="flex-grow min-w-0">
+                                        <p className="text-sm font-bold text-black truncate">{share.prompt}</p>
+                                        <p className="text-xs text-gray-500">{new Date(share.createdAt).toLocaleDateString()}</p>
+                                     </div>
+                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>
+                                        {share.type === 'learn' ? 'LEARN' : 'APP'}
+                                     </span>
+                                </button>
+                             ))}
+                        </div>
+                    )}
+                    
+                    <button 
+                        onClick={() => {
+                            onUnifiedSubmit(inputValue);
+                            setShowDropdown(false);
+                        }}
+                        className="text-left px-4 py-4 hover:bg-gray-50 flex items-center gap-3 text-black group"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                             </svg>
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Generate New</p>
+                            <p className="text-xs text-gray-500">Create a brand new concept for "{inputValue}"</p>
+                        </div>
+                    </button>
+                </div>
+             )}
+         </div>
+
+         {/* Right: Upload Button */}
+         <button 
+            onClick={() => setShowUploadForm(true)} 
+            className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+         >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            <span className="hidden md:inline">Upload</span>
+         </button>
       </header>
 
-      <main className="flex-grow w-full p-4 overflow-y-auto flex flex-col items-center">
-        <div className="flex flex-col items-center text-center w-full max-w-7xl pt-24 pb-0 flex-shrink-0">
-          <div className="mb-6">
-            <svg className="w-24 h-24 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.624l.259 1.035L18 21.75l-.843-2.846a4.5 4.5 0 00-3.09-3.09L11.25 15l2.846-.813a4.5 4.5 0 003.09-3.09l.813-2.846L18 9.75l-.813 2.846a4.5 4.5 0 00-3.09 3.09L11.25 15l2.846.813a4.5 4.5 0 003.09 3.09z" />
-            </svg>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-teal-300 via-sky-400 to-indigo-400 text-transparent bg-clip-text mb-3">
-            Concept X Lab
-          </h1>
-          <p className="text-lg text-gray-400 mb-8 max-w-2xl">{descriptionText}</p>
-          
-          {activeMode !== 'encyclopedia' && (
-            <div className="bg-gray-800 p-1 rounded-full flex items-center space-x-1 mb-8 shadow-inner">
-              <button onClick={() => setActiveMode('learn')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeMode === 'learn' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Learn</button>
-              <button onClick={() => setActiveMode('create')} className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${activeMode === 'create' ? 'bg-teal-500 text-white' : 'text-gray-400 hover:bg-gray-700/50'}`}>Create</button>
-            </div>
-          )}
-
+      {/* Main Content: Community Grid */}
+      <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white relative z-0">
+          {/* Global Error Display */}
           {error && (
-            <div className="w-full max-w-2xl mb-6 text-left">
-              <pre className="text-red-300 bg-red-900/30 border border-red-700 p-4 rounded-lg whitespace-pre-wrap text-xs font-mono overflow-x-auto">
-                <code>{error}</code>
-              </pre>
+            <div className="w-full max-w-3xl mx-auto mb-8 animate-bounce">
+                <div className="bg-red-100 border-2 border-red-500 text-red-600 p-4 rounded-xl font-bold shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] flex items-center gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    {error}
+                </div>
             </div>
           )}
 
-          <div className="w-full max-w-7xl min-h-[300px]">
-            {/* LEARN VIEW */}
-            {activeMode === 'learn' && (
-              <div className="flex flex-col items-center w-full">
-                <form onSubmit={handleLearnSubmit} className="w-full max-w-lg">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="e.g., CSS Flexbox, Black Holes"
-                    className="w-full px-6 py-4 text-lg text-center text-gray-100 bg-gray-800 border-2 border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow"
-                    disabled={isLoading}
-                  />
-                </form>
-                <div className="mt-8">
-                    <a href="https://discord.gg/x4am4gaRZY" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-teal-500/20 transform hover:-translate-y-1">
-                        <DiscordIcon />
-                        <span>Join our Discord</span>
-                    </a>
-                </div>
-              </div>
-            )}
-
-            {/* CREATE VIEW */}
-            {activeMode === 'create' && (
-              <div className="flex flex-col items-center w-full">
-                <form ref={createFormRef} onSubmit={handleCreativeSubmit} className="w-full max-w-2xl">
-                    <textarea
-                        value={createPrompt}
-                        onChange={(e) => setCreatePrompt(e.target.value)}
-                        onKeyDown={handleCreateKeyDown}
-                        placeholder="Describe an interactive experience... e.g., a relaxing particle simulation that reacts to mouse movement. Press Enter to generate."
-                        className="w-full px-6 py-4 text-lg text-gray-100 bg-gray-800 border-2 border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow resize-none h-32"
-                        rows={3}
-                        disabled={isLoading}
-                    />
-                </form>
-                {!showUploadForm ? (
-                  <div className="mt-4 text-sm text-gray-400">
-                    Don't need AI?{' '}
-                    <button
-                      onClick={() => setShowUploadForm(true)}
-                      className="underline hover:text-teal-400 transition-colors focus:outline-none"
-                    >
-                      Upload existing html file
-                    </button>
-                  </div>
+          {/* Feed Content */}
+          {isFeedLoading ? (
+             <div className="flex justify-center items-center h-64">
+                <div className="w-12 h-12 border-4 border-black border-t-pink-500 rounded-full animate-spin"></div>
+             </div>
+          ) : feedError ? (
+             <div className="text-center py-10 bg-gray-50 border-2 border-black rounded-xl max-w-md mx-auto">
+                <p className="text-lg font-bold">Failed to load feed</p>
+                <button onClick={() => window.location.reload()} className="mt-2 text-pink-500 font-bold underline">Retry</button>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                {shares.length > 0 ? (
+                    shares.map(item => (
+                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
+                    ))
                 ) : (
-                  <form onSubmit={handleUploadSubmit} className="mt-6 w-full max-w-lg bg-gray-800 border border-gray-700 rounded-lg p-6 flex flex-col gap-4 animate-fade-in">
-                    <h3 className="text-lg font-semibold text-center text-gray-200">Upload Your Creation</h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2 text-left">HTML File*</label>
-                      <div className="flex items-center">
-                        <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-full border-0 text-sm font-semibold bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-colors shrink-0">
-                          Choose File
-                        </label>
-                        <input
-                          id="html-upload"
-                          type="file"
-                          onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                          accept="text/html,.html"
-                          required
-                        />
-                        <span className="ml-4 text-sm text-gray-400 truncate">
-                          {htmlFile ? htmlFile.name : 'No file chosen'}
-                        </span>
-                      </div>
+                    <div className="col-span-full text-center py-20">
+                        <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
+                        <p className="text-gray-400">Be the first to create something.</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2 text-left">Screenshot Image*</label>
-                       <div className="flex items-center">
-                        <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-full border-0 text-sm font-semibold bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-colors shrink-0">
-                          Choose File
-                        </label>
-                        <input
-                          id="screenshot-upload"
-                          type="file"
-                          onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                          accept="image/*"
-                          required
-                        />
-                         <span className="ml-4 text-sm text-gray-400 truncate">
-                          {screenshotFile ? screenshotFile.name : 'No file chosen'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-3 mt-2">
-                      <button type="button" onClick={() => setShowUploadForm(false)} className="px-4 py-2 rounded-md text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={!htmlFile || !screenshotFile || isLoading}
-                        className="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      >
-                        Upload & Share
-                      </button>
-                    </div>
-                  </form>
                 )}
-              </div>
-            )}
-
-
-            {/* ENCYCLOPEDIA VIEW */}
-            {activeMode === 'encyclopedia' && (
-              <>
-                {isEncyclopediaLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                      <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                ) : encyclopediaError ? (
-                    <div className="text-center py-10 text-red-400 bg-red-900/20 border border-red-800 rounded-lg max-w-md mx-auto">
-                        <p className="text-lg font-semibold">Could not load encyclopedia</p>
-                        <p className="mt-1 text-red-300">{encyclopediaError}</p>
-                    </div>
-                ) : (
-                  <div className="flex flex-col items-center w-full">
-                    <div className="w-full max-w-lg mb-6">
-                      <input
-                          type="search"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder={`Search for a concept in ${selectedCategory}...`}
-                          className="w-full px-5 py-3 text-base text-gray-100 bg-gray-800/80 border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-shadow"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-wrap justify-center gap-3 mb-8">
-                      {encyclopediaCategories.map((category) => (
-                        <button 
-                          key={category.name} 
-                          onClick={() => {
-                              setSelectedCategory(category.name);
-                              setSearchQuery('');
-                          }} 
-                          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${selectedCategory === category.name ? 'bg-teal-400/10 border-teal-400 text-teal-300' : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/80 hover:border-gray-600'}`}
-                        >
-                          <category.icon className="w-5 h-5" />
-                          <span>{category.name}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {filteredConcepts.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                        {filteredConcepts.map((concept) => (
-                          <button 
-                            key={concept.name} 
-                            onClick={() => onLoadBlobConcept(concept.blobUrl)} 
-                            className="group bg-gray-800/50 border border-gray-700 rounded-lg text-left transition-all hover:bg-gray-800 hover:border-teal-500 hover:scale-105 disabled:opacity-50 disabled:pointer-events-none overflow-hidden flex flex-col h-full"
-                            disabled={isLoading}
-                          >
-                            <div className="w-full aspect-video bg-gray-900 overflow-hidden">
-                              <img
-                                src={concept.imageUrl}
-                                alt={`Preview for ${concept.name}`}
-                                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                                loading="lazy"
-                              />
-                            </div>
-                            <div className="p-4 flex flex-col flex-grow text-center">
-                              <h3 className="text-lg font-bold text-gray-200 group-hover:text-teal-300 mb-1">
-                                {concept.name}
-                              </h3>
-                              <p className="text-sm text-gray-400 flex-grow">
-                                {concept.description}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-10 text-gray-500">
-                          <p className="text-lg font-semibold">No concepts found</p>
-                          <p className="mt-1">Try adjusting your search query.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
       </main>
-      <footer className="w-full p-6 text-center text-gray-500 text-sm flex-shrink-0">
-        <div className="flex justify-center items-center gap-x-8 gap-y-2 flex-wrap">
-            <a href="https://discord.gg/x4am4gaRZY" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
-                <DiscordIcon />
-                Join our Discord
-            </a>
-            <a href="mailto:intelliflux.ltd@gmail.com" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
-                <EmailIcon />
-                intelliflux.ltd@gmail.com
-            </a>
+
+      {/* Upload Modal */}
+      {showUploadForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <form onSubmit={handleUploadSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
+                <button type="button" onClick={() => setShowUploadForm(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
+                <h3 className="text-2xl font-black text-black text-center mt-2">Upload Creation</h3>
+                
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">Prompt / Description*</label>
+                    <textarea 
+                        value={uploadPrompt}
+                        onChange={(e) => setUploadPrompt(e.target.value)}
+                        className="w-full h-24 p-3 rounded-lg border-2 border-black resize-none focus:outline-none focus:ring-4 focus:ring-pink-200"
+                        placeholder="What is this app? e.g., 'A classic Snake game with neon graphics'"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">HTML File*</label>
+                    <div className="flex items-center gap-3">
+                    <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="html-upload"
+                        type="file"
+                        onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="text/html,.html"
+                        required
+                    />
+                    <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {htmlFile ? htmlFile.name : 'No file chosen'}
+                    </span>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">Screenshot*</label>
+                    <div className="flex items-center gap-3">
+                    <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-cyan-300 text-black hover:bg-cyan-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="screenshot-upload"
+                        type="file"
+                        onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="image/*"
+                        required
+                    />
+                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {screenshotFile ? screenshotFile.name : 'No file chosen'}
+                    </span>
+                    </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <button
+                    type="submit"
+                    disabled={!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading}
+                    className={primaryBtn + " w-full text-lg py-3"}
+                    >
+                    Upload & Share
+                    </button>
+                </div>
+            </form>
         </div>
-      </footer>
+      )}
     </div>
   );
 };

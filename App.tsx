@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -8,9 +7,8 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
-import { CommunityView } from './components/CommunityView.js';
 
-type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'community';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -24,10 +22,7 @@ const App: React.FC = () => {
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
 
   useEffect(() => {
-    // When switching to a full-screen view, reset the window's scroll position.
-    // This prevents the new view from appearing already scrolled down if the
-    // user had scrolled on the home page.
-    if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView' || view === 'community') {
+    if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
       window.scrollTo(0, 0);
     }
   }, [view]);
@@ -41,16 +36,14 @@ const App: React.FC = () => {
 
     try {
       const content = await generateInteractiveConcept(concept);
-      // The service now performs robust validation, so we can be more confident here.
       setGeneratedContent(content);
       setConceptPrompt(concept);
       setView('explainer');
     } catch (err) {
       console.error("Concept generation failed:", err);
-      // The message from geminiService is designed to be user-facing.
       const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
       setError(message);
-      setView('home'); // Stay on home screen if there's an error
+      setView('home'); 
     } finally {
       setIsLoading(false);
     }
@@ -72,16 +65,36 @@ const App: React.FC = () => {
         console.error("Creative page generation failed:", err);
         const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
         setError(message);
-        setView('home'); // Stay on home screen if there's an error
+        setView('home'); 
     } finally {
         setIsLoading(false);
     }
   }, []);
 
-  const handleFileUpload = useCallback(async (htmlContent: string, fileName: string, screenshotDataUrl: string) => {
+  // Heuristic to decide whether to use Learn (Concept) or Create (Creative) mode
+  const handleUnifiedSubmit = useCallback(async (input: string) => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    const lower = trimmed.toLowerCase();
+    const wordCount = trimmed.split(/\s+/).length;
+    
+    // Keywords that strongly suggest a request to "make" something rather than just learning a concept
+    const creativeKeywords = ['create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool'];
+    const hasCreativeKeyword = creativeKeywords.some(kw => lower.includes(kw));
+
+    // If it's a long prompt or contains action verbs, assume Creative mode.
+    // Otherwise, assume it's a concept name for Learn mode.
+    if (wordCount > 6 || hasCreativeKeyword) {
+        await handleCreativeSubmit(trimmed);
+    } else {
+        await handleConceptSubmit(trimmed);
+    }
+  }, [handleCreativeSubmit, handleConceptSubmit]);
+
+  const handleFileUpload = useCallback(async (htmlContent: string, prompt: string, screenshotDataUrl: string) => {
     setIsLoading(true);
     setError(null);
-    const promptKey = `Uploaded: ${fileName}`;
     
     try {
         const response = await fetch('/api/share', {
@@ -89,7 +102,7 @@ const App: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               html: htmlContent, 
-              prompt: promptKey,
+              prompt: prompt,
               type: 'create',
               screenshot: screenshotDataUrl,
             }),
@@ -101,10 +114,10 @@ const App: React.FC = () => {
         }
 
         const data = await response.json();
-        setShareUrlOnLoad(data.url); // Set the URL to be passed to CreativeView
+        setShareUrlOnLoad(data.url); 
 
         setCreativeHtml(htmlContent);
-        setCreativePrompt(promptKey);
+        setCreativePrompt(prompt);
         setView('creativeView');
     } catch (err) {
         console.error("File upload and share failed:", err);
@@ -133,21 +146,15 @@ const App: React.FC = () => {
     setError(null);
   }, []);
 
-  const handleShowCommunity = useCallback(() => {
-    setView('community');
-  }, []);
-
   return (
     <div className="relative w-full h-screen">
       {isLoading && <LoadingSpinner />}
       
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
-          onConceptSubmit={handleConceptSubmit}
-          onCreativeSubmit={handleCreativeSubmit}
+          onUnifiedSubmit={handleUnifiedSubmit}
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
-          onShowCommunity={handleShowCommunity}
           isLoading={isLoading} 
           error={error}
         />
@@ -174,12 +181,6 @@ const App: React.FC = () => {
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
           />
-        )}
-      </div>
-
-      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'community' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {view === 'community' && (
-          <CommunityView onBack={handleGoBack} onLoadBlobConcept={handleLoadBlobConcept} />
         )}
       </div>
     </div>

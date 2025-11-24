@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -11,10 +12,7 @@ interface CreativeViewProps {
 }
 
 const LoadingSpinnerInline: React.FC = () => (
-    <svg className="animate-spin h-5 w-5 text-teal-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
+    <div className="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></div>
 );
 
 
@@ -50,14 +48,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         const iframeDoc = iframe?.contentWindow?.document;
 
         if (!iframeDoc?.body) {
-            throw new Error("Could not access the content of the experiment to take a screenshot.");
+            throw new Error("Could not access content.");
         }
 
         const screenshotCanvas = await html2canvas(iframeDoc.body, { 
             useCORS: true, 
-            backgroundColor: '#111827',
+            backgroundColor: '#fffbeb',
             logging: false,
-            // Allow iframes to be captured. Works for srcDoc.
             allowTaint: true, 
           });
         
@@ -115,31 +112,15 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     setTimeout(() => setPromptCopyButtonText('Copy'), 2000);
   };
   
+  const btnStyle = "bg-white border-2 border-black text-black font-bold py-2 px-4 rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all";
+
   return (
     <>
-      <div className="w-full h-full bg-gray-900 relative">
+      <div className="w-full h-full bg-amber-50 relative">
         <div className="absolute top-4 left-4 flex gap-4 z-20">
-            <button
-                onClick={onBack}
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Go back"
-            >
-                Back
-            </button>
-            <button 
-                onClick={handleShareClick} 
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Share experiment"
-            >
-                Share
-            </button>
-            <button 
-                onClick={() => setShowPromptModal(true)} 
-                className="text-white text-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Show prompt"
-            >
-                Prompt
-            </button>
+            <button onClick={onBack} className={btnStyle}>Back</button>
+            <button onClick={handleShareClick} className={btnStyle}>Share</button>
+            <button onClick={() => setShowPromptModal(true)} className={btnStyle}>Prompt</button>
         </div>
         <iframe
             ref={iframeRef}
@@ -151,43 +132,42 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
       </div>
 
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Share Experiment</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-3xl font-black text-black">Share It!</h2>
                 {isSharing && (
-                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg text-gray-300">
-                        <div className="w-full aspect-video bg-gray-700/50 rounded-lg flex items-center justify-center animate-pulse">
-                            <svg className="w-10 h-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
+                        <div className="w-full aspect-video bg-gray-100 border-2 border-black rounded-lg flex items-center justify-center animate-pulse">
+                            📸 Snapping...
                         </div>
                         <div className="flex items-center gap-3 mt-2">
                             <LoadingSpinnerInline />
-                            <span>Generating preview & link...</span>
+                            <span>Creating your link...</span>
                         </div>
                     </div>
                 )}
                 {shareError && (
-                    <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
-                        <p className="font-bold">Could not create link</p>
-                        <p className="text-sm mt-1">{shareError}</p>
+                    <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl font-bold">
+                        <p>Oops! {shareError}</p>
                     </div>
                 )}
                 {!isSharing && shareUrl && (
-                     <div className="flex flex-col gap-3">
+                     <div className="flex flex-col gap-4">
                         {screenshotUrl && (
-                          <div className="border border-gray-700 rounded-lg overflow-hidden shadow-lg">
-                            <img src={screenshotUrl} alt="A screenshot of the interactive experiment" className="w-full h-auto object-contain" />
+                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1">
+                            <img src={screenshotUrl} alt="Screenshot" className="w-full h-auto object-contain" />
                           </div>
                         )}
-                        <p className="text-gray-400 text-sm">Your unique link is ready. Sharing will add your creation to the public community page.</p>
+                        <p className="text-black font-medium">Here is your magic link:</p>
                         <div className="flex items-center gap-2">
-                            <input type="text" readOnly value={shareUrl} className="w-full px-4 py-2 text-gray-100 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                            <button onClick={handleCopy} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center flex-shrink-0">
+                            <input type="text" readOnly value={shareUrl} className="w-full px-4 py-3 text-black bg-gray-50 border-2 border-black rounded-xl font-mono focus:outline-none focus:ring-4 focus:ring-pink-200" />
+                            <button onClick={handleCopy} className="bg-teal-300 border-2 border-black text-black font-bold py-3 px-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex-shrink-0 w-24">
                                 {copyButtonText}
                             </button>
                         </div>
                     </div>
                 )}
-                 <button onClick={closeShareModal} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors self-end">
+                 <button onClick={closeShareModal} className="mt-2 bg-gray-200 hover:bg-gray-300 text-black border-2 border-black font-bold py-2 px-6 rounded-xl self-end">
                     Close
                 </button>
             </div>
@@ -195,17 +175,17 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
       )}
 
       {showPromptModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold text-white">Generation Prompt</h2>
-                <div className="bg-gray-900 border border-gray-700 rounded-md p-4 text-gray-300 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-2xl font-black text-black">The Secret Recipe 🤫</h2>
+                <div className="bg-gray-50 border-2 border-black rounded-xl p-4 text-gray-800 max-h-96 overflow-y-auto font-mono text-sm shadow-inner">
                     <p className="whitespace-pre-wrap">{prompt}</p>
                 </div>
                 <div className="flex justify-end gap-3 mt-4">
-                    <button onClick={handleCopyPrompt} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition-colors w-28 text-center">
+                    <button onClick={handleCopyPrompt} className="bg-lime-300 hover:bg-lime-400 border-2 border-black text-black font-bold py-2 px-4 rounded-xl shadow-[3px_3px_0px_0px_black] transition-all w-28">
                         {promptCopyButtonText}
                     </button>
-                    <button onClick={() => setShowPromptModal(false)} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-md transition-colors">
+                    <button onClick={() => setShowPromptModal(false)} className="bg-gray-200 hover:bg-gray-300 border-2 border-black text-black font-bold py-2 px-6 rounded-xl">
                         Close
                     </button>
                 </div>
