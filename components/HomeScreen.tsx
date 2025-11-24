@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 
@@ -161,9 +162,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
          {/* Left: Logo */}
          <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2 flex-shrink-0">
              <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
-                 X
+                 P
              </div>
-             <span className="hidden sm:inline">Concept Lab</span>
+             <span className="hidden sm:inline">Popku</span>
          </div>
 
          {/* Center: Unified Input Omni-box */}

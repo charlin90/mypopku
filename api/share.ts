@@ -23,7 +23,7 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${concept.explanation.split('\n')[0].replace('##', '').trim()} - Concept Lab</title>
+      <title>${concept.explanation.split('\n')[0].replace('##', '').trim()} - Popku</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -263,7 +263,7 @@ function injectPromptButtonIntoHtml(html: string, prompt: string): string {
                     });
                 }
             } catch (e) {
-                console.error('Error in injected ConceptLab script:', e);
+                console.error('Error in injected Popku script:', e);
             }
         })();
         </script>
