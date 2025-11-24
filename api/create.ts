@@ -35,10 +35,10 @@ export default async function handler(
   try {
     const geminiPrompt = getPrompt(prompt);
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-3-pro-preview",
         contents: geminiPrompt,
         config: {
-          temperature: 0.7,
+          temperature: 1.0,
         },
     });
 
