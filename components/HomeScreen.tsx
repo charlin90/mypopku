@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
-import { LoadingSpinner } from './LoadingSpinner.js';
 
 interface HomeScreenProps {
   onUnifiedSubmit: (input: string) => void;
