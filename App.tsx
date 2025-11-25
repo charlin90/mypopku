@@ -80,12 +80,20 @@ const App: React.FC = () => {
     const wordCount = trimmed.split(/\s+/).length;
     
     // Keywords that strongly suggest a request to "make" something rather than just learning a concept
-    const creativeKeywords = ['create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool'];
+    const creativeKeywords = [
+        'create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool',
+        '创建', '生成', '制作', '编写', '设计', '开发', '游戏', '模拟', '工具', '代码', '做一个', '弄一个'
+    ];
     const hasCreativeKeyword = creativeKeywords.some(kw => lower.includes(kw));
+
+    // For Chinese input, check character length since spaces aren't used for word separation.
+    // Concepts are usually short (2-6 chars), prompts are longer.
+    const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
+    const isLongChinese = hasChinese && trimmed.length > 10;
 
     // If it's a long prompt or contains action verbs, assume Creative mode.
     // Otherwise, assume it's a concept name for Learn mode.
-    if (wordCount > 6 || hasCreativeKeyword) {
+    if (wordCount > 6 || isLongChinese || hasCreativeKeyword) {
         await handleCreativeSubmit(trimmed);
     } else {
         await handleConceptSubmit(trimmed);

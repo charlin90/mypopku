@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 
@@ -160,15 +159,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Sticky Header */}
       <header className="flex-none w-full h-20 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0">
          {/* Left: Logo */}
-         <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2 flex-shrink-0">
-             <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
-                 P
+         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0">
+             <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
+                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
+                     P
+                 </div>
+                 <span className="hidden sm:inline">Popku</span>
              </div>
-             <span className="hidden sm:inline">Popku</span>
+             <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
+                An AI-native community for creating and sharing interactive content
+             </span>
          </div>
 
          {/* Center: Unified Input Omni-box */}
-         <div className="flex-grow max-w-2xl mx-4 relative z-50" ref={searchContainerRef}>
+         <div className="flex-grow max-w-2xl mx-4 relative z-50 lg:flex-grow-0 lg:w-full" ref={searchContainerRef}>
              <form onSubmit={handleSubmit} className="relative z-20">
                  <input
                      type="text"
@@ -237,15 +241,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
          </div>
 
          {/* Right: Upload Button */}
-         <button 
-            onClick={() => setShowUploadForm(true)} 
-            className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
-         >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-            </svg>
-            <span className="hidden md:inline">Upload</span>
-         </button>
+         <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end">
+            <button 
+                onClick={() => setShowUploadForm(true)} 
+                className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="hidden md:inline">Upload</span>
+            </button>
+         </div>
       </header>
 
       {/* Main Content: Community Grid */}
