@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc && cp index.html dist/index.html"
+    "build": "tsc && cp index.html dist/index.html && cp wechat.png dist/wechat.png"
   },
   "dependencies": {
     "@google/genai": "^1.27.0",

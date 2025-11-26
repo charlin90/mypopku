@@ -255,7 +255,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 >
 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
    
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
     
    
     <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
@@ -406,7 +406,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold">✕</button>
                  <h3 className="text-xl font-black mb-4">群聊：Popku</h3>
                  <div className="w-48 h-48 mx-auto bg-gray-200 border-2 border-black rounded-xl flex items-center justify-center mb-4 relative overflow-hidden">
-                    <img src="/wechat.png" alt="WeChat QR Code" className="w-full h-full object-cover" />
+                    <img 
+                        src="/wechat.png" 
+                        alt="WeChat QR Code" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none'; 
+                            target.parentElement!.innerHTML = '<span class="text-xs text-gray-400 p-4 text-center">QR Code not found<br/>(Check file location)</span>';
+                        }}
+                    />
                  </div>
                  <p className="text-sm text-gray-500 font-bold">该二维码7天内(12月3日前)有效，重新进入将更新</p>
             </div>
