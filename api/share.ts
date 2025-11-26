@@ -329,20 +329,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const host = req.headers.host;
+    
+    // Generate a permanent ID for this share
+    const id = nanoid();
+    
+    // Legacy Blob URL (internal use)
     const blobUrl = `${protocol}://${host}/s/${htmlBlob.pathname}`;
+    
+    // SEO-friendly URL (public sharing)
+    const viewUrl = `${protocol}://${host}/view/${id}`;
 
     const shareData: CommunityShare = {
-        id: nanoid(),
+        id,
         type,
         prompt,
         screenshotUrl,
         blobUrl,
         createdAt: Date.now()
     };
+    
+    // 1. Add to the feed list
     await redis.lpush('community:shares', JSON.stringify(shareData));
+    
+    // 2. Add to individual key-value store for direct access via /view/:id
+    await redis.set(`share:${id}`, JSON.stringify(shareData));
 
-
-    return res.status(200).json({ url: blobUrl });
+    // Return the SEO-friendly URL to the user
+    return res.status(200).json({ url: viewUrl });
 
   } catch (error) {
     console.error("Error in /api/share:", error);

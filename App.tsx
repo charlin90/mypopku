@@ -1,10 +1,11 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
 import { generateInteractiveConcept } from './services/geminiService.js';
 import { generateCreativePage } from './services/creativeService.js';
-import type { GeneratedConcept } from './types.js';
+import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
 
@@ -21,9 +22,47 @@ const App: React.FC = () => {
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
 
+  // Handle inbound links for SEO (Display Wall Strategy)
+  useEffect(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/view\/([a-zA-Z0-9_-]+)$/);
+    
+    if (match) {
+        const id = match[1];
+        setIsLoading(true);
+        fetch(`/api/item?id=${id}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Creation not found");
+                return res.json();
+            })
+            .then((data: CommunityShare) => {
+                // SEO Strategy: Title = User Prompt
+                if (data.prompt) {
+                    document.title = `${data.prompt} - Popku`;
+                }
+                
+                // SEO Strategy: Page contains generated App preview
+                if (data.blobUrl) {
+                    setBlobUrlToLoad(data.blobUrl);
+                    setView('blobExplainer');
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load item:", err);
+                setError("Creation not found or link is expired.");
+                setView('home');
+            })
+            .finally(() => setIsLoading(false));
+    }
+  }, []);
+
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
       window.scrollTo(0, 0);
+    }
+    // Reset title when going back home
+    if (view === 'home') {
+        document.title = 'Popku';
     }
   }, [view]);
 
@@ -144,6 +183,11 @@ const App: React.FC = () => {
   }, []);
 
   const handleGoBack = useCallback(() => {
+    // If we are in a deep-linked view (blobExplainer active on load), hitting back should go to home
+    if (window.location.pathname.startsWith('/view/')) {
+        window.history.pushState({}, '', '/');
+    }
+    
     setView('home');
     setGeneratedContent(null);
     setConceptPrompt(null);
