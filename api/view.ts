@@ -1,9 +1,60 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const { id } = req.query;
+
+  let title = 'Popku';
+  let description = 'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.';
+  let imageUrl = 'https://popku.com/og-image.png'; // Default or placeholder
+
+  if (id && typeof id === 'string') {
+    try {
+        const itemStr = await redis.get(`share:${id}`);
+        if (itemStr) {
+            const item = JSON.parse(itemStr as string);
+            if (item) {
+                title = `${item.prompt} - Popku`;
+                description = `Check out this interactive interactive concept generated on Popku: ${item.prompt}`;
+                if (item.screenshotUrl) {
+                    imageUrl = item.screenshotUrl;
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Failed to fetch item for SEO:", e);
+    }
+  }
+
+  // We serve the index.html content manually here, injecting the SEO tags.
+  // We MUST ensure the script src is absolute (/index.js).
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popku</title>
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:site_name" content="Popku">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="${title}">
+    <meta property="twitter:description" content="${description}">
+    <meta property="twitter:image" content="${imageUrl}">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,3 +110,11 @@
     <script type="module" src="/index.js"></script>
 </body>
 </html>
+  `;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  // Cache for 1 minute (SWR) to balance SEO freshness with performance
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
+  
+  return res.status(200).send(html);
+}
