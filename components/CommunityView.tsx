@@ -12,8 +12,13 @@ const LoadingSpinner: React.FC = () => (
 );
 
 const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = ({ item, onClick }) => (
-  <button 
-    onClick={onClick}
+  <a 
+    href={`/view/${item.id}`}
+    onClick={(e) => {
+      e.preventDefault();
+      window.history.pushState({}, '', `/view/${item.id}`);
+      onClick();
+    }}
     className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
   >
     <div className="absolute top-2 right-2 z-10">
@@ -45,7 +50,7 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
         {new Date(item.createdAt).toLocaleDateString()}
       </div>
     </div>
-  </button>
+  </a>
 );
 
 

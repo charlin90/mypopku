@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 
@@ -10,8 +11,13 @@ interface HomeScreenProps {
 }
 
 const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = ({ item, onClick }) => (
-  <button 
-    onClick={onClick}
+  <a 
+    href={`/view/${item.id}`}
+    onClick={(e) => {
+      e.preventDefault();
+      window.history.pushState({}, '', `/view/${item.id}`);
+      onClick();
+    }}
     className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
   >
     <div className="absolute top-2 right-2 z-10">
@@ -43,7 +49,7 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
         {new Date(item.createdAt).toLocaleDateString()}
       </div>
     </div>
-  </button>
+  </a>
 );
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
@@ -203,9 +209,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                 Found in Gallery
                              </div>
                              {filteredShares.map(share => (
-                                <button 
+                                <a 
                                     key={share.id}
-                                    onClick={() => handleExistingSelect(share.blobUrl)}
+                                    href={`/view/${share.id}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.history.pushState({}, '', `/view/${share.id}`);
+                                        handleExistingSelect(share.blobUrl);
+                                    }}
                                     className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
                                 >
                                      <div className="w-10 h-8 bg-gray-200 rounded border border-black overflow-hidden flex-shrink-0">
@@ -218,7 +229,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>
                                         {share.type === 'learn' ? 'LEARN' : 'APP'}
                                      </span>
-                                </button>
+                                </a>
                              ))}
                         </div>
                     )}
