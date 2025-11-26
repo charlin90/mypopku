@@ -407,7 +407,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <h3 className="text-xl font-black mb-4">群聊：Popku</h3>
                  <div className="w-48 h-48 mx-auto bg-gray-200 border-2 border-black rounded-xl flex items-center justify-center mb-4 relative overflow-hidden">
                     <img 
-                        src="/wechat.png" 
+                        src="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/WECHAT/wechat.png" 
                         alt="WeChat QR Code" 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
