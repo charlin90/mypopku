@@ -1,5 +1,7 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
+import type { CommunityShare } from '../types.js';
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -15,15 +17,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (id && typeof id === 'string') {
     try {
-        const itemStr = await redis.get(`share:${id}`);
-        if (itemStr) {
-            const item = JSON.parse(itemStr as string);
-            if (item) {
-                title = `${item.prompt} - Popku`;
-                description = `Check out this interactive interactive concept generated on Popku: ${item.prompt}`;
-                if (item.screenshotUrl) {
-                    imageUrl = item.screenshotUrl;
-                }
+        // Fetch from Hash 'shares'
+        // Upstash hget automatically parses JSON if it was stored as such, so we type it
+        const item = await redis.hget<CommunityShare>('shares', id);
+        
+        if (item) {
+            title = `${item.prompt} - Popku`;
+            description = `Check out this interactive interactive concept generated on Popku: ${item.prompt}`;
+            if (item.screenshotUrl) {
+                imageUrl = item.screenshotUrl;
             }
         }
     } catch (e) {

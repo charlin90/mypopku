@@ -351,8 +351,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. Add to the feed list
     await redis.lpush('community:shares', JSON.stringify(shareData));
     
-    // 2. Add to individual key-value store for direct access via /view/:id
-    await redis.set(`share:${id}`, JSON.stringify(shareData));
+    // 2. Add to key-value store using Hash to avoid cluttering keys
+    // We pass the object directly, Upstash SDK typically handles serialization for hashes
+    await redis.hset('shares', { [id]: shareData });
 
     // Return the SEO-friendly URL to the user
     return res.status(200).json({ url: viewUrl });

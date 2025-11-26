@@ -15,7 +15,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const item = await redis.get(`share:${id}`);
+    // Fetch from the hash 'shares' instead of individual key
+    const item = await redis.hget('shares', id);
     
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
