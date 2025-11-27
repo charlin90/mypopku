@@ -23,14 +23,15 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
     className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
   >
     <div className="absolute top-2 right-2 z-10 flex gap-1.5">
-        {/game|play|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏|玩/i.test(item.prompt) && (
+        {/game|play|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏|玩/i.test(item.prompt) ? (
             <span className="px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-purple-300 text-black">
                 GAME
             </span>
+        ) : (
+            <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
+                {item.type === 'learn' ? 'LEARN' : 'CREATE'}
+            </span>
         )}
-        <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
-            {item.type === 'learn' ? 'LEARN' : 'CREATE'}
-        </span>
     </div>
     <div className="w-full aspect-video bg-gray-100 border-b-2 border-black overflow-hidden relative">
       {item.screenshotUrl ? (
