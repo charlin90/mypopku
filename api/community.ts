@@ -24,14 +24,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (shares.length > 0) {
         const ids = shares.map(s => s.id);
         
-        // HMGET returns an array of values corresponding to the requested fields (ids)
-        // Since 'views' is now a single Hash key
-        const views = await redis.hmget<number[]>('views', ...ids);
+        // HMGET in Upstash SDK returns a Record<string, T> mapping fields to values
+        const views = await redis.hmget<Record<string, number>>('views', ...ids);
         
-        shares = shares.map((share, i) => ({
+        shares = shares.map((share) => ({
             ...share,
-            // If the hash field doesn't exist, views[i] will be null, so we default to 0
-            views: views && views[i] ? Number(views[i]) : 0
+            // Access the view count from the record object using the ID
+            // If views is null or the key doesn't exist, default to 0
+            views: views ? (views[share.id] || 0) : 0
         }));
     }
     
