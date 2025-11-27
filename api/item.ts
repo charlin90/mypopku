@@ -15,6 +15,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Increment view count using Hash to keep keys organized
+    // Key: 'views', Field: id, Increment: 1
+    await redis.hincrby('views', id, 1);
+
     // Fetch from the hash 'shares' instead of individual key
     const item = await redis.hget('shares', id);
     

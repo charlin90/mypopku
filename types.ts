@@ -26,4 +26,5 @@ export interface CommunityShare {
   screenshotUrl: string;
   blobUrl: string;
   createdAt: number;
+  views?: number;
 }

@@ -16,6 +16,8 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
     onClick={(e) => {
       e.preventDefault();
       window.history.pushState({}, '', `/view/${item.id}`);
+      // Trigger view increment without blocking navigation
+      fetch(`/api/item?id=${item.id}`).catch(() => {});
       onClick();
     }}
     className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
@@ -45,8 +47,17 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
       <p className="text-sm font-bold text-black flex-grow line-clamp-3 leading-snug" title={item.prompt}>
         {item.prompt}
       </p>
-      <div className="mt-3 text-xs font-mono text-gray-500 text-right">
-        {new Date(item.createdAt).toLocaleDateString()}
+      <div className="mt-3 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200" title={`${item.views || 0} views`}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-gray-500">
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+              <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
+            </svg>
+            <span className="text-xs font-bold text-gray-500 font-mono">{item.views || 0}</span>
+        </div>
+        <div className="text-xs font-mono text-gray-500 text-right">
+            {new Date(item.createdAt).toLocaleDateString()}
+        </div>
       </div>
     </div>
   </a>
@@ -215,6 +226,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                     onClick={(e) => {
                                         e.preventDefault();
                                         window.history.pushState({}, '', `/view/${share.id}`);
+                                        // Trigger count but don't wait
+                                        fetch(`/api/item?id=${share.id}`).catch(() => {});
                                         handleExistingSelect(share.blobUrl);
                                     }}
                                     className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
