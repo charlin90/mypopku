@@ -15,10 +15,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Fetch all items from the list. For large lists, consider pagination.
-    const data = await redis.lrange('community:shares', 0, -1);
-    
-    let shares = data as unknown as CommunityShare[]; 
+    let shares: CommunityShare[] = [];
+    const { filter } = req.query;
+    const mode = Array.isArray(filter) ? filter[0] : filter;
+
+    if (mode === 'featured') {
+        // Fetch IDs from the featured set
+        const ids = await redis.smembers('community:featured_ids');
+        
+        if (ids && ids.length > 0) {
+            // Fetch actual item data from the shares hash
+            // hmget returns a Record<string, T> in the current SDK version for multiple keys
+            const sharesMap = await redis.hmget<Record<string, CommunityShare>>('shares', ...ids);
+            
+            if (sharesMap) {
+                shares = Object.values(sharesMap).filter((item): item is CommunityShare => !!item);
+            }
+        }
+    } else {
+        // Default: Fetch all items from the list (Latest)
+        // For large lists, consider pagination in the future.
+        const data = await redis.lrange('community:shares', 0, -1);
+        shares = data as unknown as CommunityShare[];
+    }
     
     // Fetch view counts for all shares in one go using Hash
     if (shares.length > 0) {
@@ -34,6 +53,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             views: views ? (views[share.id] || 0) : 0
         }));
     }
+    
+    // Sort by Date Descending
+    shares.sort((a, b) => b.createdAt - a.createdAt);
     
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');

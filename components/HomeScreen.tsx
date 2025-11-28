@@ -82,6 +82,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [shares, setShares] = useState<CommunityShare[]>([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
+  const [feedTab, setFeedTab] = useState<'featured' | 'latest'>('featured');
 
   // Upload Modal State
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -96,19 +97,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch community shares on mount
+  // Fetch community shares on mount or when tab changes
   useEffect(() => {
     const fetchCommunityShares = async () => {
       setIsFeedLoading(true);
       setFeedError(null);
       try {
-        const response = await fetch('/api/community');
+        const response = await fetch(`/api/community?filter=${feedTab}`);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || 'Failed to load community creations.');
         }
         const data: CommunityShare[] = await response.json();
-        setShares(data.sort((a, b) => b.createdAt - a.createdAt));
+        // Sorting is handled by backend for consistency, but we double check here if needed.
+        // Backend sorts by createdAt desc.
+        setShares(data);
       } catch (err) {
         setFeedError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -116,7 +119,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchCommunityShares();
-  }, []);
+  }, [feedTab]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -332,6 +335,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
+          {/* Featured / Latest Toggle */}
+          <div className="flex justify-center mb-8">
+              <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <button 
+                      onClick={() => setFeedTab('featured')}
+                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                      <span>✨</span> Featured
+                  </button>
+                  <button 
+                      onClick={() => setFeedTab('latest')}
+                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                      <span>🔥</span> Latest
+                  </button>
+              </div>
+          </div>
+
           {/* Feed Content */}
           {isFeedLoading ? (
              <div className="flex justify-center items-center h-64">
@@ -349,9 +370,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
                     ))
                 ) : (
-                    <div className="col-span-full text-center py-20">
+                    <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
-                        <p className="text-gray-400">Be the first to create something.</p>
+                        <p className="text-gray-400 mt-2">
+                           {feedTab === 'featured' ? "Check back later for curated picks." : "Be the first to create something."}
+                        </p>
                     </div>
                 )}
             </div>
