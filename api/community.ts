@@ -20,8 +20,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const mode = Array.isArray(filter) ? filter[0] : filter;
 
     if (mode === 'featured') {
-        // Fetch IDs from the featured set
-        const ids = await redis.smembers('community:featured_ids');
+        // Fetch IDs from the featured sorted set
+        // We use zrange (0, -1) to get all members instead of smembers, as the data type is now a Sorted Set.
+        const ids = await redis.zrange<string[]>('community:featured_ids', 0, -1);
         
         if (ids && ids.length > 0) {
             // Fetch actual item data from the shares hash
