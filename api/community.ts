@@ -21,16 +21,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (mode === 'featured') {
         // Fetch IDs from the featured sorted set
-        // We use zrange (0, -1) to get all members instead of smembers, as the data type is now a Sorted Set.
+        // We use zrange (0, -1) to get all members sorted by score.
         const ids = await redis.zrange<string[]>('community:featured_ids', 0, -1);
         
         if (ids && ids.length > 0) {
             // Fetch actual item data from the shares hash
-            // hmget returns a Record<string, T> in the current SDK version for multiple keys
             const sharesMap = await redis.hmget<Record<string, CommunityShare>>('shares', ...ids);
             
             if (sharesMap) {
-                shares = Object.values(sharesMap).filter((item): item is CommunityShare => !!item);
+                // IMPORTANT: Use the ordered 'ids' array to map the values. 
+                // Object.values() does not guarantee order.
+                shares = ids
+                    .map(id => sharesMap[id])
+                    .filter((item): item is CommunityShare => !!item);
             }
         }
     } else {
@@ -55,8 +58,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }));
     }
     
-    // Sort by Date Descending
-    shares.sort((a, b) => b.createdAt - a.createdAt);
+    // Sort by Date Descending ONLY if not featured.
+    // Featured items should respect the Sorted Set order (Score) from Redis.
+    if (mode !== 'featured') {
+        shares.sort((a, b) => b.createdAt - a.createdAt);
+    }
     
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
