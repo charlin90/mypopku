@@ -1,7 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(_req: VercelRequest, res: VercelResponse) {
   // Read the environment variable on the server side
   const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY;
 
