@@ -200,8 +200,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
   const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
-  const navBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none bg-white hover:bg-gray-50";
-  const navBtnActive = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-none translate-y-0.5 bg-gray-100 cursor-default";
 
   return (
     <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
@@ -300,7 +298,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
          {/* Right: Social/Nav, Upload & Auth */}
          <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end items-center gap-3">
              <div className="flex items-center gap-2">
-                {/* Slot 1: WeChat (Logged Out) OR Home (Logged In) */}
+                {/* Slot 1: WeChat (Logged Out only) */}
                 <SignedOut>
                     <button 
                         onClick={() => setShowWeChatModal(true)}
@@ -314,16 +312,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         </svg>
                     </button>
                 </SignedOut>
-                <SignedIn>
-                    <button 
-                        onClick={() => onTabChange('featured')}
-                        className={activeTab !== 'personal' ? navBtnActive : navBtn}
-                    >
-                        Home
-                    </button>
-                </SignedIn>
 
-                {/* Slot 2: Discord (Logged Out) OR My Popku (Logged In) */}
+                {/* Slot 2: Discord (Logged Out only) */}
                 <SignedOut>
                     <a 
                         href="https://discord.com/invite/x4am4gaRZY" 
@@ -337,14 +327,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         </svg>
                     </a>
                 </SignedOut>
-                <SignedIn>
-                    <button 
-                        onClick={() => onTabChange('personal')} 
-                        className={activeTab === 'personal' ? navBtnActive : navBtn}
-                    >
-                        My Popku
-                    </button>
-                </SignedIn>
              </div>
 
             {/* Slot 3: Upload Button */}
@@ -387,51 +369,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
-           {/* Mobile Nav */}
-           <div className="lg:hidden flex justify-center mb-6">
-                 <div className="bg-gray-100 border-2 border-black rounded-xl p-1 flex gap-1">
-                    <button 
-                        onClick={() => onTabChange('featured')} 
-                        className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm ${activeTab !== 'personal' ? 'bg-black text-white' : 'text-gray-500'}`}
+          {/* Unified Feed Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full">
+                <SignedIn>
+                     <button 
+                        onClick={() => onTabChange('personal')}
+                        className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
                     >
-                        Home
+                        <span>👤</span> My Popku
                     </button>
-                    <SignedIn>
-                         <button 
-                            onClick={() => onTabChange('personal')} 
-                            className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm ${activeTab === 'personal' ? 'bg-black text-white' : 'text-gray-500'}`}
-                        >
-                            My Popku
-                        </button>
-                    </SignedIn>
-                 </div>
-           </div>
-
-          {/* Featured / Latest Toggle - Only show if NOT in personal mode */}
-          {activeTab !== 'personal' ? (
-            <div className="flex justify-center mb-8">
-                <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <button 
-                        onClick={() => onTabChange('featured')}
-                        className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                        <span>✨</span> Featured
-                    </button>
-                    <button 
-                        onClick={() => onTabChange('latest')}
-                        className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                        <span>🔥</span> Latest
-                    </button>
-                </div>
+                </SignedIn>
+                <button 
+                    onClick={() => onTabChange('featured')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>✨</span> Featured
+                </button>
+                <button 
+                    onClick={() => onTabChange('latest')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>🔥</span> Latest
+                </button>
             </div>
-          ) : (
-            <div className="flex justify-center mb-8">
-                 <h2 className="text-3xl font-black italic tracking-tight text-black drop-shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">
-                    My Popku
-                 </h2>
-            </div>
-          )}
+          </div>
 
           {/* Feed Content */}
           {isFeedLoading ? (
