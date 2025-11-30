@@ -8,6 +8,7 @@ interface HomeScreenProps {
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
   onNavigateToProfile: () => void;
+  onNavigateToHome: () => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -76,6 +77,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onFileUpload,
   onLoadBlobConcept,
   onNavigateToProfile,
+  onNavigateToHome,
   isLoading, 
   error,
 }) => {
@@ -186,9 +188,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
   const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
-  const navBtn = "px-4 py-2 rounded-xl text-sm font-bold transition-all text-gray-500 hover:text-black hover:bg-gray-50";
-  const navBtnActive = "px-4 py-2 rounded-xl text-sm font-bold transition-all bg-black text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]";
-
+  const navBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none bg-white hover:bg-gray-50";
 
   return (
     <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
@@ -203,13 +203,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  </div>
                  <span className="hidden sm:inline">Popku</span>
              </div>
-             
-             <div className="hidden lg:flex mt-1 gap-2">
-                 <button className={navBtnActive}>Home</button>
-                 <SignedIn>
-                     <button onClick={onNavigateToProfile} className={navBtn}>My Popku</button>
-                 </SignedIn>
-             </div>
+             <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
+                An AI-native community for creating and sharing interactive content
+             </span>
          </div>
 
          {/* Center: Unified Input Omni-box */}
@@ -288,36 +284,63 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
              )}
          </div>
 
-         {/* Right: Social, Auth & Upload Button */}
+         {/* Right: Social/Nav, Upload & Auth */}
          <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end items-center gap-3">
              <div className="flex items-center gap-2">
-                {/* WeChat Button */}
-                <button 
-                    onClick={() => setShowWeChatModal(true)}
-                    className={`${socialBtn} text-green-600`}
-                    title="WeChat Group"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
-                        <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
-                        <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
-                    </svg>
-                </button>
-                {/* Discord Button */}
-                <a 
-                    href="https://discord.com/invite/x4am4gaRZY" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`${socialBtn} text-[#5865F2]`}
-                    title="Join Discord"
-                >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-                    </svg>
-                </a>
+                {/* Slot 1: WeChat (Logged Out) OR Home (Logged In) */}
+                <SignedOut>
+                    <button 
+                        onClick={() => setShowWeChatModal(true)}
+                        className={`${socialBtn} text-green-600`}
+                        title="WeChat Group"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
+                            <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
+                            <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
+                        </svg>
+                    </button>
+                </SignedOut>
+                <SignedIn>
+                    <button 
+                        onClick={onNavigateToHome}
+                        className={navBtn}
+                    >
+                        Home
+                    </button>
+                </SignedIn>
+
+                {/* Slot 2: Discord (Logged Out) OR My Popku (Logged In) */}
+                <SignedOut>
+                    <a 
+                        href="https://discord.com/invite/x4am4gaRZY" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`${socialBtn} text-[#5865F2]`}
+                        title="Join Discord"
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                        </svg>
+                    </a>
+                </SignedOut>
+                <SignedIn>
+                    <button onClick={onNavigateToProfile} className={navBtn}>My Popku</button>
+                </SignedIn>
              </div>
 
-            {/* Clerk Authentication */}
+            {/* Slot 3: Upload Button */}
+            <button 
+                onClick={() => setShowUploadForm(true)} 
+                className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="hidden md:inline">Upload</span>
+            </button>
+
+            {/* Slot 4: Auth (Sign In / User Button) */}
             <SignedOut>
                 <SignInButton mode="modal">
                     <button className={authBtn}>
@@ -331,15 +354,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
             </SignedIn>
 
-            <button 
-                onClick={() => setShowUploadForm(true)} 
-                className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                </svg>
-                <span className="hidden md:inline">Upload</span>
-            </button>
          </div>
       </header>
 
@@ -358,7 +372,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
            {/* Mobile Nav */}
            <div className="lg:hidden flex justify-center mb-6">
                  <div className="bg-gray-100 border-2 border-black rounded-xl p-1 flex gap-1">
-                    <button onClick={() => {}} className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold shadow-sm">Home</button>
+                    <button onClick={onNavigateToHome} className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold shadow-sm">Home</button>
                     <SignedIn>
                          <button onClick={onNavigateToProfile} className="px-4 py-2 text-gray-500 rounded-lg text-sm font-bold">My Popku</button>
                     </SignedIn>

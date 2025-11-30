@@ -1,6 +1,5 @@
 
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
@@ -25,7 +24,8 @@ const App: React.FC = () => {
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
   
-  const { user } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
+  const hasRedirectedRef = useRef(false);
 
   // Handle inbound links for SEO (Display Wall Strategy)
   useEffect(() => {
@@ -60,6 +60,17 @@ const App: React.FC = () => {
             .finally(() => setIsLoading(false));
     }
   }, []);
+
+  // Redirect to My Popku when user signs in (only once per session load and if not deep linking)
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
+        // Don't redirect if we are already viewing a deep link (e.g., view/ID)
+        if (!window.location.pathname.startsWith('/view/')) {
+            setView('myPopku');
+        }
+        hasRedirectedRef.current = true;
+    }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
@@ -194,6 +205,9 @@ const App: React.FC = () => {
         window.history.pushState({}, '', '/');
     }
     
+    // If user is logged in, going back usually implies going to their profile, but standard UX is Home.
+    // However, since we auto-redirect to MyPopku on load, let's just go to 'home' view which renders HomeScreen.
+    // HomeScreen has nav to switch between Home/MyPopku.
     setView('home');
     setGeneratedContent(null);
     setConceptPrompt(null);
@@ -214,6 +228,7 @@ const App: React.FC = () => {
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
           onNavigateToProfile={() => setView('myPopku')}
+          onNavigateToHome={() => setView('home')}
           isLoading={isLoading} 
           error={error}
         />
