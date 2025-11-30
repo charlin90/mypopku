@@ -12,8 +12,7 @@ if (!rootElement) {
 }
 
 // Import your publishable key safely
-const env = (import.meta as any).env || {};
-const PUBLISHABLE_KEY = env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
   console.error("Missing Publishable Key: Please add VITE_CLERK_PUBLISHABLE_KEY to your .env or Vercel settings");
