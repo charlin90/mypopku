@@ -1,5 +1,6 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
@@ -8,11 +9,17 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
+import { useUser } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
+export type FeedTab = 'featured' | 'latest' | 'personal';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
+  const [homeFeedTab, setHomeFeedTab] = useState<FeedTab>('featured');
+  // Track specific user profile being viewed (null implies current user if logged in)
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+  
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
@@ -21,6 +28,9 @@ const App: React.FC = () => {
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
+  
+  const { user, isSignedIn, isLoaded } = useUser();
+  const hasRedirectedRef = useRef(false);
 
   // Handle inbound links for SEO (Display Wall Strategy)
   useEffect(() => {
@@ -56,6 +66,17 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Redirect to My Popku (Personal Tab) when user signs in
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
+        // Don't redirect if we are already viewing a deep link (e.g., view/ID)
+        if (!window.location.pathname.startsWith('/view/')) {
+            setHomeFeedTab('personal');
+        }
+        hasRedirectedRef.current = true;
+    }
+  }, [isLoaded, isSignedIn]);
+
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
       window.scrollTo(0, 0);
@@ -65,6 +86,20 @@ const App: React.FC = () => {
         document.title = 'Popku';
     }
   }, [view]);
+
+  const handleTabChange = useCallback((tab: FeedTab) => {
+    setHomeFeedTab(tab);
+    // If explicitly clicking the personal tab, reset to "My" profile (current user)
+    if (tab === 'personal') {
+        setViewingProfileId(null);
+    }
+  }, []);
+
+  const handleUserClick = useCallback((authorId: string) => {
+    setViewingProfileId(authorId);
+    setHomeFeedTab('personal');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleConceptSubmit = useCallback(async (concept: string) => {
     if (!concept.trim()) return;
@@ -118,20 +153,15 @@ const App: React.FC = () => {
     const lower = trimmed.toLowerCase();
     const wordCount = trimmed.split(/\s+/).length;
     
-    // Keywords that strongly suggest a request to "make" something rather than just learning a concept
     const creativeKeywords = [
         'create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool',
         '创建', '生成', '制作', '编写', '设计', '开发', '游戏', '模拟', '工具', '代码', '做一个', '弄一个'
     ];
     const hasCreativeKeyword = creativeKeywords.some(kw => lower.includes(kw));
 
-    // For Chinese input, check character length since spaces aren't used for word separation.
-    // Concepts are usually short (2-6 chars), prompts are longer.
     const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
     const isLongChinese = hasChinese && trimmed.length > 10;
 
-    // If it's a long prompt or contains action verbs, assume Creative mode.
-    // Otherwise, assume it's a concept name for Learn mode.
     if (wordCount > 6 || isLongChinese || hasCreativeKeyword) {
         await handleCreativeSubmit(trimmed);
     } else {
@@ -152,6 +182,9 @@ const App: React.FC = () => {
               prompt: prompt,
               type: 'create',
               screenshot: screenshotDataUrl,
+              userId: user?.id,
+              authorName: user?.fullName || user?.username || 'Anonymous',
+              authorAvatarUrl: user?.imageUrl,
             }),
         });
         
@@ -174,7 +207,7 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
@@ -187,7 +220,6 @@ const App: React.FC = () => {
     if (window.location.pathname.startsWith('/view/')) {
         window.history.pushState({}, '', '/');
     }
-    
     setView('home');
     setGeneratedContent(null);
     setConceptPrompt(null);
@@ -204,6 +236,11 @@ const App: React.FC = () => {
       
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
+          activeTab={homeFeedTab}
+          onTabChange={handleTabChange}
+          userId={user?.id}
+          viewingProfileId={viewingProfileId}
+          onUserClick={handleUserClick}
           onUnifiedSubmit={handleUnifiedSubmit}
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
@@ -211,10 +248,17 @@ const App: React.FC = () => {
           error={error}
         />
       </div>
-
+      
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {generatedContent && conceptPrompt && view === 'explainer' && (
-          <ExplainerView content={generatedContent} prompt={conceptPrompt} onBack={handleGoBack} />
+          <ExplainerView 
+            content={generatedContent} 
+            prompt={conceptPrompt} 
+            onBack={handleGoBack} 
+            userId={user?.id}
+            userName={user?.fullName || user?.username || 'Anonymous'}
+            userAvatarUrl={user?.imageUrl}
+          />
         )}
       </div>
 
@@ -232,6 +276,9 @@ const App: React.FC = () => {
             onBack={handleGoBack}
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
+            userId={user?.id}
+            userName={user?.fullName || user?.username || 'Anonymous'}
+            userAvatarUrl={user?.imageUrl}
           />
         )}
       </div>

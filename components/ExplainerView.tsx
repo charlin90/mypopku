@@ -1,4 +1,6 @@
 
+
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -9,6 +11,9 @@ interface ExplainerViewProps {
   content: GeneratedConcept;
   prompt: string;
   onBack: () => void;
+  userId?: string | null;
+  userName?: string;
+  userAvatarUrl?: string;
 }
 
 const LoadingSpinnerInline: React.FC = () => (
@@ -27,7 +32,7 @@ marked.setOptions({
   renderer,
 });
 
-export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, onBack }) => {
+export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, onBack, userId, userName, userAvatarUrl }) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
@@ -82,6 +87,9 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                 prompt,
                 type: 'learn',
                 screenshot: screenshotDataUrl,
+                userId: userId,
+                authorName: userName,
+                authorAvatarUrl: userAvatarUrl,
              }),
         });
 

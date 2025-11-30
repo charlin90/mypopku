@@ -1,8 +1,19 @@
 
+
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
+import type { FeedTab } from '../App.js';
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 interface HomeScreenProps {
+  activeTab: FeedTab;
+  onTabChange: (tab: FeedTab) => void;
+  userId?: string;
+  viewingProfileId?: string | null;
+  onUserClick: (authorId: string) => void;
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
@@ -10,7 +21,7 @@ interface HomeScreenProps {
   error: string | null;
 }
 
-const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = ({ item, onClick }) => (
+const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void }> = ({ item, onClick, onUserClick }) => (
   <a 
     href={`/view/${item.id}`}
     onClick={(e) => {
@@ -54,15 +65,35 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
         {item.prompt}
       </p>
       <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200" title={`${item.views || 0} views`}>
+        <div className="flex items-center gap-2 min-w-0">
+             <div 
+                className={`w-6 h-6 rounded-full border border-black overflow-hidden bg-gray-200 flex-shrink-0 ${item.userId ? 'cursor-pointer hover:ring-2 hover:ring-pink-300 transition-all' : ''}`}
+                onClick={(e) => {
+                  if (item.userId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUserClick(item.userId);
+                  }
+                }}
+             >
+                {item.authorAvatarUrl ? (
+                    <img src={item.authorAvatarUrl} alt={item.authorName} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-200">
+                        {item.authorName ? item.authorName[0].toUpperCase() : '?'}
+                    </div>
+                )}
+            </div>
+            <span className="text-xs font-bold text-gray-700 truncate max-w-[80px] sm:max-w-[100px]" title={item.authorName || 'Anonymous'}>
+                {item.authorName || 'Anonymous'}
+            </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0" title={`${item.views || 0} views`}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-gray-500">
               <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
               <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
             </svg>
             <span className="text-xs font-bold text-gray-500 font-mono">{item.views || 0}</span>
-        </div>
-        <div className="text-xs font-mono text-gray-500 text-right">
-            {new Date(item.createdAt).toLocaleDateString()}
         </div>
       </div>
     </div>
@@ -70,6 +101,11 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
 );
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
+  activeTab,
+  onTabChange,
+  userId,
+  viewingProfileId,
+  onUserClick,
   onUnifiedSubmit,
   onFileUpload,
   onLoadBlobConcept,
@@ -82,7 +118,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [shares, setShares] = useState<CommunityShare[]>([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [feedTab, setFeedTab] = useState<'featured' | 'latest'>('featured');
 
   // Upload Modal State
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -97,20 +132,34 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch community shares on mount or when tab changes
+  // Determine effective user ID for the personal tab (either viewing another user or self)
+  const effectiveUserId = viewingProfileId || userId;
+  const isViewingOther = viewingProfileId && viewingProfileId !== userId;
+
+  // Fetch community shares or user creations when tab changes
   useEffect(() => {
-    const fetchCommunityShares = async () => {
+    const fetchShares = async () => {
       setIsFeedLoading(true);
       setFeedError(null);
       try {
-        const response = await fetch(`/api/community?filter=${feedTab}`);
+        let endpoint = `/api/community?filter=${activeTab}`;
+        
+        if (activeTab === 'personal') {
+            if (!effectiveUserId) {
+                // If we somehow got here without a user ID, empty list
+                setShares([]);
+                setIsFeedLoading(false);
+                return;
+            }
+            endpoint = `/api/user-creations?userId=${effectiveUserId}`;
+        }
+
+        const response = await fetch(endpoint);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to load community creations.');
+          throw new Error(errorData.error || 'Failed to load creations.');
         }
         const data: CommunityShare[] = await response.json();
-        // Sorting is handled by backend for consistency, but we double check here if needed.
-        // Backend sorts by createdAt desc.
         setShares(data);
       } catch (err) {
         setFeedError(err instanceof Error ? err.message : String(err));
@@ -118,8 +167,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         setIsFeedLoading(false);
       }
     };
-    fetchCommunityShares();
-  }, [feedTab]);
+    fetchShares();
+  }, [activeTab, effectiveUserId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -181,6 +230,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
+  const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
 
   return (
@@ -277,40 +327,41 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
              )}
          </div>
 
-         {/* Right: Social & Upload Button */}
+         {/* Right: Social/Nav, Upload & Auth */}
          <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end items-center gap-3">
              <div className="flex items-center gap-2">
-                {/* WeChat Button */}
-                <button 
-                    onClick={() => setShowWeChatModal(true)}
-                    className={`${socialBtn} text-green-600`}
-                    title="WeChat Group"
-                >
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-   
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
-    
-   
-    <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
-    
-    
-    <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
-</svg>
-                </button>
-                {/* Discord Button */}
-                <a 
-                    href="https://discord.com/invite/x4am4gaRZY" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`${socialBtn} text-[#5865F2]`}
-                    title="Join Discord"
-                >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-                    </svg>
-                </a>
+                {/* Slot 1: WeChat (Logged Out only) */}
+                <SignedOut>
+                    <button 
+                        onClick={() => setShowWeChatModal(true)}
+                        className={`${socialBtn} text-green-600`}
+                        title="WeChat Group"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
+                            <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
+                            <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
+                        </svg>
+                    </button>
+                </SignedOut>
+
+                {/* Slot 2: Discord (Logged Out only) */}
+                <SignedOut>
+                    <a 
+                        href="https://discord.com/invite/x4am4gaRZY" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`${socialBtn} text-[#5865F2]`}
+                        title="Join Discord"
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                        </svg>
+                    </a>
+                </SignedOut>
              </div>
 
+            {/* Slot 3: Upload Button */}
             <button 
                 onClick={() => setShowUploadForm(true)} 
                 className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
@@ -320,6 +371,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </svg>
                 <span className="hidden md:inline">Upload</span>
             </button>
+
+            {/* Slot 4: Auth (Sign In / User Button) */}
+            <SignedOut>
+                <SignInButton mode="modal">
+                    <button className={authBtn}>
+                        Sign In
+                    </button>
+                </SignInButton>
+            </SignedOut>
+            <SignedIn>
+                <div className="flex items-center justify-center border-2 border-black rounded-full overflow-hidden w-9 h-9 shadow-[2px_2px_0px_0px_black]">
+                    <UserButton />
+                </div>
+            </SignedIn>
+
          </div>
       </header>
 
@@ -335,22 +401,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
-          {/* Featured / Latest Toggle */}
+          {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
-              <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <button 
-                      onClick={() => setFeedTab('featured')}
-                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                  >
-                      <span>✨</span> Featured
-                  </button>
-                  <button 
-                      onClick={() => setFeedTab('latest')}
-                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                  >
-                      <span>🔥</span> Latest
-                  </button>
-              </div>
+            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full">
+                {(effectiveUserId) && (
+                     <button 
+                        onClick={() => onTabChange('personal')}
+                        className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>👤</span> {isViewingOther ? 'User Gallery' : 'My Popku'}
+                    </button>
+                )}
+                <button 
+                    onClick={() => onTabChange('featured')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>✨</span> Featured
+                </button>
+                <button 
+                    onClick={() => onTabChange('latest')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>🔥</span> Latest
+                </button>
+            </div>
           </div>
 
           {/* Feed Content */}
@@ -367,13 +441,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {shares.length > 0 ? (
                     shares.map(item => (
-                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
+                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} onUserClick={onUserClick} />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
                         <p className="text-gray-400 mt-2">
-                           {feedTab === 'featured' ? "Check back later for curated picks." : "Be the first to create something."}
+                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something."}
                         </p>
                     </div>
                 )}

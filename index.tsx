@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.js';
 import { inject } from '@vercel/analytics';
+import { ClerkProvider } from '@clerk/clerk-react';
 
 inject();
 
@@ -12,8 +13,36 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+
+async function initApp() {
+  try {
+    // Fetch the publishable key from our backend API
+    const response = await fetch('/api/clerk-config');
+    
+    if (!response.ok) {
+        console.error("Failed to load configuration");
+        return;
+    }
+
+    const { publishableKey } = await response.json();
+
+    if (!publishableKey) {
+        console.error("Missing Clerk Publishable Key");
+        return;
+    }
+
+    // Render the app only after we have the key
+    root.render(
+      <React.StrictMode>
+        <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+          <App />
+        </ClerkProvider>
+      </React.StrictMode>
+    );
+
+  } catch (error) {
+    console.error("Error initializing application:", error);
+  }
+}
+
+initApp();

@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -92,6 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^18.3.1",
+    "react-dom": "https://aistudiocdn.com/react-dom@^18.3.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^18.3.1/",
     "react/": "https://aistudiocdn.com/react@^18.3.1/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
@@ -102,7 +102,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     "@vercel/blob": "https://aistudiocdn.com/@vercel/blob@^2.0.0",
     "@upstash/redis": "https://aistudiocdn.com/@upstash/redis@^1.35.6",
     "html2canvas": "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js",
-    "buffer": "https://aistudiocdn.com/buffer@^6.0.3"
+    "buffer": "https://aistudiocdn.com/buffer@^6.0.3",
+    "@clerk/clerk-react": "https://esm.sh/@clerk/clerk-react@5.15.0?external=react,react-dom"
   }
 }
 </script>
