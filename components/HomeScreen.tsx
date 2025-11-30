@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -10,6 +12,8 @@ interface HomeScreenProps {
   activeTab: FeedTab;
   onTabChange: (tab: FeedTab) => void;
   userId?: string;
+  viewingProfileId?: string | null;
+  onUserClick: (authorId: string) => void;
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
@@ -17,7 +21,7 @@ interface HomeScreenProps {
   error: string | null;
 }
 
-const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = ({ item, onClick }) => (
+const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void }> = ({ item, onClick, onUserClick }) => (
   <a 
     href={`/view/${item.id}`}
     onClick={(e) => {
@@ -62,7 +66,16 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
       </p>
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-             <div className="w-6 h-6 rounded-full border border-black overflow-hidden bg-gray-200 flex-shrink-0">
+             <div 
+                className={`w-6 h-6 rounded-full border border-black overflow-hidden bg-gray-200 flex-shrink-0 ${item.userId ? 'cursor-pointer hover:ring-2 hover:ring-pink-300 transition-all' : ''}`}
+                onClick={(e) => {
+                  if (item.userId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUserClick(item.userId);
+                  }
+                }}
+             >
                 {item.authorAvatarUrl ? (
                     <img src={item.authorAvatarUrl} alt={item.authorName} className="w-full h-full object-cover" />
                 ) : (
@@ -91,6 +104,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   activeTab,
   onTabChange,
   userId,
+  viewingProfileId,
+  onUserClick,
   onUnifiedSubmit,
   onFileUpload,
   onLoadBlobConcept,
@@ -117,6 +132,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // Determine effective user ID for the personal tab (either viewing another user or self)
+  const effectiveUserId = viewingProfileId || userId;
+  const isViewingOther = viewingProfileId && viewingProfileId !== userId;
+
   // Fetch community shares or user creations when tab changes
   useEffect(() => {
     const fetchShares = async () => {
@@ -126,13 +145,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         let endpoint = `/api/community?filter=${activeTab}`;
         
         if (activeTab === 'personal') {
-            if (!userId) {
-                // Should not happen if UI is correct, but safe fallback
+            if (!effectiveUserId) {
+                // If we somehow got here without a user ID, empty list
                 setShares([]);
                 setIsFeedLoading(false);
                 return;
             }
-            endpoint = `/api/user-creations?userId=${userId}`;
+            endpoint = `/api/user-creations?userId=${effectiveUserId}`;
         }
 
         const response = await fetch(endpoint);
@@ -149,7 +168,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, userId]);
+  }, [activeTab, effectiveUserId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -385,14 +404,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full">
-                <SignedIn>
+                {(effectiveUserId) && (
                      <button 
                         onClick={() => onTabChange('personal')}
                         className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
                     >
-                        <span>👤</span> My Popku
+                        <span>👤</span> {isViewingOther ? 'User Gallery' : 'My Popku'}
                     </button>
-                </SignedIn>
+                )}
                 <button 
                     onClick={() => onTabChange('featured')}
                     className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
@@ -422,13 +441,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {shares.length > 0 ? (
                     shares.map(item => (
-                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} />
+                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} onUserClick={onUserClick} />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? "You haven't created anything yet." : "Be the first to create something."}
+                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something."}
                         </p>
                     </div>
                 )}

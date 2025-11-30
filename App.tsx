@@ -17,6 +17,8 @@ export type FeedTab = 'featured' | 'latest' | 'personal';
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
   const [homeFeedTab, setHomeFeedTab] = useState<FeedTab>('featured');
+  // Track specific user profile being viewed (null implies current user if logged in)
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +86,20 @@ const App: React.FC = () => {
         document.title = 'Popku';
     }
   }, [view]);
+
+  const handleTabChange = useCallback((tab: FeedTab) => {
+    setHomeFeedTab(tab);
+    // If explicitly clicking the personal tab, reset to "My" profile (current user)
+    if (tab === 'personal') {
+        setViewingProfileId(null);
+    }
+  }, []);
+
+  const handleUserClick = useCallback((authorId: string) => {
+    setViewingProfileId(authorId);
+    setHomeFeedTab('personal');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleConceptSubmit = useCallback(async (concept: string) => {
     if (!concept.trim()) return;
@@ -221,8 +237,10 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
           activeTab={homeFeedTab}
-          onTabChange={setHomeFeedTab}
+          onTabChange={handleTabChange}
           userId={user?.id}
+          viewingProfileId={viewingProfileId}
+          onUserClick={handleUserClick}
           onUnifiedSubmit={handleUnifiedSubmit}
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
