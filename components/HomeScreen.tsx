@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
+import type { FeedTab } from '../App.js';
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 interface HomeScreenProps {
+  activeTab: FeedTab;
+  onTabChange: (tab: FeedTab) => void;
+  userId?: string;
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
-  onNavigateToProfile: () => void;
-  onNavigateToHome: () => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -73,11 +75,12 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
 );
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
+  activeTab,
+  onTabChange,
+  userId,
   onUnifiedSubmit,
   onFileUpload,
   onLoadBlobConcept,
-  onNavigateToProfile,
-  onNavigateToHome,
   isLoading, 
   error,
 }) => {
@@ -87,7 +90,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [shares, setShares] = useState<CommunityShare[]>([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
-  const [feedTab, setFeedTab] = useState<'featured' | 'latest'>('featured');
 
   // Upload Modal State
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -102,20 +104,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch community shares on mount or when tab changes
+  // Fetch community shares or user creations when tab changes
   useEffect(() => {
-    const fetchCommunityShares = async () => {
+    const fetchShares = async () => {
       setIsFeedLoading(true);
       setFeedError(null);
       try {
-        const response = await fetch(`/api/community?filter=${feedTab}`);
+        let endpoint = `/api/community?filter=${activeTab}`;
+        
+        if (activeTab === 'personal') {
+            if (!userId) {
+                // Should not happen if UI is correct, but safe fallback
+                setShares([]);
+                setIsFeedLoading(false);
+                return;
+            }
+            endpoint = `/api/user-creations?userId=${userId}`;
+        }
+
+        const response = await fetch(endpoint);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to load community creations.');
+          throw new Error(errorData.error || 'Failed to load creations.');
         }
         const data: CommunityShare[] = await response.json();
-        // Sorting is handled by backend for consistency, but we double check here if needed.
-        // Backend sorts by createdAt desc.
         setShares(data);
       } catch (err) {
         setFeedError(err instanceof Error ? err.message : String(err));
@@ -123,8 +135,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         setIsFeedLoading(false);
       }
     };
-    fetchCommunityShares();
-  }, [feedTab]);
+    fetchShares();
+  }, [activeTab, userId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -189,6 +201,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
   const navBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none bg-white hover:bg-gray-50";
+  const navBtnActive = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-none translate-y-0.5 bg-gray-100 cursor-default";
 
   return (
     <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
@@ -303,8 +316,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </SignedOut>
                 <SignedIn>
                     <button 
-                        onClick={onNavigateToHome}
-                        className={navBtn}
+                        onClick={() => onTabChange('featured')}
+                        className={activeTab !== 'personal' ? navBtnActive : navBtn}
                     >
                         Home
                     </button>
@@ -325,7 +338,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </a>
                 </SignedOut>
                 <SignedIn>
-                    <button onClick={onNavigateToProfile} className={navBtn}>My Popku</button>
+                    <button 
+                        onClick={() => onTabChange('personal')} 
+                        className={activeTab === 'personal' ? navBtnActive : navBtn}
+                    >
+                        My Popku
+                    </button>
                 </SignedIn>
              </div>
 
@@ -372,30 +390,48 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
            {/* Mobile Nav */}
            <div className="lg:hidden flex justify-center mb-6">
                  <div className="bg-gray-100 border-2 border-black rounded-xl p-1 flex gap-1">
-                    <button onClick={onNavigateToHome} className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold shadow-sm">Home</button>
+                    <button 
+                        onClick={() => onTabChange('featured')} 
+                        className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm ${activeTab !== 'personal' ? 'bg-black text-white' : 'text-gray-500'}`}
+                    >
+                        Home
+                    </button>
                     <SignedIn>
-                         <button onClick={onNavigateToProfile} className="px-4 py-2 text-gray-500 rounded-lg text-sm font-bold">My Popku</button>
+                         <button 
+                            onClick={() => onTabChange('personal')} 
+                            className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm ${activeTab === 'personal' ? 'bg-black text-white' : 'text-gray-500'}`}
+                        >
+                            My Popku
+                        </button>
                     </SignedIn>
                  </div>
            </div>
 
-          {/* Featured / Latest Toggle */}
-          <div className="flex justify-center mb-8">
-              <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <button 
-                      onClick={() => setFeedTab('featured')}
-                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                  >
-                      <span>✨</span> Featured
-                  </button>
-                  <button 
-                      onClick={() => setFeedTab('latest')}
-                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${feedTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                  >
-                      <span>🔥</span> Latest
-                  </button>
-              </div>
-          </div>
+          {/* Featured / Latest Toggle - Only show if NOT in personal mode */}
+          {activeTab !== 'personal' ? (
+            <div className="flex justify-center mb-8">
+                <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <button 
+                        onClick={() => onTabChange('featured')}
+                        className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>✨</span> Featured
+                    </button>
+                    <button 
+                        onClick={() => onTabChange('latest')}
+                        className={`px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>🔥</span> Latest
+                    </button>
+                </div>
+            </div>
+          ) : (
+            <div className="flex justify-center mb-8">
+                 <h2 className="text-3xl font-black italic tracking-tight text-black drop-shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">
+                    My Popku
+                 </h2>
+            </div>
+          )}
 
           {/* Feed Content */}
           {isFeedLoading ? (
@@ -417,7 +453,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
                         <p className="text-gray-400 mt-2">
-                           {feedTab === 'featured' ? "Check back later for curated picks." : "Be the first to create something."}
+                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? "You haven't created anything yet." : "Be the first to create something."}
                         </p>
                     </div>
                 )}

@@ -8,13 +8,15 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
-import { MyPopkuView } from './components/MyPopkuView.js';
 import { useUser } from '@clerk/clerk-react';
 
-type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'myPopku';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
+export type FeedTab = 'featured' | 'latest' | 'personal';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
+  const [homeFeedTab, setHomeFeedTab] = useState<FeedTab>('featured');
+  
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
@@ -61,12 +63,12 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Redirect to My Popku when user signs in (only once per session load and if not deep linking)
+  // Redirect to My Popku (Personal Tab) when user signs in
   useEffect(() => {
     if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
         // Don't redirect if we are already viewing a deep link (e.g., view/ID)
         if (!window.location.pathname.startsWith('/view/')) {
-            setView('myPopku');
+            setHomeFeedTab('personal');
         }
         hasRedirectedRef.current = true;
     }
@@ -77,7 +79,7 @@ const App: React.FC = () => {
       window.scrollTo(0, 0);
     }
     // Reset title when going back home
-    if (view === 'home' || view === 'myPopku') {
+    if (view === 'home') {
         document.title = 'Popku';
     }
   }, [view]);
@@ -134,20 +136,15 @@ const App: React.FC = () => {
     const lower = trimmed.toLowerCase();
     const wordCount = trimmed.split(/\s+/).length;
     
-    // Keywords that strongly suggest a request to "make" something rather than just learning a concept
     const creativeKeywords = [
         'create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool',
         '创建', '生成', '制作', '编写', '设计', '开发', '游戏', '模拟', '工具', '代码', '做一个', '弄一个'
     ];
     const hasCreativeKeyword = creativeKeywords.some(kw => lower.includes(kw));
 
-    // For Chinese input, check character length since spaces aren't used for word separation.
-    // Concepts are usually short (2-6 chars), prompts are longer.
     const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
     const isLongChinese = hasChinese && trimmed.length > 10;
 
-    // If it's a long prompt or contains action verbs, assume Creative mode.
-    // Otherwise, assume it's a concept name for Learn mode.
     if (wordCount > 6 || isLongChinese || hasCreativeKeyword) {
         await handleCreativeSubmit(trimmed);
     } else {
@@ -204,10 +201,6 @@ const App: React.FC = () => {
     if (window.location.pathname.startsWith('/view/')) {
         window.history.pushState({}, '', '/');
     }
-    
-    // If user is logged in, going back usually implies going to their profile, but standard UX is Home.
-    // However, since we auto-redirect to MyPopku on load, let's just go to 'home' view which renders HomeScreen.
-    // HomeScreen has nav to switch between Home/MyPopku.
     setView('home');
     setGeneratedContent(null);
     setConceptPrompt(null);
@@ -224,26 +217,17 @@ const App: React.FC = () => {
       
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'home' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <HomeScreen 
+          activeTab={homeFeedTab}
+          onTabChange={setHomeFeedTab}
+          userId={user?.id}
           onUnifiedSubmit={handleUnifiedSubmit}
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
-          onNavigateToProfile={() => setView('myPopku')}
-          onNavigateToHome={() => setView('home')}
           isLoading={isLoading} 
           error={error}
         />
       </div>
       
-      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'myPopku' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {view === 'myPopku' && user && (
-            <MyPopkuView 
-                userId={user.id}
-                onLoadBlobConcept={handleLoadBlobConcept}
-                onBack={handleGoBack}
-            />
-        )}
-      </div>
-
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {generatedContent && conceptPrompt && view === 'explainer' && (
           <ExplainerView 
