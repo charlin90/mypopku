@@ -1,4 +1,5 @@
 
+
 export interface GeneratedConcept {
   html: string;
   css: string;
@@ -27,4 +28,5 @@ export interface CommunityShare {
   blobUrl: string;
   createdAt: number;
   views?: number;
+  userId?: string;
 }

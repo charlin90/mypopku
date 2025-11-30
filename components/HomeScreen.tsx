@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
@@ -6,6 +7,7 @@ interface HomeScreenProps {
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
   onLoadBlobConcept: (blobUrl: string) => void;
+  onNavigateToProfile: () => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -73,6 +75,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onUnifiedSubmit,
   onFileUpload,
   onLoadBlobConcept,
+  onNavigateToProfile,
   isLoading, 
   error,
 }) => {
@@ -183,6 +186,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
   const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
+  const navBtn = "px-4 py-2 rounded-xl text-sm font-bold transition-all text-gray-500 hover:text-black hover:bg-gray-50";
+  const navBtnActive = "px-4 py-2 rounded-xl text-sm font-bold transition-all bg-black text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]";
+
 
   return (
     <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
@@ -197,9 +203,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  </div>
                  <span className="hidden sm:inline">Popku</span>
              </div>
-             <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
-                An AI-native community for creating and sharing interactive content
-             </span>
+             
+             <div className="hidden lg:flex mt-1 gap-2">
+                 <button className={navBtnActive}>Home</button>
+                 <SignedIn>
+                     <button onClick={onNavigateToProfile} className={navBtn}>My Popku</button>
+                 </SignedIn>
+             </div>
          </div>
 
          {/* Center: Unified Input Omni-box */}
@@ -344,6 +354,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
             </div>
           )}
+
+           {/* Mobile Nav */}
+           <div className="lg:hidden flex justify-center mb-6">
+                 <div className="bg-gray-100 border-2 border-black rounded-xl p-1 flex gap-1">
+                    <button onClick={() => {}} className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold shadow-sm">Home</button>
+                    <SignedIn>
+                         <button onClick={onNavigateToProfile} className="px-4 py-2 text-gray-500 rounded-lg text-sm font-bold">My Popku</button>
+                    </SignedIn>
+                 </div>
+           </div>
 
           {/* Featured / Latest Toggle */}
           <div className="flex justify-center mb-8">

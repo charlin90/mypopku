@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -8,8 +9,10 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
+import { MyPopkuView } from './components/MyPopkuView.js';
+import { useUser } from '@clerk/clerk-react';
 
-type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'myPopku';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -21,6 +24,8 @@ const App: React.FC = () => {
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
+  
+  const { user } = useUser();
 
   // Handle inbound links for SEO (Display Wall Strategy)
   useEffect(() => {
@@ -61,7 +66,7 @@ const App: React.FC = () => {
       window.scrollTo(0, 0);
     }
     // Reset title when going back home
-    if (view === 'home') {
+    if (view === 'home' || view === 'myPopku') {
         document.title = 'Popku';
     }
   }, [view]);
@@ -152,6 +157,7 @@ const App: React.FC = () => {
               prompt: prompt,
               type: 'create',
               screenshot: screenshotDataUrl,
+              userId: user?.id,
             }),
         });
         
@@ -174,7 +180,7 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
@@ -207,14 +213,30 @@ const App: React.FC = () => {
           onUnifiedSubmit={handleUnifiedSubmit}
           onFileUpload={handleFileUpload}
           onLoadBlobConcept={handleLoadBlobConcept}
+          onNavigateToProfile={() => setView('myPopku')}
           isLoading={isLoading} 
           error={error}
         />
       </div>
+      
+      <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'myPopku' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {view === 'myPopku' && user && (
+            <MyPopkuView 
+                userId={user.id}
+                onLoadBlobConcept={handleLoadBlobConcept}
+                onBack={handleGoBack}
+            />
+        )}
+      </div>
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'explainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {generatedContent && conceptPrompt && view === 'explainer' && (
-          <ExplainerView content={generatedContent} prompt={conceptPrompt} onBack={handleGoBack} />
+          <ExplainerView 
+            content={generatedContent} 
+            prompt={conceptPrompt} 
+            onBack={handleGoBack} 
+            userId={user?.id}
+          />
         )}
       </div>
 
@@ -232,6 +254,7 @@ const App: React.FC = () => {
             onBack={handleGoBack}
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
+            userId={user?.id}
           />
         )}
       </div>
