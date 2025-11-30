@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -11,6 +13,8 @@ interface CreativeViewProps {
   initialShareUrl?: string | null;
   onClearInitialShareUrl: () => void;
   userId?: string | null;
+  userName?: string;
+  userAvatarUrl?: string;
 }
 
 const LoadingSpinnerInline: React.FC = () => (
@@ -18,7 +22,7 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack, initialShareUrl, onClearInitialShareUrl, userId }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -72,6 +76,8 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
               type: 'create',
               screenshot: screenshotDataUrl,
               userId: userId,
+              authorName: userName,
+              authorAvatarUrl: userAvatarUrl,
             }),
         });
 

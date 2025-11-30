@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -59,15 +61,26 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void }> = (
         {item.prompt}
       </p>
       <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200" title={`${item.views || 0} views`}>
+        <div className="flex items-center gap-2 min-w-0">
+             <div className="w-6 h-6 rounded-full border border-black overflow-hidden bg-gray-200 flex-shrink-0">
+                {item.authorAvatarUrl ? (
+                    <img src={item.authorAvatarUrl} alt={item.authorName} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-200">
+                        {item.authorName ? item.authorName[0].toUpperCase() : '?'}
+                    </div>
+                )}
+            </div>
+            <span className="text-xs font-bold text-gray-700 truncate max-w-[80px] sm:max-w-[100px]" title={item.authorName || 'Anonymous'}>
+                {item.authorName || 'Anonymous'}
+            </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0" title={`${item.views || 0} views`}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-gray-500">
               <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
               <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
             </svg>
             <span className="text-xs font-bold text-gray-500 font-mono">{item.views || 0}</span>
-        </div>
-        <div className="text-xs font-mono text-gray-500 text-right">
-            {new Date(item.createdAt).toLocaleDateString()}
         </div>
       </div>
     </div>

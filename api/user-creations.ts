@@ -1,4 +1,5 @@
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -21,10 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // 1. Get List of IDs for this user
-    const ids = await redis.lrange(`user:${userId}:shares`, 0, -1);
+    // 1. Get List of IDs for this user from the single Hash
+    const ids = await redis.hget<string[]>('user_creations', userId);
 
-    if (ids.length === 0) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(200).json([]);
     }
 

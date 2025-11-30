@@ -1,5 +1,6 @@
 
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
 import { put } from '@vercel/blob';
@@ -286,7 +287,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = req.body;
     let htmlContent: string;
-    const { screenshot, type, prompt, userId } = body;
+    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl } = body;
 
     if (!prompt || !type) {
       return res.status(400).json({ error: 'Invalid payload.' });
@@ -348,6 +349,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         blobUrl,
         createdAt: Date.now(),
         userId: userId || undefined,
+        authorName,
+        authorAvatarUrl,
     };
     
     // 1. Add to the feed list
@@ -356,9 +359,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2. Add to key-value store using Hash to avoid cluttering keys
     await redis.hset('shares', { [id]: shareData });
 
-    // 3. If user is logged in, add to their personal list
+    // 3. If user is logged in, add to their personal list stored in a single Hash
     if (userId) {
-        await redis.lpush(`user:${userId}:shares`, id);
+        // Use a single hash 'user_creations' mapping userId -> [id1, id2...]
+        const userShares = await redis.hget<string[]>('user_creations', userId) || [];
+        userShares.unshift(id);
+        await redis.hset('user_creations', { [userId]: userShares });
     }
 
     // Return the SEO-friendly URL to the user

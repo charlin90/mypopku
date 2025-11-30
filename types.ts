@@ -29,4 +29,6 @@ export interface CommunityShare {
   createdAt: number;
   views?: number;
   userId?: string;
+  authorName?: string;
+  authorAvatarUrl?: string;
 }

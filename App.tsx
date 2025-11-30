@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -166,6 +167,8 @@ const App: React.FC = () => {
               type: 'create',
               screenshot: screenshotDataUrl,
               userId: user?.id,
+              authorName: user?.fullName || user?.username || 'Anonymous',
+              authorAvatarUrl: user?.imageUrl,
             }),
         });
         
@@ -235,6 +238,8 @@ const App: React.FC = () => {
             prompt={conceptPrompt} 
             onBack={handleGoBack} 
             userId={user?.id}
+            userName={user?.fullName || user?.username || 'Anonymous'}
+            userAvatarUrl={user?.imageUrl}
           />
         )}
       </div>
@@ -254,6 +259,8 @@ const App: React.FC = () => {
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
             userId={user?.id}
+            userName={user?.fullName || user?.username || 'Anonymous'}
+            userAvatarUrl={user?.imageUrl}
           />
         )}
       </div>
