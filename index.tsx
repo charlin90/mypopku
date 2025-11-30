@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.js';
@@ -11,18 +12,37 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-// Import your publishable key safely
-const PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+const root = ReactDOM.createRoot(rootElement);
 
-if (!PUBLISHABLE_KEY) {
-  console.error("Missing Publishable Key: Please add VITE_CLERK_PUBLISHABLE_KEY to your .env or Vercel settings");
+async function initApp() {
+  try {
+    // Fetch the publishable key from our backend API
+    const response = await fetch('/api/clerk-config');
+    
+    if (!response.ok) {
+        console.error("Failed to load configuration");
+        return;
+    }
+
+    const { publishableKey } = await response.json();
+
+    if (!publishableKey) {
+        console.error("Missing Clerk Publishable Key");
+        return;
+    }
+
+    // Render the app only after we have the key
+    root.render(
+      <React.StrictMode>
+        <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+          <App />
+        </ClerkProvider>
+      </React.StrictMode>
+    );
+
+  } catch (error) {
+    console.error("Error initializing application:", error);
+  }
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <App />
-    </ClerkProvider>
-  </React.StrictMode>
-);
+initApp();
