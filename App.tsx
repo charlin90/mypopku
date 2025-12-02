@@ -32,6 +32,29 @@ const App: React.FC = () => {
   const { user, isSignedIn, isLoaded } = useUser();
   const hasRedirectedRef = useRef(false);
 
+  // Restore state if returning from a login redirect (which causes page refresh)
+  useEffect(() => {
+    const restoreState = sessionStorage.getItem('restore_state');
+    if (restoreState) {
+        try {
+            const parsed = JSON.parse(restoreState);
+            if (parsed.view === 'explainer' && parsed.content && parsed.prompt) {
+                setGeneratedContent(parsed.content);
+                setConceptPrompt(parsed.prompt);
+                setView('explainer');
+            } else if (parsed.view === 'creativeView' && parsed.html && parsed.prompt) {
+                setCreativeHtml(parsed.html);
+                setCreativePrompt(parsed.prompt);
+                setView('creativeView');
+            }
+            // Clear immediately to prevent restoring on subsequent manual refreshes
+            sessionStorage.removeItem('restore_state');
+        } catch (e) {
+            console.error("Failed to restore app state:", e);
+        }
+    }
+  }, []);
+
   // Handle inbound links for SEO (Display Wall Strategy)
   useEffect(() => {
     const path = window.location.pathname;
@@ -70,12 +93,14 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
         // Don't redirect if we are already viewing a deep link (e.g., view/ID)
-        if (!window.location.pathname.startsWith('/view/')) {
+        // Also don't redirect if we just restored a view (e.g. explainer/creative)
+        const isRestoring = sessionStorage.getItem('restore_state') !== null;
+        if (!window.location.pathname.startsWith('/view/') && view === 'home' && !isRestoring) {
             setHomeFeedTab('personal');
         }
         hasRedirectedRef.current = true;
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, view]);
 
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {

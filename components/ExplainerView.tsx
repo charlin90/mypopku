@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -62,7 +63,13 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const handleShareClick = async () => {
     // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
-        console.log('[ExplainerView] User not logged in. Setting sessionStorage flag.');
+        console.log('[ExplainerView] User not logged in. Saving state and setting pending flag.');
+        // Persist the current view state so App.tsx can restore it after a potential page reload during auth
+        sessionStorage.setItem('restore_state', JSON.stringify({
+            view: 'explainer',
+            content,
+            prompt
+        }));
         sessionStorage.setItem('pending_share_explainer', 'true');
         openSignIn();
         return;

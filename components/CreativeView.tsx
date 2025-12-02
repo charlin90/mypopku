@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -43,7 +44,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const handleShareClick = async () => {
     // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
-        console.log('[CreativeView] User not logged in. Setting sessionStorage flag.');
+        console.log('[CreativeView] User not logged in. Saving state and setting pending flag.');
+        // Persist the current view state so App.tsx can restore it after a potential page reload during auth
+        sessionStorage.setItem('restore_state', JSON.stringify({
+            view: 'creativeView',
+            html,
+            prompt
+        }));
         sessionStorage.setItem('pending_share_creative', 'true');
         openSignIn();
         return;
