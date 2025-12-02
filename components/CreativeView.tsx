@@ -1,13 +1,4 @@
 
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -51,6 +42,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   }, [initialShareUrl]);
   
   const handleShareClick = async () => {
+    // If user is not logged in, trigger sign in modal and set pending flag
     if (!userId) {
         setPendingShare(true);
         openSignIn();
@@ -112,6 +104,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     }
   };
 
+  // Automatically trigger share if pending share is true and user logs in
   useEffect(() => {
     if (userId && pendingShare) {
         setPendingShare(false);

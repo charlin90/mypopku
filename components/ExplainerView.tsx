@@ -1,12 +1,4 @@
 
-
-
-
-
-
-
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -69,6 +61,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
   const handleShareClick = async () => {
+    // If user is not logged in, trigger sign in modal and set pending flag
     if (!userId) {
         setPendingShare(true);
         openSignIn();
@@ -124,6 +117,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     }
   };
 
+  // Automatically trigger share if pending share is true and user logs in
   useEffect(() => {
     if (userId && pendingShare) {
         setPendingShare(false);
