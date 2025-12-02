@@ -3,6 +3,8 @@
 
 
 
+
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -54,6 +56,8 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
+  const [pendingShare, setPendingShare] = useState(false);
+
   const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {
@@ -65,6 +69,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
   const handleShareClick = async () => {
     if (!userId) {
+        setPendingShare(true);
         openSignIn();
         return;
     }
@@ -117,6 +122,13 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         setIsSharing(false);
     }
   };
+
+  useEffect(() => {
+    if (userId && pendingShare) {
+        setPendingShare(false);
+        handleShareClick();
+    }
+  }, [userId, pendingShare]);
 
   const handleCopy = () => {
     if (shareUrl) {
