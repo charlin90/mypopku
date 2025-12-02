@@ -4,6 +4,10 @@
 
 
 
+
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -36,6 +40,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
+  const [pendingShare, setPendingShare] = useState(false);
   const { openSignIn } = useClerk();
 
   useEffect(() => {
@@ -47,6 +52,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   
   const handleShareClick = async () => {
     if (!userId) {
+        setPendingShare(true);
         openSignIn();
         return;
     }
@@ -105,6 +111,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         setIsSharing(false);
     }
   };
+
+  useEffect(() => {
+    if (userId && pendingShare) {
+        setPendingShare(false);
+        handleShareClick();
+    }
+  }, [userId, pendingShare]);
 
   const handleCopy = () => {
     if (shareUrl) {

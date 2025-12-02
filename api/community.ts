@@ -38,9 +38,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     } else {
         // Default: Fetch all items from the list (Latest)
-        // For large lists, consider pagination in the future.
+        // Redis lrange returns an array of strings (because we store them as JSON strings)
         const data = await redis.lrange('community:shares', 0, -1);
-        shares = data as unknown as CommunityShare[];
+        
+        // We must parse the strings back into objects
+        shares = data.map((item: unknown) => {
+            if (typeof item === 'string') {
+                try {
+                    return JSON.parse(item);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return item as CommunityShare;
+        }).filter((item): item is CommunityShare => !!item);
     }
     
     // Fetch view counts for all shares in one go using Hash
