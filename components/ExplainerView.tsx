@@ -5,6 +5,8 @@
 
 
 
+
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -57,7 +59,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
   const [pendingShare, setPendingShare] = useState(false);
-
   const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {

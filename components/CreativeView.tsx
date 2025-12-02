@@ -6,6 +6,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -39,7 +41,6 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
   const [pendingShare, setPendingShare] = useState(false);
-
   const { openSignIn } = useClerk();
 
   useEffect(() => {
