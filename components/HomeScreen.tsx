@@ -370,10 +370,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
              <div className="flex justify-center items-center h-64">
                 <div className="w-12 h-12 border-4 border-black border-t-pink-500 rounded-full animate-spin"></div>
              </div>
-          ) : feedError ? (
+          ) : (feedError || error) ? (
              <div className="text-center py-10 bg-gray-50 border-2 border-black rounded-xl max-w-md mx-auto">
                 <p className="text-lg font-bold">Failed to load</p>
-                <p className="text-sm text-red-500">{feedError}</p>
+                <p className="text-sm text-red-500">{feedError || error}</p>
              </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto pb-20">
