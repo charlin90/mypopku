@@ -50,7 +50,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
-  const [pendingShare, setPendingShare] = useState(false);
   const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {
@@ -61,12 +60,10 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
   const handleShareClick = async () => {
-    console.log('[ExplainerView] handleShareClick initiated', { userId, pendingShare });
-
-    // If user is not logged in, trigger sign in modal and set pending flag
+    // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
-        console.log('[ExplainerView] User not logged in. Setting pendingShare=true and opening sign-in.');
-        setPendingShare(true);
+        console.log('[ExplainerView] User not logged in. Setting sessionStorage flag.');
+        sessionStorage.setItem('pending_share_explainer', 'true');
         openSignIn();
         return;
     }
@@ -120,15 +117,17 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     }
   };
 
-  // Automatically trigger share if pending share is true and user logs in
+  // Automatically trigger share if pending share flag exists in sessionStorage and user logs in
   useEffect(() => {
-    console.log('[ExplainerView] useEffect[userId, pendingShare]', { userId, pendingShare });
-    if (userId && pendingShare) {
+    const isPending = sessionStorage.getItem('pending_share_explainer') === 'true';
+    console.log('[ExplainerView] Checking auto-share', { userId, isPending });
+    
+    if (userId && isPending) {
         console.log('[ExplainerView] Triggering auto-share logic...');
-        setPendingShare(false);
+        sessionStorage.removeItem('pending_share_explainer');
         handleShareClick();
     }
-  }, [userId, pendingShare]);
+  }, [userId]);
 
   const handleCopy = () => {
     if (shareUrl) {

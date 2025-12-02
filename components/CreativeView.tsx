@@ -31,7 +31,6 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
-  const [pendingShare, setPendingShare] = useState(false);
   const { openSignIn } = useClerk();
 
   useEffect(() => {
@@ -42,12 +41,10 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   }, [initialShareUrl]);
   
   const handleShareClick = async () => {
-    console.log('[CreativeView] handleShareClick initiated', { userId, pendingShare });
-
-    // If user is not logged in, trigger sign in modal and set pending flag
+    // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
-        console.log('[CreativeView] User not logged in. Setting pendingShare=true and opening sign-in.');
-        setPendingShare(true);
+        console.log('[CreativeView] User not logged in. Setting sessionStorage flag.');
+        sessionStorage.setItem('pending_share_creative', 'true');
         openSignIn();
         return;
     }
@@ -107,15 +104,17 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     }
   };
 
-  // Automatically trigger share if pending share is true and user logs in
+  // Automatically trigger share if pending share flag exists in sessionStorage and user logs in
   useEffect(() => {
-    console.log('[CreativeView] useEffect[userId, pendingShare]', { userId, pendingShare });
-    if (userId && pendingShare) {
+    const isPending = sessionStorage.getItem('pending_share_creative') === 'true';
+    console.log('[CreativeView] Checking auto-share', { userId, isPending });
+    
+    if (userId && isPending) {
         console.log('[CreativeView] Triggering auto-share logic...');
-        setPendingShare(false);
+        sessionStorage.removeItem('pending_share_creative');
         handleShareClick();
     }
-  }, [userId, pendingShare]);
+  }, [userId]);
 
   const handleCopy = () => {
     if (shareUrl) {
