@@ -39,4 +39,13 @@ declare module '@clerk/clerk-react' {
     getToken: (options?: any) => Promise<string | null>;
     signOut: () => Promise<void>;
   };
+
+  export function useClerk(): {
+    openSignIn: (options?: any) => void;
+    openSignUp: (options?: any) => void;
+    signOut: (callback?: () => void) => Promise<void>;
+    user: any;
+    session: any;
+    client: any;
+  };
 }
