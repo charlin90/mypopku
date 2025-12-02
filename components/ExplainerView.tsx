@@ -61,8 +61,11 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
   const handleShareClick = async () => {
+    console.log('[ExplainerView] handleShareClick initiated', { userId, pendingShare });
+
     // If user is not logged in, trigger sign in modal and set pending flag
     if (!userId) {
+        console.log('[ExplainerView] User not logged in. Setting pendingShare=true and opening sign-in.');
         setPendingShare(true);
         openSignIn();
         return;
@@ -119,7 +122,9 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
   // Automatically trigger share if pending share is true and user logs in
   useEffect(() => {
+    console.log('[ExplainerView] useEffect[userId, pendingShare]', { userId, pendingShare });
     if (userId && pendingShare) {
+        console.log('[ExplainerView] Triggering auto-share logic...');
         setPendingShare(false);
         handleShareClick();
     }

@@ -42,8 +42,11 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   }, [initialShareUrl]);
   
   const handleShareClick = async () => {
+    console.log('[CreativeView] handleShareClick initiated', { userId, pendingShare });
+
     // If user is not logged in, trigger sign in modal and set pending flag
     if (!userId) {
+        console.log('[CreativeView] User not logged in. Setting pendingShare=true and opening sign-in.');
         setPendingShare(true);
         openSignIn();
         return;
@@ -106,7 +109,9 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
 
   // Automatically trigger share if pending share is true and user logs in
   useEffect(() => {
+    console.log('[CreativeView] useEffect[userId, pendingShare]', { userId, pendingShare });
     if (userId && pendingShare) {
+        console.log('[CreativeView] Triggering auto-share logic...');
         setPendingShare(false);
         handleShareClick();
     }
