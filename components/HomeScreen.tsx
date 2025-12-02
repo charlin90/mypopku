@@ -541,7 +541,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         }}
                     />
                  </div>
-                 <p className="text-sm text-gray-500 font-bold">该二维码7天内(12月3日前)有效，重新进入将更新</p>
+                 <p className="text-sm text-gray-500 font-bold">该二维码长期有效</p>
             </div>
         </div>
       )}
