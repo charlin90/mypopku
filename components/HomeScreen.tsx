@@ -11,7 +11,7 @@ interface HomeScreenProps {
   onUserClick: (authorId: string) => void;
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
-  onLoadBlobConcept: (blobUrl: string) => void;
+  onLoadBlobConcept: (blobUrl: string, prompt: string) => void;
   isLoading: boolean;
   error: string | null;
   refreshTrigger: number;
@@ -187,8 +187,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     setShowDropdown(true);
   };
 
-  const handleExistingSelect = (blobUrl: string) => {
-    onLoadBlobConcept(blobUrl);
+  const handleExistingSelect = (share: CommunityShare) => {
+    onLoadBlobConcept(share.blobUrl, share.prompt);
     setShowDropdown(false);
   };
 
@@ -284,7 +284,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         window.history.pushState({}, '', `/view/${share.id}`);
                                         // Trigger count but don't wait
                                         fetch(`/api/item?id=${share.id}`).catch(() => {});
-                                        handleExistingSelect(share.blobUrl);
+                                        handleExistingSelect(share);
                                     }}
                                     className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
                                 >
@@ -438,7 +438,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {shares.length > 0 ? (
                     shares.map(item => (
-                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} onUserClick={onUserClick} />
+                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl, item.prompt)} onUserClick={onUserClick} />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">

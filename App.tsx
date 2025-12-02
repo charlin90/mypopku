@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
   const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
+  const [blobPromptToLoad, setBlobPromptToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
@@ -84,6 +85,7 @@ const App: React.FC = () => {
                 // SEO Strategy: Page contains generated App preview
                 if (data.blobUrl) {
                     setBlobUrlToLoad(data.blobUrl);
+                    setBlobPromptToLoad(data.prompt);
                     setView('blobExplainer');
                 }
             })
@@ -241,9 +243,10 @@ const App: React.FC = () => {
     }
   }, [user, getDisplayName]);
 
-  const handleLoadBlobConcept = useCallback((blobUrl: string) => {
+  const handleLoadBlobConcept = useCallback((blobUrl: string, prompt: string) => {
     setError(null);
     setBlobUrlToLoad(blobUrl);
+    setBlobPromptToLoad(prompt);
     setView('blobExplainer');
   }, []);
 
@@ -256,6 +259,7 @@ const App: React.FC = () => {
     setGeneratedContent(null);
     setConceptPrompt(null);
     setBlobUrlToLoad(null);
+    setBlobPromptToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
     setShareUrlOnLoad(null);
@@ -298,7 +302,11 @@ const App: React.FC = () => {
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'blobExplainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {blobUrlToLoad && view === 'blobExplainer' && (
-          <BlobExplainerView blobUrl={blobUrlToLoad} onBack={handleGoBack} />
+          <BlobExplainerView 
+            blobUrl={blobUrlToLoad} 
+            prompt={blobPromptToLoad || ''}
+            onBack={handleGoBack} 
+          />
         )}
       </div>
 

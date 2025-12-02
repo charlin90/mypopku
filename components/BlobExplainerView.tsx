@@ -1,14 +1,17 @@
-
 import React, { useState } from 'react';
 
 interface BlobExplainerViewProps {
   blobUrl: string;
+  prompt: string;
   onBack: () => void;
 }
 
-export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, onBack }) => {
+export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, prompt, onBack }) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
+  
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
 
   const shareableUrl = blobUrl;
 
@@ -25,6 +28,12 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
   
   const closeShareModal = () => {
     setShowShareModal(false);
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(prompt);
+    setPromptCopyButtonText('Copied!');
+    setTimeout(() => setPromptCopyButtonText('Copy'), 2000);
   };
 
   const btnStyle = "bg-white border-2 border-black text-black font-bold py-2 px-4 rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all";
@@ -47,6 +56,15 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
               >
                   Share
               </button>
+              {prompt && (
+                <button 
+                  onClick={() => setShowPromptModal(true)} 
+                  className={btnStyle}
+                  aria-label="Show prompt"
+                >
+                  Prompt
+                </button>
+              )}
           </div>
           <iframe
               src={blobUrl}
@@ -72,6 +90,25 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, o
                  <button onClick={closeShareModal} className="mt-2 bg-gray-200 hover:bg-gray-300 text-black border-2 border-black font-bold py-2 px-6 rounded-xl self-end">
                     Close
                 </button>
+            </div>
+        </div>
+      )}
+
+      {showPromptModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPromptModal(false)}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+                <h2 className="text-2xl font-black text-black">The Secret Recipe 🤫</h2>
+                <div className="bg-gray-50 border-2 border-black rounded-xl p-4 text-gray-800 max-h-96 overflow-y-auto font-mono text-sm shadow-inner">
+                    <p className="whitespace-pre-wrap">{prompt}</p>
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                    <button onClick={handleCopyPrompt} className="bg-lime-300 hover:bg-lime-400 border-2 border-black text-black font-bold py-2 px-4 rounded-xl shadow-[3px_3px_0px_0px_black] transition-all w-28">
+                        {promptCopyButtonText}
+                    </button>
+                    <button onClick={() => setShowPromptModal(false)} className="bg-gray-200 hover:bg-gray-300 border-2 border-black text-black font-bold py-2 px-6 rounded-xl">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
       )}
