@@ -1,11 +1,14 @@
 
 
 
+
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
 // @ts-ignore
 import html2canvas from 'html2canvas';
+import { useClerk } from '@clerk/clerk-react';
 
 interface ExplainerViewProps {
   content: GeneratedConcept;
@@ -50,6 +53,8 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
+  
+  const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {
     if (hasClickedAha) return;
@@ -59,6 +64,11 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
   const handleShareClick = async () => {
+    if (!userId) {
+        openSignIn();
+        return;
+    }
+
     setShowShareModal(true);
     if (shareUrl || isSharing) return;
 
