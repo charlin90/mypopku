@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -42,10 +40,12 @@ const App: React.FC = () => {
                 setGeneratedContent(parsed.content);
                 setConceptPrompt(parsed.prompt);
                 setView('explainer');
+                setHomeFeedTab('personal');
             } else if (parsed.view === 'creativeView' && parsed.html && parsed.prompt) {
                 setCreativeHtml(parsed.html);
                 setCreativePrompt(parsed.prompt);
                 setView('creativeView');
+                setHomeFeedTab('personal');
             }
             // Clear immediately to prevent restoring on subsequent manual refreshes
             sessionStorage.removeItem('restore_state');
