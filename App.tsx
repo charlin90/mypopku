@@ -31,6 +31,12 @@ const App: React.FC = () => {
   const { user, isSignedIn, isLoaded } = useUser();
   const hasRedirectedRef = useRef(false);
 
+  // Helper to get display name: Username > FirstName > Anonymous
+  const getDisplayName = useCallback(() => {
+    if (!user) return 'Anonymous';
+    return user.username || user.firstName || 'Anonymous';
+  }, [user]);
+
   // Restore state if returning from a login redirect (which causes page refresh)
   useEffect(() => {
     const restoreState = sessionStorage.getItem('restore_state');
@@ -209,7 +215,7 @@ const App: React.FC = () => {
               type: 'create',
               screenshot: screenshotDataUrl,
               userId: user?.id,
-              authorName: user?.fullName || user?.username || 'Anonymous',
+              authorName: getDisplayName(),
               authorAvatarUrl: user?.imageUrl,
             }),
         });
@@ -233,7 +239,7 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, [user]);
+  }, [user, getDisplayName]);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string) => {
     setError(null);
@@ -284,7 +290,7 @@ const App: React.FC = () => {
             prompt={conceptPrompt} 
             onBack={handleGoBack} 
             userId={user?.id}
-            userName={user?.fullName || user?.username || 'Anonymous'}
+            userName={getDisplayName()}
             userAvatarUrl={user?.imageUrl}
           />
         )}
@@ -305,7 +311,7 @@ const App: React.FC = () => {
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
             userId={user?.id}
-            userName={user?.fullName || user?.username || 'Anonymous'}
+            userName={getDisplayName()}
             userAvatarUrl={user?.imageUrl}
           />
         )}
