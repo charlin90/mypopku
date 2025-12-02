@@ -256,65 +256,120 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                      value={inputValue}
                      onChange={handleInputChange}
                      onFocus={() => setShowDropdown(true)}
-                     className="w-full h-12 rounded-full border-2 border-black px-4 bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-yellow-200 transition-all font-bold"
-                     placeholder="What do you want to learn or create?"
+                     className="w-full h-12 rounded-full border-2 border-black px-6 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all bg-white hover:bg-gray-50 placeholder-gray-400"
+                     placeholder="Search or type to create..."
                      disabled={isLoading}
                  />
-                 <button 
-                    type="submit" 
-                    className="absolute right-2 top-2 h-8 w-8 bg-teal-300 border-2 border-black rounded-lg flex items-center justify-center hover:bg-teal-400 active:translate-y-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all disabled:opacity-50"
-                    disabled={isLoading}
-                 >
-                     {isLoading ? (
-                         <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                     ) : (
-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
-                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                         </svg>
-                     )}
+                 <button type="submit" className="absolute right-2 top-1.5 bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors" disabled={isLoading}>
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                     </svg>
                  </button>
              </form>
-             
-             {/* Dropdown Results */}
-             {showDropdown && inputValue.trim().length > 1 && filteredShares.length > 0 && (
-                <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden z-50">
-                    <div className="p-2">
-                        <div className="text-xs font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Community</div>
-                        {filteredShares.map(share => (
-                            <button
-                                key={share.id}
-                                onClick={() => handleExistingSelect(share.blobUrl)}
-                                className="w-full text-left px-3 py-2 hover:bg-yellow-50 rounded-lg flex items-center justify-between group transition-colors"
-                            >
-                                <span className="font-medium truncate mr-2">{share.prompt}</span>
-                                <span className="text-xs font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 group-hover:border-yellow-200 group-hover:bg-yellow-100">
-                                    {share.type === 'learn' ? 'LEARN' : 'CREATE'}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
+
+             {/* Omni-box Dropdown */}
+             {showDropdown && inputValue.trim().length > 1 && (
+                <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden z-10 flex flex-col animate-fade-in-up">
+                    {filteredShares.length > 0 && (
+                        <div className="flex flex-col border-b-2 border-black">
+                             <div className="px-4 py-2 bg-gray-50 border-b-2 border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Found in Gallery
+                             </div>
+                             {filteredShares.map(share => (
+                                <a 
+                                    key={share.id}
+                                    href={`/view/${share.id}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.history.pushState({}, '', `/view/${share.id}`);
+                                        // Trigger count but don't wait
+                                        fetch(`/api/item?id=${share.id}`).catch(() => {});
+                                        handleExistingSelect(share.blobUrl);
+                                    }}
+                                    className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
+                                >
+                                     <div className="w-10 h-8 bg-gray-200 rounded border border-black overflow-hidden flex-shrink-0">
+                                        {share.screenshotUrl ? <img src={share.screenshotUrl} alt="" className="w-full h-full object-cover" /> : null}
+                                     </div>
+                                     <div className="flex-grow min-w-0">
+                                        <p className="text-sm font-bold text-black truncate">{share.prompt}</p>
+                                        <p className="text-xs text-gray-500">{new Date(share.createdAt).toLocaleDateString()}</p>
+                                     </div>
+                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>
+                                        {share.type === 'learn' ? 'LEARN' : 'APP'}
+                                     </span>
+                                </a>
+                             ))}
+                        </div>
+                    )}
+                    
+                    <button 
+                        onClick={() => {
+                            onUnifiedSubmit(inputValue);
+                            setShowDropdown(false);
+                        }}
+                        className="text-left px-4 py-4 hover:bg-gray-50 flex items-center gap-3 text-black group"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                             </svg>
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm">Generate New</p>
+                            <p className="text-xs text-gray-500">Create a brand new concept for "{inputValue}"</p>
+                        </div>
+                    </button>
                 </div>
              )}
          </div>
 
-         {/* Right: Auth & Profile */}
-         <div className="flex items-center justify-end gap-3 flex-shrink-0 lg:flex-1 lg:min-w-0">
-             <button onClick={() => setShowUploadForm(true)} className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-pink-300 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-0.5" title="Upload HTML">
-                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+         {/* Right: Social/Nav, Upload & Auth */}
+         <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end items-center gap-3">
+             <div className="flex items-center gap-2">
+                {/* Slot 1: WeChat (Logged Out only) */}
+                <SignedOut>
+                    <button 
+                        onClick={() => setShowWeChatModal(true)}
+                        className={`${socialBtn} text-green-600`}
+                        title="WeChat Group"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
+                            <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
+                            <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
+                        </svg>
+                    </button>
+                </SignedOut>
+
+                {/* Slot 2: Discord (Logged Out only) */}
+                <SignedOut>
+                    <a 
+                        href="https://discord.com/invite/x4am4gaRZY" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`${socialBtn} text-[#5865F2]`}
+                        title="Join Discord"
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                        </svg>
+                    </a>
+                </SignedOut>
+             </div>
+
+            {/* Slot 3: Upload Button */}
+            <button 
+                onClick={() => setShowUploadForm(true)} 
+                className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                 </svg>
-             </button>
-             
-             <button onClick={() => setShowWeChatModal(true)} className={`${socialBtn} hidden md:flex`} title="Join WeChat Group">
-                <img src="/wechat.png" alt="WeChat" className="w-6 h-6 object-contain" />
-             </button>
-             
-             <a href="https://x.com/Tiseno1024" target="_blank" rel="noopener noreferrer" className={`${socialBtn} hidden md:flex`} title="Follow on X">
-                 <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5"><g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>
-             </a>
+                </svg>
+                <span className="hidden md:inline">Upload</span>
+            </button>
 
-             <div className="h-8 w-[2px] bg-gray-200 mx-1 hidden sm:block"></div>
-
+            {/* Slot 4: Auth (Sign In / User Button) */}
             <SignedOut>
                 <SignInButton mode="modal">
                     <button className={authBtn}>
@@ -323,60 +378,64 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </SignInButton>
             </SignedOut>
             <SignedIn>
-                <div className="border-2 border-black rounded-full p-0.5 hover:shadow-[0px_0px_0px_4px_rgba(253,224,71,0.5)] transition-all bg-white">
-                    <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+                <div className="flex items-center justify-center border-2 border-black rounded-full overflow-hidden w-9 h-9 shadow-[2px_2px_0px_0px_black]">
+                    <UserButton />
                 </div>
             </SignedIn>
+
          </div>
       </header>
-      
-      {/* Tabs / Sub-header */}
-      <div className="w-full bg-white border-b-2 border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-center sm:justify-start gap-4 overflow-x-auto no-scrollbar">
-           <button 
-            onClick={() => onTabChange('featured')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-bold border-2 transition-all whitespace-nowrap ${activeTab === 'featured' ? 'bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,0.5)]' : 'bg-white text-gray-500 border-transparent hover:bg-gray-50'}`}
-           >
-             Featured 🌟
-           </button>
-           <button 
-            onClick={() => onTabChange('latest')}
-            className={`px-4 py-1.5 rounded-lg text-sm font-bold border-2 transition-all whitespace-nowrap ${activeTab === 'latest' ? 'bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,0.5)]' : 'bg-white text-gray-500 border-transparent hover:bg-gray-50'}`}
-           >
-             Fresh In 🚀
-           </button>
-           <SignedIn>
-               <button 
-                onClick={() => onTabChange('personal')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-bold border-2 transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'personal' ? 'bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(100,100,100,0.5)]' : 'bg-white text-gray-500 border-transparent hover:bg-gray-50'}`}
-               >
-                 <span>My Popku</span>
-                 <span className="bg-pink-500 text-white text-[10px] px-1.5 rounded-full">YOU</span>
-               </button>
-           </SignedIn>
-      </div>
 
-      {/* Main Content Area */}
+      {/* Main Content: Community Grid */}
       <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white relative z-0">
-          
-          {activeTab === 'personal' && isViewingOther && (
-            <div className="mb-6 flex items-center gap-3 bg-gray-50 p-4 rounded-xl border-2 border-black max-w-7xl mx-auto">
-                 <button onClick={() => onTabChange('featured')} className="text-sm font-bold underline">← Back to Feed</button>
-                 <span className="text-gray-400">|</span>
-                 <span className="font-bold">Viewing Profile: {shares[0]?.authorName || 'User'}</span>
+          {/* Global Error Display */}
+          {error && (
+            <div className="w-full max-w-3xl mx-auto mb-8 animate-bounce">
+                <div className="bg-red-100 border-2 border-red-500 text-red-600 p-4 rounded-xl font-bold shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] flex items-center gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    {error}
+                </div>
             </div>
           )}
 
+          {/* Unified Feed Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full">
+                {(effectiveUserId) && (
+                     <button 
+                        onClick={() => onTabChange('personal')}
+                        className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>👤</span> {isViewingOther ? 'User Gallery' : 'My Popku'}
+                    </button>
+                )}
+                <button 
+                    onClick={() => onTabChange('featured')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>✨</span> Featured
+                </button>
+                <button 
+                    onClick={() => onTabChange('latest')}
+                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                    <span>🔥</span> Latest
+                </button>
+            </div>
+          </div>
+
+          {/* Feed Content */}
           {isFeedLoading ? (
              <div className="flex justify-center items-center h-64">
                 <div className="w-12 h-12 border-4 border-black border-t-pink-500 rounded-full animate-spin"></div>
              </div>
-          ) : (feedError || error) ? (
+          ) : feedError ? (
              <div className="text-center py-10 bg-gray-50 border-2 border-black rounded-xl max-w-md mx-auto">
-                <p className="text-lg font-bold">Failed to load</p>
-                <p className="text-sm text-red-500">{feedError || error}</p>
+                <p className="text-lg font-bold">Failed to load feed</p>
+                <button onClick={() => window.location.reload()} className="mt-2 text-pink-500 font-bold underline">Retry</button>
              </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto pb-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {shares.length > 0 ? (
                     shares.map(item => (
                         <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} onUserClick={onUserClick} />
@@ -385,7 +444,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'personal' ? "You haven't shared anything yet." : "Be the first to create something awesome."}
+                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something."}
                         </p>
                     </div>
                 )}
@@ -396,60 +455,93 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Upload Modal */}
       {showUploadForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowUploadForm(false)}>
-            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-6 w-full max-w-lg flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-black">Upload Creation</h2>
-                <form onSubmit={handleUploadSubmit} className="flex flex-col gap-4">
-                    <div>
-                        <label className="block text-sm font-bold mb-1">Prompt / Title</label>
-                        <input 
-                            type="text" 
-                            className="w-full border-2 border-black rounded-lg px-3 py-2 font-bold"
-                            value={uploadPrompt}
-                            onChange={e => setUploadPrompt(e.target.value)}
-                            required
-                        />
+            <form onSubmit={handleUploadSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
+                <button type="button" onClick={() => setShowUploadForm(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
+                <h3 className="text-2xl font-black text-black text-center mt-2">Upload Creation</h3>
+                
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">Prompt / Description*</label>
+                    <textarea 
+                        value={uploadPrompt}
+                        onChange={(e) => setUploadPrompt(e.target.value)}
+                        className="w-full h-24 p-3 rounded-lg border-2 border-black resize-none focus:outline-none focus:ring-4 focus:ring-pink-200"
+                        placeholder="What is this app? e.g., 'A classic Snake game with neon graphics'"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">HTML File*</label>
+                    <div className="flex items-center gap-3">
+                    <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="html-upload"
+                        type="file"
+                        onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="text/html,.html"
+                        required
+                    />
+                    <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {htmlFile ? htmlFile.name : 'No file chosen'}
+                    </span>
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold mb-1">HTML File</label>
-                        <input 
-                            type="file" 
-                            accept=".html"
-                            className="w-full border-2 border-black rounded-lg px-3 py-2 font-mono text-sm bg-gray-50"
-                            onChange={e => setHtmlFile(e.target.files?.[0] || null)}
-                            required
-                        />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-black mb-2 text-left">Screenshot*</label>
+                    <div className="flex items-center gap-3">
+                    <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-cyan-300 text-black hover:bg-cyan-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="screenshot-upload"
+                        type="file"
+                        onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="image/*"
+                        required
+                    />
+                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {screenshotFile ? screenshotFile.name : 'No file chosen'}
+                    </span>
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold mb-1">Screenshot (JPEG/PNG)</label>
-                        <input 
-                            type="file" 
-                            accept="image/*"
-                            className="w-full border-2 border-black rounded-lg px-3 py-2 font-mono text-sm bg-gray-50"
-                            onChange={e => setScreenshotFile(e.target.files?.[0] || null)}
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-end gap-3 mt-2">
-                         <button type="button" onClick={() => setShowUploadForm(false)} className="px-4 py-2 border-2 border-black rounded-lg font-bold hover:bg-gray-100">Cancel</button>
-                         <button type="submit" className={primaryBtn}>Upload</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <button
+                    type="submit"
+                    disabled={!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading}
+                    className={primaryBtn + " w-full text-lg py-3"}
+                    >
+                    Upload & Share
+                    </button>
+                </div>
+            </form>
         </div>
       )}
 
       {/* WeChat Modal */}
       {showWeChatModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWeChatModal(false)}>
-            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-sm flex flex-col gap-4 items-center text-center" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-black">Join Community</h2>
-                <p className="font-medium text-gray-600">Scan via WeChat to join our group!</p>
-                <div className="w-48 h-48 bg-gray-200 rounded-xl overflow-hidden border-2 border-black">
-                    <img src="/wechat.png" alt="WeChat QR Code" className="w-full h-full object-cover" />
-                </div>
-                <button onClick={() => setShowWeChatModal(false)} className="mt-2 px-6 py-2 border-2 border-black rounded-xl font-bold hover:bg-gray-100 w-full">
-                    Close
-                </button>
+            <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 max-w-sm w-full relative text-center" onClick={e => e.stopPropagation()}>
+                 <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold">✕</button>
+                 <h3 className="text-xl font-black mb-4">群聊：Popku</h3>
+                 <div className="w-48 h-48 mx-auto bg-gray-200 border-2 border-black rounded-xl flex items-center justify-center mb-4 relative overflow-hidden">
+                    <img 
+                        src="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/WECHAT/wechat.png" 
+                        alt="WeChat QR Code" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none'; 
+                            target.parentElement!.innerHTML = '<span class="text-xs text-gray-400 p-4 text-center">QR Code not found<br/>(Check file location)</span>';
+                        }}
+                    />
+                 </div>
+                 <p className="text-sm text-gray-500 font-bold">该二维码7天内(12月3日前)有效，重新进入将更新</p>
             </div>
         </div>
       )}

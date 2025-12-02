@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
-  const [feedRefreshTrigger, setFeedRefreshTrigger] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   const { user, isSignedIn, isLoaded } = useUser();
   const hasRedirectedRef = useRef(false);
@@ -254,7 +254,7 @@ const App: React.FC = () => {
     setCreativePrompt(null);
     setShareUrlOnLoad(null);
     setError(null);
-    setFeedRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger(prev => prev + 1);
   }, []);
 
   return (
@@ -273,7 +273,7 @@ const App: React.FC = () => {
           onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
-          refreshTrigger={feedRefreshTrigger}
+          refreshTrigger={refreshTrigger}
         />
       </div>
       
