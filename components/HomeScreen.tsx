@@ -144,6 +144,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Define the main categories
   const categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [
     { id: 'featured', label: 'Featured', emoji: '✨', colorClass: 'bg-yellow-300' },
+    { id: 'christmas', label: 'Christmas', emoji: '🎄', colorClass: 'bg-red-300' },
     { id: 'most_viewed', label: 'Most Viewed', emoji: '👁️', colorClass: 'bg-orange-300' },
     { id: 'latest', label: 'Latest', emoji: '🔥', colorClass: 'bg-cyan-300' },
     { id: 'games', label: 'Games', emoji: '🎮', colorClass: 'bg-purple-300' },

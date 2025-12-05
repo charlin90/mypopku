@@ -59,6 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Apply Filters & Sorting based on mode
     if (mode === 'most_viewed') {
         shares.sort((a, b) => (b.views || 0) - (a.views || 0));
+    } else if (mode === 'christmas') {
+         shares = shares.filter(s => /christmas|xmas|santa|elf|reindeer|gift|present|holiday|festive|snow|winter|tree|december|圣诞|节日/i.test(s.prompt));
+         shares.sort((a, b) => b.createdAt - a.createdAt);
     } else if (mode === 'games') {
         shares = shares.filter(s => /game|play|arcade|tetris|snake|pong|minecraft|mario|zelda|rpg|platformer|adventure|puzzle|card|chess|sudoku|2048|flappy|clicker|rogue|survival|sim|racing|shooter|fps|tower|defense|strategy|游戏|玩/i.test(s.prompt));
         shares.sort((a, b) => b.createdAt - a.createdAt);
