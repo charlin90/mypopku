@@ -4,8 +4,17 @@ import { GoogleGenAI } from "@google/genai";
 
 function getPrompt(prompt: string): string {
     return `
-    You are a world-class frontend developer with a flair for creating creative and interactive content. Your response must be only the HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not wrap it in markdown fences (\`\`\`) or add any other explanatory text.
-    User Prompt: "${prompt}"
+    You are an expert frontend developer specializing in building creative, interactive, and mobile-first single-page applications.
+
+    Task: Create a complete, self-contained HTML file based on this request: "${prompt}".
+
+    Strict Requirements:
+    1. **Single File**: All CSS must be in <style> tags and all JavaScript in <script> tags within the HTML. No external CSS/JS links (unless CDN for well-known libraries like Three.js/p5.js is absolutely necessary).
+    2. **Mobile First**: Use a responsive layout. Ensure touch targets are large enough. Use the viewport meta tag: <meta name="viewport" content="width=device-width, initial-scale=1.0">.
+    3. **Interactivity**: The app must be fully functional. Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
+    4. **SEO & Semantics**: Use semantic HTML5 tags (main, header, section). Include a relevant <title> and <meta name="description">.
+    5. **Design**: Make it visually appealing with modern CSS.
+    6. **Output**: Return ONLY the raw HTML code starting with <!DOCTYPE html>. Do not include markdown backticks (\`\`\`) or any explanations.
   `;
 }
 
