@@ -1,12 +1,5 @@
 
 
-
-
-
-
-
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -58,7 +51,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
-  const [pendingShare, setPendingShare] = useState(false);
   const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {
@@ -69,8 +61,16 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   };
 
   const handleShareClick = async () => {
+    // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
-        setPendingShare(true);
+        console.log('[ExplainerView] User not logged in. Saving state and setting pending flag.');
+        // Persist the current view state so App.tsx can restore it after a potential page reload during auth
+        sessionStorage.setItem('restore_state', JSON.stringify({
+            view: 'explainer',
+            content,
+            prompt
+        }));
+        sessionStorage.setItem('pending_share_explainer', 'true');
         openSignIn();
         return;
     }
@@ -124,12 +124,17 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     }
   };
 
+  // Automatically trigger share if pending share flag exists in sessionStorage and user logs in
   useEffect(() => {
-    if (userId && pendingShare) {
-        setPendingShare(false);
+    const isPending = sessionStorage.getItem('pending_share_explainer') === 'true';
+    console.log('[ExplainerView] Checking auto-share', { userId, isPending });
+    
+    if (userId && isPending) {
+        console.log('[ExplainerView] Triggering auto-share logic...');
+        sessionStorage.removeItem('pending_share_explainer');
         handleShareClick();
     }
-  }, [userId, pendingShare]);
+  }, [userId]);
 
   const handleCopy = () => {
     if (shareUrl) {

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -12,7 +10,7 @@ import { CreativeView } from './components/CreativeView.js';
 import { useUser } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
-export type FeedTab = 'featured' | 'latest' | 'personal';
+export type FeedTab = 'featured' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -25,12 +23,45 @@ const App: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
   const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
+  const [blobPromptToLoad, setBlobPromptToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   const { user, isSignedIn, isLoaded } = useUser();
   const hasRedirectedRef = useRef(false);
+
+  // Helper to get display name: Username > FirstName > Anonymous
+  const getDisplayName = useCallback(() => {
+    if (!user) return 'Anonymous';
+    return user.username || user.firstName || 'Anonymous';
+  }, [user]);
+
+  // Restore state if returning from a login redirect (which causes page refresh)
+  useEffect(() => {
+    const restoreState = sessionStorage.getItem('restore_state');
+    if (restoreState) {
+        try {
+            const parsed = JSON.parse(restoreState);
+            if (parsed.view === 'explainer' && parsed.content && parsed.prompt) {
+                setGeneratedContent(parsed.content);
+                setConceptPrompt(parsed.prompt);
+                setView('explainer');
+                setHomeFeedTab('personal');
+            } else if (parsed.view === 'creativeView' && parsed.html && parsed.prompt) {
+                setCreativeHtml(parsed.html);
+                setCreativePrompt(parsed.prompt);
+                setView('creativeView');
+                setHomeFeedTab('personal');
+            }
+            // Clear immediately to prevent restoring on subsequent manual refreshes
+            sessionStorage.removeItem('restore_state');
+        } catch (e) {
+            console.error("Failed to restore app state:", e);
+        }
+    }
+  }, []);
 
   // Handle inbound links for SEO (Display Wall Strategy)
   useEffect(() => {
@@ -54,6 +85,7 @@ const App: React.FC = () => {
                 // SEO Strategy: Page contains generated App preview
                 if (data.blobUrl) {
                     setBlobUrlToLoad(data.blobUrl);
+                    setBlobPromptToLoad(data.prompt);
                     setView('blobExplainer');
                 }
             })
@@ -70,12 +102,14 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
         // Don't redirect if we are already viewing a deep link (e.g., view/ID)
-        if (!window.location.pathname.startsWith('/view/')) {
+        // Also don't redirect if we just restored a view (e.g. explainer/creative)
+        const isRestoring = sessionStorage.getItem('restore_state') !== null;
+        if (!window.location.pathname.startsWith('/view/') && view === 'home' && !isRestoring) {
             setHomeFeedTab('personal');
         }
         hasRedirectedRef.current = true;
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, view]);
 
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
@@ -183,7 +217,7 @@ const App: React.FC = () => {
               type: 'create',
               screenshot: screenshotDataUrl,
               userId: user?.id,
-              authorName: user?.fullName || user?.username || 'Anonymous',
+              authorName: getDisplayName(),
               authorAvatarUrl: user?.imageUrl,
             }),
         });
@@ -207,11 +241,12 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, [user]);
+  }, [user, getDisplayName]);
 
-  const handleLoadBlobConcept = useCallback((blobUrl: string) => {
+  const handleLoadBlobConcept = useCallback((blobUrl: string, prompt: string) => {
     setError(null);
     setBlobUrlToLoad(blobUrl);
+    setBlobPromptToLoad(prompt);
     setView('blobExplainer');
   }, []);
 
@@ -224,10 +259,12 @@ const App: React.FC = () => {
     setGeneratedContent(null);
     setConceptPrompt(null);
     setBlobUrlToLoad(null);
+    setBlobPromptToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
     setShareUrlOnLoad(null);
     setError(null);
+    setRefreshTrigger(prev => prev + 1);
   }, []);
 
   return (
@@ -246,6 +283,7 @@ const App: React.FC = () => {
           onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
+          refreshTrigger={refreshTrigger}
         />
       </div>
       
@@ -256,7 +294,7 @@ const App: React.FC = () => {
             prompt={conceptPrompt} 
             onBack={handleGoBack} 
             userId={user?.id}
-            userName={user?.fullName || user?.username || 'Anonymous'}
+            userName={getDisplayName()}
             userAvatarUrl={user?.imageUrl}
           />
         )}
@@ -264,7 +302,11 @@ const App: React.FC = () => {
 
       <div className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${view === 'blobExplainer' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {blobUrlToLoad && view === 'blobExplainer' && (
-          <BlobExplainerView blobUrl={blobUrlToLoad} onBack={handleGoBack} />
+          <BlobExplainerView 
+            blobUrl={blobUrlToLoad} 
+            prompt={blobPromptToLoad || ''}
+            onBack={handleGoBack} 
+          />
         )}
       </div>
 
@@ -277,7 +319,7 @@ const App: React.FC = () => {
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}
             userId={user?.id}
-            userName={user?.fullName || user?.username || 'Anonymous'}
+            userName={getDisplayName()}
             userAvatarUrl={user?.imageUrl}
           />
         )}

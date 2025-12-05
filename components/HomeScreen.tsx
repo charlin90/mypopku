@@ -1,8 +1,3 @@
-
-
-
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -16,89 +11,98 @@ interface HomeScreenProps {
   onUserClick: (authorId: string) => void;
   onUnifiedSubmit: (input: string) => void;
   onFileUpload: (htmlContent: string, prompt: string, screenshotDataUrl: string) => void;
-  onLoadBlobConcept: (blobUrl: string) => void;
+  onLoadBlobConcept: (blobUrl: string, prompt: string) => void;
   isLoading: boolean;
   error: string | null;
+  refreshTrigger: number;
 }
 
-const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void }> = ({ item, onClick, onUserClick }) => (
-  <a 
-    href={`/view/${item.id}`}
-    onClick={(e) => {
-      e.preventDefault();
-      window.history.pushState({}, '', `/view/${item.id}`);
-      // Trigger view increment without blocking navigation
-      fetch(`/api/item?id=${item.id}`).catch(() => {});
-      onClick();
-    }}
-    className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
-  >
-    <div className="absolute top-2 right-2 z-10 flex gap-1.5">
-        {/game|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏/i.test(item.prompt) ? (
-            <span className="px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-purple-300 text-black">
-                GAME
-            </span>
+const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void, isFeatured?: boolean }> = ({ item, onClick, onUserClick, isFeatured }) => {
+  const isAnonymous = !item.authorName || item.authorName === 'Anonymous';
+  const showOfficial = isFeatured && isAnonymous;
+  const displayName = showOfficial ? 'Popku Official' : (item.authorName || 'Anonymous');
+
+  return (
+    <a 
+      href={`/view/${item.id}`}
+      onClick={(e) => {
+        e.preventDefault();
+        window.history.pushState({}, '', `/view/${item.id}`);
+        // Trigger view increment without blocking navigation
+        fetch(`/api/item?id=${item.id}`).catch(() => {});
+        onClick();
+      }}
+      className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
+    >
+      <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+          {/game|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏/i.test(item.prompt) ? (
+              <span className="px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-purple-300 text-black">
+                  GAME
+              </span>
+          ) : (
+              <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
+                  {item.type === 'learn' ? 'LEARN' : 'CREATE'}
+              </span>
+          )}
+      </div>
+      <div className="w-full aspect-video bg-gray-100 border-b-2 border-black overflow-hidden relative">
+        {item.screenshotUrl ? (
+          <img
+            src={item.screenshotUrl}
+            alt={`Preview for ${item.prompt}`}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            loading="lazy"
+          />
         ) : (
-            <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
-                {item.type === 'learn' ? 'LEARN' : 'CREATE'}
-            </span>
+          <div className="w-full h-full flex items-center justify-center text-gray-300 bg-white">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-12 h-12">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+              </svg>
+          </div>
         )}
-    </div>
-    <div className="w-full aspect-video bg-gray-100 border-b-2 border-black overflow-hidden relative">
-      {item.screenshotUrl ? (
-        <img
-          src={item.screenshotUrl}
-          alt={`Preview for ${item.prompt}`}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-white">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-12 h-12">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
-        </div>
-      )}
-    </div>
-    <div className="p-4 flex flex-col flex-grow bg-white">
-      <p className="text-sm font-bold text-black flex-grow line-clamp-3 leading-snug" title={item.prompt}>
-        {item.prompt}
-      </p>
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-             <div 
-                className={`w-6 h-6 rounded-full border border-black overflow-hidden bg-gray-200 flex-shrink-0 ${item.userId ? 'cursor-pointer hover:ring-2 hover:ring-pink-300 transition-all' : ''}`}
-                onClick={(e) => {
-                  if (item.userId) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onUserClick(item.userId);
-                  }
-                }}
-             >
-                {item.authorAvatarUrl ? (
-                    <img src={item.authorAvatarUrl} alt={item.authorName} className="w-full h-full object-cover" />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-200">
-                        {item.authorName ? item.authorName[0].toUpperCase() : '?'}
-                    </div>
-                )}
-            </div>
-            <span className="text-xs font-bold text-gray-700 truncate max-w-[80px] sm:max-w-[100px]" title={item.authorName || 'Anonymous'}>
-                {item.authorName || 'Anonymous'}
-            </span>
-        </div>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0" title={`${item.views || 0} views`}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-gray-500">
-              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-              <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
-            </svg>
-            <span className="text-xs font-bold text-gray-500 font-mono">{item.views || 0}</span>
+      </div>
+      <div className="p-4 flex flex-col flex-grow bg-white">
+        <p className="text-sm font-bold text-black flex-grow line-clamp-3 leading-snug" title={item.prompt}>
+          {item.prompt}
+        </p>
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+               <div 
+                  className={`w-6 h-6 rounded-full border border-black overflow-hidden flex-shrink-0 ${showOfficial ? 'bg-yellow-400' : 'bg-gray-200'} ${item.userId && !showOfficial ? 'cursor-pointer hover:ring-2 hover:ring-pink-300 transition-all' : ''}`}
+                  onClick={(e) => {
+                    if (item.userId && !showOfficial) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onUserClick(item.userId);
+                    }
+                  }}
+               >
+                  {showOfficial ? (
+                      <div className="w-full h-full flex items-center justify-center font-serif font-black italic text-black text-xs">P</div>
+                  ) : item.authorAvatarUrl ? (
+                      <img src={item.authorAvatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-200">
+                          {displayName[0].toUpperCase()}
+                      </div>
+                  )}
+              </div>
+              <span className="text-xs font-bold text-gray-700 truncate max-w-[80px] sm:max-w-[100px]" title={displayName}>
+                  {displayName}
+              </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 flex-shrink-0" title={`${item.views || 0} views`}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-gray-500">
+                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
+              </svg>
+              <span className="text-xs font-bold text-gray-500 font-mono">{item.views || 0}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </a>
-);
+    </a>
+  );
+};
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ 
   activeTab,
@@ -111,6 +115,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onLoadBlobConcept,
   isLoading, 
   error,
+  refreshTrigger,
 }) => {
   const [inputValue, setInputValue] = useState('');
   
@@ -135,6 +140,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Determine effective user ID for the personal tab (either viewing another user or self)
   const effectiveUserId = viewingProfileId || userId;
   const isViewingOther = viewingProfileId && viewingProfileId !== userId;
+
+  // Define the main categories
+  const categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [
+    { id: 'featured', label: 'Featured', emoji: '✨', colorClass: 'bg-yellow-300' },
+    { id: 'most_viewed', label: 'Most Viewed', emoji: '👁️', colorClass: 'bg-orange-300' },
+    { id: 'latest', label: 'Latest', emoji: '🔥', colorClass: 'bg-cyan-300' },
+    { id: 'games', label: 'Games', emoji: '🎮', colorClass: 'bg-purple-300' },
+    { id: 'tools', label: 'Tools', emoji: '🛠️', colorClass: 'bg-blue-300' },
+    { id: 'art', label: 'Art', emoji: '🎨', colorClass: 'bg-pink-300' },
+    { id: 'education', label: 'Education', emoji: '📚', colorClass: 'bg-green-300' },
+    { id: 'ai', label: 'AI', emoji: '🤖', colorClass: 'bg-indigo-300' },
+    { id: 'music', label: 'Music', emoji: '🎵', colorClass: 'bg-red-300' },
+    { id: 'misc', label: 'Misc', emoji: '🧩', colorClass: 'bg-gray-300' },
+  ];
 
   // Fetch community shares or user creations when tab changes
   useEffect(() => {
@@ -168,7 +187,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId]);
+  }, [activeTab, effectiveUserId, refreshTrigger]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -190,8 +209,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     setShowDropdown(true);
   };
 
-  const handleExistingSelect = (blobUrl: string) => {
-    onLoadBlobConcept(blobUrl);
+  const handleExistingSelect = (share: CommunityShare) => {
+    onLoadBlobConcept(share.blobUrl, share.prompt);
     setShowDropdown(false);
   };
 
@@ -287,7 +306,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         window.history.pushState({}, '', `/view/${share.id}`);
                                         // Trigger count but don't wait
                                         fetch(`/api/item?id=${share.id}`).catch(() => {});
-                                        handleExistingSelect(share.blobUrl);
+                                        handleExistingSelect(share);
                                     }}
                                     className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
                                 >
@@ -403,27 +422,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
           {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
-            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full">
+            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
                 {(effectiveUserId) && (
                      <button 
                         onClick={() => onTabChange('personal')}
-                        className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
                     >
                         <span>👤</span> {isViewingOther ? 'User Gallery' : 'My Popku'}
                     </button>
                 )}
-                <button 
-                    onClick={() => onTabChange('featured')}
-                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'featured' ? 'bg-yellow-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                >
-                    <span>✨</span> Featured
-                </button>
-                <button 
-                    onClick={() => onTabChange('latest')}
-                    className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap ${activeTab === 'latest' ? 'bg-cyan-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                >
-                    <span>🔥</span> Latest
-                </button>
+                {categories.map((cat) => (
+                     <button 
+                        key={cat.id}
+                        onClick={() => onTabChange(cat.id)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === cat.id ? `${cat.colorClass} text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]` : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>{cat.emoji}</span> {cat.label}
+                    </button>
+                ))}
             </div>
           </div>
 
@@ -441,13 +457,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {shares.length > 0 ? (
                     shares.map(item => (
-                        <CommunityCard key={item.id} item={item} onClick={() => onLoadBlobConcept(item.blobUrl)} onUserClick={onUserClick} />
+                        <CommunityCard 
+                          key={item.id} 
+                          item={item} 
+                          onClick={() => onLoadBlobConcept(item.blobUrl, item.prompt)} 
+                          onUserClick={onUserClick} 
+                          isFeatured={activeTab === 'featured'}
+                        />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something."}
+                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something in this category."}
                         </p>
                     </div>
                 )}
@@ -544,7 +566,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         }}
                     />
                  </div>
-                 <p className="text-sm text-gray-500 font-bold">该二维码7天内(12月3日前)有效，重新进入将更新</p>
+                 <p className="text-sm text-gray-500 font-bold">该二维码长期有效</p>
             </div>
         </div>
       )}
