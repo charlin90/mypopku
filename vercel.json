@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/s/:pathname", "destination": "/api/serve?pathname=:pathname" },
     { "source": "/view/:id", "destination": "/api/view?id=:id" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

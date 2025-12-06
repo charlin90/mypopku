@@ -10,7 +10,7 @@ import { CreativeView } from './components/CreativeView.js';
 import { useUser } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
-export type FeedTab = 'featured' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
+export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
