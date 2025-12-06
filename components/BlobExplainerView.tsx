@@ -71,7 +71,7 @@ export const BlobExplainerView: React.FC<BlobExplainerViewProps> = ({ blobUrl, p
               src={blobUrl}
               title="Interactive Concept"
               className="w-full h-full border-none"
-              sandbox="allow-scripts allow-same-origin allow-modals"
+              sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
           ></iframe>
       </div>
       
