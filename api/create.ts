@@ -10,15 +10,13 @@ function getPrompt(prompt: string): string {
     **CRITICAL REQUIREMENT: PERSISTENCE & CLOUD SYNC**
     1.  **Local State (MANDATORY):** The app MUST automatically save its entire state (all input values, text areas, drawings as Base64, positions, scores, etc.) to \`localStorage\` whenever data changes. Restore this state immediately when the page loads so user progress is never lost.
     
-    2.  **Cloud Sync Button (CONDITIONAL):**
-        *   **DECISION RULE:** Include this button and logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard). If the app is a stateless simulation, visual demo, or simple calculator, **DO NOT** include this button.
-        *   **UI:** Add a button with \`id="cloud-sync-btn"\` and text "Cloud Sync".
-        *   **Position:** \`position: fixed; top: 10px; right: 10px; z-index: 9999;\`.
-        *   **Style:** White background, black border (2px), bold text, rounded corners, shadow.
+    2.  **Automatic Cloud Sync (CONDITIONAL):**
+        *   **DECISION RULE:** Implement this logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard).
         *   **Logic:**
             *   **Get App ID:** \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
-            *   **Save (Click):** If \`!appId\`, alert("Please click 'Share' in the top menu first to create a permanent link."); Else, gather the state object and \`POST\` it to \`/api/storage?id=\${appId}\`. Alert "Saved to Cloud! ☁️" on success.
             *   **Load (Init):** On page load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). If cloud data returns, merge it into the app state (prioritizing cloud data over local).
+            *   **Auto-Save:** Whenever state changes (and is saved to localStorage), if \`appId\` exists, \`POST\` the state to \`/api/storage?id=\${appId}\`. **Use a debounce (e.g. 1000ms)** to avoid frequent network requests.
+            *   **UI Feedback:** Add a small, unobtrusive fixed status indicator (e.g., bottom-right) showing "☁️ Saved" or "☁️ Saving..." to inform the user.
 
     User Prompt: "${prompt}"
   `;
