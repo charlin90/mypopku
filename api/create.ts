@@ -47,13 +47,31 @@ export default async function handler(
 
   try {
     const geminiPrompt = getPrompt(prompt);
-    const response = await ai.models.generateContent({
+    let response;
+
+    try {
+      response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: geminiPrompt,
         config: {
           temperature: 1.0,
         },
-    });
+      });
+    } catch (error) {
+      const backupKey = process.env.API_KEY_A;
+      if (!backupKey) {
+        throw error;
+      }
+      console.warn('Primary API key failed, retrying with API_KEY_A');
+      const backupAi = new GoogleGenAI({ apiKey: backupKey });
+      response = await backupAi.models.generateContent({
+        model: "gemini-3-pro-preview",
+        contents: geminiPrompt,
+        config: {
+          temperature: 1.0,
+        },
+      });
+    }
 
     let htmlContent = response.text;
 

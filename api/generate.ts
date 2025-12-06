@@ -107,7 +107,10 @@ export default async function handler(
 
   try {
     const prompt = getPrompt(concept);
-    const response = await ai.models.generateContent({
+    let response;
+
+    try {
+      response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: prompt,
         config: {
@@ -115,7 +118,24 @@ export default async function handler(
           responseSchema: responseSchema,
           temperature: 1.0,
         },
-    });
+      });
+    } catch (error) {
+      const backupKey = process.env.API_KEY_A;
+      if (!backupKey) {
+        throw error;
+      }
+      console.warn('Primary API key failed, retrying with API_KEY_A');
+      const backupAi = new GoogleGenAI({ apiKey: backupKey });
+      response = await backupAi.models.generateContent({
+        model: "gemini-3-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+          temperature: 1.0,
+        },
+      });
+    }
 
     if (!response.text) {
         throw new Error("The AI returned an empty response.");
