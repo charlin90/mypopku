@@ -13,7 +13,7 @@ function getPrompt(prompt: string): string {
     2.  **Cloud Sync Button (CONDITIONAL):**
         *   **DECISION RULE:** Include this button and logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard). If the app is a stateless simulation, visual demo, or simple calculator, **DO NOT** include this button.
         *   **UI:** Add a button with \`id="cloud-sync-btn"\` and text "Cloud Sync".
-        *   **Position:** \`position: fixed; top: 4px; right: 4px; z-index: 9999;\`.
+        *   **Position:** \`position: fixed; top: 10px; right: 10px; z-index: 9999;\`.
         *   **Style:** White background, black border (2px), bold text, rounded corners, shadow.
         *   **Logic:**
             *   **Get App ID:** \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
