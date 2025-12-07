@@ -41,6 +41,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7Y6YH2EXW9');
+    </script>
     <meta name="description" content="${description}">
     
     <!-- Open Graph / Facebook -->

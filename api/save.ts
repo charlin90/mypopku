@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
 import { nanoid } from 'nanoid';
@@ -16,6 +15,15 @@ async function createSavableHtml(concept: GeneratedConcept & { prompt?: string }
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Popku (Saved): ${concept.explanation.split('\n')[0].replace('##', '').trim()}</title>
+      <!-- Google tag (gtag.js) -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-7Y6YH2EXW9');
+      </script>
       <script src="https://cdn.tailwindcss.com"></script>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,6 +195,16 @@ async function createSavableHtml(concept: GeneratedConcept & { prompt?: string }
 }
 
 function injectPromptButtonIntoHtml(html: string, prompt: string): string {
+    const gaScript = `<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7Y6YH2EXW9');
+</script>`;
+
     const sanitizedPrompt = prompt
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -261,7 +279,17 @@ function injectPromptButtonIntoHtml(html: string, prompt: string): string {
         </script>
     `;
 
-    let injectedHtml = html.replace(/<body[^>]*>/i, `$&${promptButtonAndModal}`);
+    let injectedHtml = html;
+    
+    // Inject GA into head if possible
+    if (injectedHtml.includes('<head>')) {
+        injectedHtml = injectedHtml.replace('<head>', `<head>\n${gaScript}`);
+    } else {
+        // Fallback: just prepend
+        injectedHtml = `${gaScript}\n${injectedHtml}`;
+    }
+
+    injectedHtml = injectedHtml.replace(/<body[^>]*>/i, `$&${promptButtonAndModal}`);
     injectedHtml = injectedHtml.replace(/<\/body>/i, `${promptScript}</body>`);
     
     return injectedHtml;
