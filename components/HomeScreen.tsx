@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -348,7 +349,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
          </div>
 
          {/* Right: Social/Nav, Upload & Auth */}
-         <div className="flex-shrink-0 lg:flex-1 lg:flex lg:justify-end items-center gap-3">
+         <div className="flex-shrink-0 flex justify-end items-center gap-3 lg:flex-1">
              <div className="flex items-center gap-2">
                 {/* Slot 1: WeChat (Logged Out only) */}
                 <SignedOut>
@@ -365,13 +366,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </button>
                 </SignedOut>
 
-                {/* Slot 2: Discord (Logged Out only) */}
+                {/* Slot 2: Discord (Logged Out only) - HIDDEN ON MOBILE */}
                 <SignedOut>
                     <a 
                         href="https://discord.com/invite/x4am4gaRZY" 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className={`${socialBtn} text-[#5865F2]`}
+                        className={`${socialBtn} text-[#5865F2] hidden md:flex`}
                         title="Join Discord"
                     >
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -381,10 +382,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </SignedOut>
              </div>
 
-            {/* Slot 3: Upload Button */}
+            {/* Slot 3: Upload Button - HIDDEN ON MOBILE */}
             <button 
                 onClick={() => setShowUploadForm(true)} 
-                className="flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+                className="hidden md:flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
@@ -392,10 +393,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <span className="hidden md:inline">Upload</span>
             </button>
 
-            {/* Slot 4: Auth (Sign In / User Button) */}
+            {/* Slot 4: Auth (Sign In / User Button) - Sign In HIDDEN ON MOBILE */}
             <SignedOut>
                 <SignInButton mode="modal">
-                    <button className={authBtn}>
+                    <button className={`${authBtn} hidden md:block`}>
                         Sign In
                     </button>
                 </SignInButton>

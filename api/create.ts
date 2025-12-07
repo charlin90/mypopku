@@ -1,6 +1,11 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from "@google/genai";
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 function getPrompt(prompt: string): string {
     return `
@@ -10,15 +15,13 @@ function getPrompt(prompt: string): string {
     **CRITICAL REQUIREMENT: PERSISTENCE & CLOUD SYNC**
     1.  **Local State (MANDATORY):** The app MUST automatically save its entire state (all input values, text areas, drawings as Base64, positions, scores, etc.) to \`localStorage\` whenever data changes. Restore this state immediately when the page loads so user progress is never lost.
     
-    2.  **Cloud Sync Button (CONDITIONAL):**
-        *   **DECISION RULE:** Include this button and logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard). If the app is a stateless simulation, visual demo, or simple calculator, **DO NOT** include this button.
-        *   **UI:** Add a button with \`id="cloud-sync-btn"\` and text "Cloud Sync ☁️".
-        *   **Position:** \`position: fixed; top: 80px; right: 20px; z-index: 9999;\` (Ensures visibility below main nav).
-        *   **Style:** White background, black border (2px), bold text, rounded corners, shadow.
+    2.  **Automatic Cloud Sync (CONDITIONAL):**
+        *   **DECISION RULE:** Implement this logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard).
         *   **Logic:**
             *   **Get App ID:** \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
-            *   **Save (Click):** If \`!appId\`, alert("Please click 'Share' in the top menu first to create a permanent link."); Else, gather the state object and \`POST\` it to \`/api/storage?id=\${appId}\`. Alert "Saved to Cloud! ☁️" on success.
             *   **Load (Init):** On page load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). If cloud data returns, merge it into the app state (prioritizing cloud data over local).
+            *   **Auto-Save:** Whenever state changes (and is saved to localStorage), if \`appId\` exists, \`POST\` the state to \`/api/storage?id=\${appId}\`. **Use a debounce (e.g. 1000ms)** to avoid frequent network requests.
+            *   **UI Feedback:** Add a small, unobtrusive fixed status indicator (e.g., bottom-right) showing "☁️ Saved" or "☁️ Saving..." to inform the user.
 
     User Prompt: "${prompt}"
   `;
@@ -41,21 +44,75 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { prompt } = req.body;
+  const { prompt, userId } = req.body;
 
   if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
     return res.status(400).json({ error: 'A non-empty prompt is required.' });
   }
 
+  // Check Daily Limit for Registered Users
+  if (userId) {
+    try {
+      // 1. Determine User Limit based on Plan
+      let dailyLimit = 3;
+      const planName = await redis.hget<string>('user_subscriptions', userId);
+      
+      if (planName) {
+        const plan = planName.toLowerCase();
+        if (plan.includes('starter')) {
+            dailyLimit = 40;
+        } else if (plan.includes('pro')) {
+            dailyLimit = 140;
+        }
+      }
+
+      // 2. Track Usage (Beijing Time UTC+8)
+      const date = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const key = `daily_usage:${date}`;
+      
+      const usage = await redis.hincrby(key, userId, 1);
+      
+      if (usage === 1) {
+        await redis.expire(key, 86400);
+      }
+
+      // 3. Enforce Limit
+      if (usage > dailyLimit) {
+        return res.status(402).json({ error: 'Daily limit reached' });
+      }
+
+    } catch (e) {
+      console.error("Redis usage/auth check error:", e);
+    }
+  }
+
   try {
     const geminiPrompt = getPrompt(prompt);
-    const response = await ai.models.generateContent({
+    let response;
+
+    try {
+      response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: geminiPrompt,
         config: {
           temperature: 1.0,
         },
-    });
+      });
+    } catch (error) {
+      const backupKey = process.env.API_KEY_A;
+      if (!backupKey) {
+        throw error;
+      }
+      console.warn('Primary API key failed, retrying with API_KEY_A');
+      const backupAi = new GoogleGenAI({ apiKey: backupKey });
+      response = await backupAi.models.generateContent({
+        model: "gemini-3-pro-preview",
+        contents: geminiPrompt,
+        config: {
+          temperature: 1.0,
+        },
+      });
+    }
 
     let htmlContent = response.text;
 

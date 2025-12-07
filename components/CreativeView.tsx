@@ -163,7 +163,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
             srcDoc={html}
             title="Generated AI Content"
             className="w-full h-full border-none"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts allow-same-origin allow-modals"
         />
       </div>
 

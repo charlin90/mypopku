@@ -1,7 +1,12 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
+import { Redis } from '@upstash/redis';
 import type { GeneratedConcept } from '../types.js';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 const responseSchema = {
   type: Type.OBJECT,
@@ -99,15 +104,53 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { concept } = req.body;
+  const { concept, userId } = req.body;
 
   if (!concept || typeof concept !== 'string' || concept.trim() === '') {
     return res.status(400).json({ error: 'Concept is required.' });
   }
 
+  // Check Daily Limit for Registered Users
+  if (userId) {
+    try {
+      // 1. Determine User Limit based on Plan
+      let dailyLimit = 3;
+      const planName = await redis.hget<string>('user_subscriptions', userId);
+      
+      if (planName) {
+        const plan = planName.toLowerCase();
+        if (plan.includes('starter')) {
+            dailyLimit = 40;
+        } else if (plan.includes('pro')) {
+            dailyLimit = 140;
+        }
+      }
+
+      // 2. Track Usage (Beijing Time UTC+8)
+      const date = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const key = `daily_usage:${date}`;
+      
+      const usage = await redis.hincrby(key, userId, 1);
+      
+      if (usage === 1) {
+        await redis.expire(key, 86400);
+      }
+
+      // 3. Enforce Limit
+      if (usage > dailyLimit) {
+        return res.status(402).json({ error: 'Daily limit reached' });
+      }
+    } catch (e) {
+      console.error("Redis usage check error:", e);
+    }
+  }
+
   try {
     const prompt = getPrompt(concept);
-    const response = await ai.models.generateContent({
+    let response;
+
+    try {
+      response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: prompt,
         config: {
@@ -115,7 +158,24 @@ export default async function handler(
           responseSchema: responseSchema,
           temperature: 1.0,
         },
-    });
+      });
+    } catch (error) {
+      const backupKey = process.env.API_KEY_A;
+      if (!backupKey) {
+        throw error;
+      }
+      console.warn('Primary API key failed, retrying with API_KEY_A');
+      const backupAi = new GoogleGenAI({ apiKey: backupKey });
+      response = await backupAi.models.generateContent({
+        model: "gemini-3-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+          temperature: 1.0,
+        },
+      });
+    }
 
     if (!response.text) {
         throw new Error("The AI returned an empty response.");

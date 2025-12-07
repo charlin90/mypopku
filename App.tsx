@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -7,7 +8,7 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
 export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   const { user, isSignedIn, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
   const hasRedirectedRef = useRef(false);
 
   // Helper to get display name: Username > FirstName > Anonymous
@@ -143,19 +145,25 @@ const App: React.FC = () => {
     setGeneratedContent(null);
 
     try {
-      const content = await generateInteractiveConcept(concept);
+      const content = await generateInteractiveConcept(concept, user?.id);
       setGeneratedContent(content);
       setConceptPrompt(concept);
       setView('explainer');
     } catch (err) {
       console.error("Concept generation failed:", err);
       const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
+      if (message === 'Daily limit reached') {
+          // Pass userId in custom data for the webhook to identify the user
+          const checkoutUrl = `https://popku.lemonsqueezy.com/buy/153b1de3-a365-419f-bfdc-c5e9f214fc9c?checkout[custom][user_id]=${user?.id}`;
+          window.location.href = checkoutUrl;
+          return;
+      }
       setError(message);
       setView('home'); 
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
   
   const handleCreativeSubmit = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -165,19 +173,25 @@ const App: React.FC = () => {
     setCreativeHtml(null);
 
     try {
-        const html = await generateCreativePage(prompt);
+        const html = await generateCreativePage(prompt, user?.id);
         setCreativeHtml(html);
         setCreativePrompt(prompt);
         setView('creativeView');
     } catch (err) {
         console.error("Creative page generation failed:", err);
         const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
+        if (message === 'Daily limit reached') {
+            // Pass userId in custom data for the webhook to identify the user
+            const checkoutUrl = `https://popku.lemonsqueezy.com/buy/153b1de3-a365-419f-bfdc-c5e9f214fc9c?checkout[custom][user_id]=${user?.id}`;
+            window.location.href = checkoutUrl;
+            return;
+        }
         setError(message);
         setView('home'); 
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   // Heuristic to decide whether to use Learn (Concept) or Create (Creative) mode
   const handleUnifiedSubmit = useCallback(async (input: string) => {
@@ -197,11 +211,15 @@ const App: React.FC = () => {
     const isLongChinese = hasChinese && trimmed.length > 10;
 
     if (wordCount > 6 || isLongChinese || hasCreativeKeyword) {
+        if (!isSignedIn) {
+            openSignIn();
+            return;
+        }
         await handleCreativeSubmit(trimmed);
     } else {
         await handleConceptSubmit(trimmed);
     }
-  }, [handleCreativeSubmit, handleConceptSubmit]);
+  }, [handleCreativeSubmit, handleConceptSubmit, isSignedIn, openSignIn]);
 
   const handleFileUpload = useCallback(async (htmlContent: string, prompt: string, screenshotDataUrl: string) => {
     setIsLoading(true);
