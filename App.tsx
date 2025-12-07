@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useClerk, useUser } from '@clerk/clerk-react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
