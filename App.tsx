@@ -13,6 +13,9 @@ export type FeedTab = 'featured' | 'latest' | 'games' | 'tools' | 'art' | 'educa
 
 type ViewState = 'home' | 'explainer' | 'creative' | 'blob';
 
+// Replace this with your actual Lemon Squeezy Checkout URL
+const PAYMENT_URL = "https://popku.lemonsqueezy.com/buy/153b1de3-a365-419f-bfdc-c5e9f214fc9c";
+
 export default function App() {
   const { openSignIn } = useClerk();
   const { isSignedIn, user } = useUser();
@@ -61,6 +64,11 @@ export default function App() {
       setGeneratedConcept(concept);
       setCurrentView('explainer');
     } catch (err: any) {
+      if (err.message === 'Daily limit reached') {
+        const checkoutUrl = `${PAYMENT_URL}?checkout[custom][user_id]=${user?.id}`;
+        window.location.href = checkoutUrl;
+        return;
+      }
       setError(err.message || 'Failed to generate concept.');
     } finally {
       setIsLoading(false);
@@ -76,6 +84,11 @@ export default function App() {
       setCreativeHtml(html);
       setCurrentView('creative');
     } catch (err: any) {
+      if (err.message === 'Daily limit reached') {
+        const checkoutUrl = `${PAYMENT_URL}?checkout[custom][user_id]=${user?.id}`;
+        window.location.href = checkoutUrl;
+        return;
+      }
       setError(err.message || 'Failed to generate creative page.');
     } finally {
       setIsLoading(false);
