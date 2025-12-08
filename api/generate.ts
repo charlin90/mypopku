@@ -2,6 +2,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GeneratedConcept } from '../types.js';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 const responseSchema = {
   type: Type.OBJECT,
@@ -103,6 +109,18 @@ export default async function handler(
 
   if (!concept || typeof concept !== 'string' || concept.trim() === '') {
     return res.status(400).json({ error: 'Concept is required.' });
+  }
+
+  // Track IP usage for statistics
+  try {
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+    const realIp = ip ? ip.split(',')[0].trim() : (req.socket.remoteAddress || 'unknown');
+    
+    // Increment the count for this IP in the hash 'ai_generations_by_ip'
+    await redis.hincrby('ai_generations_by_ip', realIp, 1);
+  } catch (err) {
+    console.error("Failed to track IP usage:", err);
   }
 
   try {
