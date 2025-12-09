@@ -15,8 +15,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     let shares: CommunityShare[] = [];
-    const { filter } = req.query;
+    const { filter, lang } = req.query;
     const mode = Array.isArray(filter) ? filter[0] : filter;
+    const isZh = lang === 'zh';
 
     if (mode === 'featured') {
         // Fetch IDs from the featured sorted set
@@ -55,6 +56,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             views: views ? (views[share.id] || 0) : 0
         }));
     }
+
+    // --- LANGUAGE FILTER START ---
+    // Minimal regex check for Chinese characters
+    shares = shares.filter(s => {
+        const hasChinese = /[\u4e00-\u9fa5]/.test(s.prompt);
+        return isZh ? hasChinese : !hasChinese;
+    });
+    // --- LANGUAGE FILTER END ---
 
     // Apply Filters & Sorting based on mode
     if (mode === 'most_viewed') {

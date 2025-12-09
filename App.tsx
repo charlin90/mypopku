@@ -30,8 +30,26 @@ const App: React.FC = () => {
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
+  // Language State: 'en' | 'zh'
+  const [language, setLanguage] = useState<'en' | 'zh'>('en');
+  
   const { user, isSignedIn, isLoaded } = useUser();
   const hasRedirectedRef = useRef(false);
+
+  // Initialize Language based on URL or Browser
+  useEffect(() => {
+    const path = window.location.pathname;
+    const isZhPath = path.startsWith('/zh');
+    const isZhBrowser = navigator.language.startsWith('zh');
+
+    if (isZhPath) {
+        setLanguage('zh');
+    } else if (path === '/' && isZhBrowser) {
+        // Auto-redirect to /zh for Chinese users on root
+        window.history.replaceState(null, '', '/zh');
+        setLanguage('zh');
+    }
+  }, []);
 
   // Helper to get display name: Username > FirstName > Anonymous
   const getDisplayName = useCallback(() => {
@@ -172,13 +190,15 @@ const App: React.FC = () => {
     // Reset title when going back home
     if (view === 'home') {
         updateMetaTags(
-            'Popku - Generate Interactive Concepts with AI', 
+            language === 'zh' ? 'Popku - AI原生互动内容社区' : 'Popku - Generate Interactive Concepts with AI', 
             'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.',
             'https://popku.com/og-image.png'
         );
-        window.history.pushState({}, '', '/');
+        // Only push '/' if we are not on /zh
+        const path = language === 'zh' ? '/zh' : '/';
+        window.history.pushState({}, '', path);
     }
-  }, [view]);
+  }, [view, language]);
 
   const handleTabChange = useCallback((tab: FeedTab) => {
     setHomeFeedTab(tab);
@@ -317,7 +337,8 @@ const App: React.FC = () => {
   const handleGoBack = useCallback(() => {
     // If we are in a deep-linked view (blobExplainer active on load), hitting back should go to home
     if (window.location.pathname.startsWith('/view/')) {
-        window.history.pushState({}, '', '/');
+        const path = language === 'zh' ? '/zh' : '/';
+        window.history.pushState({}, '', path);
     }
     setView('home');
     setGeneratedContent(null);
@@ -329,7 +350,7 @@ const App: React.FC = () => {
     setShareUrlOnLoad(null);
     setError(null);
     setRefreshTrigger(prev => prev + 1);
-  }, []);
+  }, [language]);
 
   // Simple Router Switch
   if (view === 'admin') {
@@ -353,6 +374,7 @@ const App: React.FC = () => {
           isLoading={isLoading} 
           error={error}
           refreshTrigger={refreshTrigger}
+          language={language}
         />
       </div>
       

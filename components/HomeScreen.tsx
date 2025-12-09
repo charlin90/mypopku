@@ -15,9 +15,69 @@ interface HomeScreenProps {
   isLoading: boolean;
   error: string | null;
   refreshTrigger: number;
+  language: 'en' | 'zh';
 }
 
-const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void, isFeatured?: boolean }> = ({ item, onClick, onUserClick, isFeatured }) => {
+const translations = {
+  en: {
+    latest: 'Latest',
+    games: 'Games',
+    featured: 'Featured',
+    christmas: 'Christmas',
+    most_viewed: 'Most Viewed',
+    tools: 'Tools',
+    art: 'Art',
+    education: 'Education',
+    ai: 'AI',
+    music: 'Music',
+    misc: 'Misc',
+    personal: 'My Popku',
+    userGallery: 'User Gallery',
+    searchPlaceholder: 'Search or type to create...',
+    upload: 'Upload',
+    signIn: 'Sign In',
+    empty: 'Nothing here yet!',
+    emptySubFeatured: "Check back later for curated picks.",
+    emptySubPersonal: "You haven't created anything yet.",
+    emptySubOther: "This user hasn't shared anything yet.",
+    emptySubCat: "Be the first to create something in this category.",
+    foundInGallery: 'Found in Gallery',
+    generateNew: 'Generate New',
+    createNewDesc: 'Create a brand new concept for',
+    learnTag: 'LEARN',
+    appTag: 'APP'
+  },
+  zh: {
+    latest: '最新',
+    games: '游戏',
+    featured: '精选',
+    christmas: '节日',
+    most_viewed: '热门',
+    tools: '工具',
+    art: '艺术',
+    education: '教育',
+    ai: 'AI',
+    music: '音乐',
+    misc: '其他',
+    personal: '我的',
+    userGallery: '用户作品',
+    searchPlaceholder: '搜索或输入以创建...',
+    upload: '上传',
+    signIn: '登录',
+    empty: '这里还什么都没有！',
+    emptySubFeatured: "稍后再来看看精选内容吧。",
+    emptySubPersonal: "你还没有创建任何内容。",
+    emptySubOther: "该用户尚未分享任何内容。",
+    emptySubCat: "成为第一个在这个分类下创作的人吧。",
+    foundInGallery: '库中发现',
+    generateNew: '生成新的',
+    createNewDesc: '创建一个全新的概念：',
+    learnTag: '学习',
+    appTag: '应用'
+  }
+};
+
+const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void, isFeatured?: boolean, t: any }> = ({ item, onClick, onUserClick, isFeatured, t }) => {
   const isAnonymous = !item.authorName || item.authorName === 'Anonymous';
   const showOfficial = isFeatured && isAnonymous;
   const displayName = showOfficial ? 'Popku Official' : (item.authorName || 'Anonymous');
@@ -41,7 +101,7 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUse
               </span>
           ) : (
               <span className={`px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${item.type === 'learn' ? 'bg-pink-300 text-black' : 'bg-lime-300 text-black'}`}>
-                  {item.type === 'learn' ? 'LEARN' : 'CREATE'}
+                  {item.type === 'learn' ? t.learnTag : t.appTag}
               </span>
           )}
       </div>
@@ -119,8 +179,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   isLoading, 
   error,
   refreshTrigger,
+  language
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const t = translations[language];
   
   // Community Feed State
   const [shares, setShares] = useState<CommunityShare[]>([]);
@@ -146,17 +208,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // Define the main categories
   const categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [
-    { id: 'featured', label: 'Featured', emoji: '✨', colorClass: 'bg-yellow-300' },
-    { id: 'christmas', label: 'Christmas', emoji: '🎄', colorClass: 'bg-red-300' },
-    { id: 'most_viewed', label: 'Most Viewed', emoji: '👁️', colorClass: 'bg-orange-300' },
-    { id: 'latest', label: 'Latest', emoji: '🔥', colorClass: 'bg-cyan-300' },
-    { id: 'games', label: 'Games', emoji: '🎮', colorClass: 'bg-purple-300' },
-    { id: 'tools', label: 'Tools', emoji: '🛠️', colorClass: 'bg-blue-300' },
-    { id: 'art', label: 'Art', emoji: '🎨', colorClass: 'bg-pink-300' },
-    { id: 'education', label: 'Education', emoji: '📚', colorClass: 'bg-green-300' },
-    { id: 'ai', label: 'AI', emoji: '🤖', colorClass: 'bg-indigo-300' },
-    { id: 'music', label: 'Music', emoji: '🎵', colorClass: 'bg-red-300' },
-    { id: 'misc', label: 'Misc', emoji: '🧩', colorClass: 'bg-gray-300' },
+    { id: 'featured', label: t.featured, emoji: '✨', colorClass: 'bg-yellow-300' },
+    { id: 'christmas', label: t.christmas, emoji: '🎄', colorClass: 'bg-red-300' },
+    { id: 'most_viewed', label: t.most_viewed, emoji: '👁️', colorClass: 'bg-orange-300' },
+    { id: 'latest', label: t.latest, emoji: '🔥', colorClass: 'bg-cyan-300' },
+    { id: 'games', label: t.games, emoji: '🎮', colorClass: 'bg-purple-300' },
+    { id: 'tools', label: t.tools, emoji: '🛠️', colorClass: 'bg-blue-300' },
+    { id: 'art', label: t.art, emoji: '🎨', colorClass: 'bg-pink-300' },
+    { id: 'education', label: t.education, emoji: '📚', colorClass: 'bg-green-300' },
+    { id: 'ai', label: t.ai, emoji: '🤖', colorClass: 'bg-indigo-300' },
+    { id: 'music', label: t.music, emoji: '🎵', colorClass: 'bg-red-300' },
+    { id: 'misc', label: t.misc, emoji: '🧩', colorClass: 'bg-gray-300' },
   ];
 
   // Fetch community shares or user creations when tab changes
@@ -165,7 +227,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setIsFeedLoading(true);
       setFeedError(null);
       try {
-        let endpoint = `/api/community?filter=${activeTab}`;
+        let endpoint = `/api/community?filter=${activeTab}&lang=${language}`;
         
         if (activeTab === 'personal') {
             if (!effectiveUserId) {
@@ -191,7 +253,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId, refreshTrigger]);
+  }, [activeTab, effectiveUserId, refreshTrigger, language]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -270,7 +332,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <span className="hidden sm:inline">Popku</span>
              </div>
              <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
-                An AI-native community for creating and sharing interactive content
+                {language === 'zh' ? 'AI原生互动内容创作社区' : 'An AI-native community for creating and sharing interactive content'}
              </span>
          </div>
 
@@ -283,7 +345,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                      onChange={handleInputChange}
                      onFocus={() => setShowDropdown(true)}
                      className="w-full h-12 rounded-full border-2 border-black px-6 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all bg-white hover:bg-gray-50 placeholder-gray-400"
-                     placeholder="Search or type to create..."
+                     placeholder={t.searchPlaceholder}
                      disabled={isLoading}
                  />
                  <button type="submit" className="absolute right-2 top-1.5 bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors" disabled={isLoading}>
@@ -299,7 +361,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     {filteredShares.length > 0 && (
                         <div className="flex flex-col border-b-2 border-black">
                              <div className="px-4 py-2 bg-gray-50 border-b-2 border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                Found in Gallery
+                                {t.foundInGallery}
                              </div>
                              {filteredShares.map(share => (
                                 <a 
@@ -322,7 +384,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         <p className="text-xs text-gray-500">{new Date(share.createdAt).toLocaleDateString()}</p>
                                      </div>
                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>
-                                        {share.type === 'learn' ? 'LEARN' : 'APP'}
+                                        {share.type === 'learn' ? t.learnTag : t.appTag}
                                      </span>
                                 </a>
                              ))}
@@ -342,8 +404,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                              </svg>
                         </div>
                         <div>
-                            <p className="font-bold text-sm">Generate New</p>
-                            <p className="text-xs text-gray-500">Create a brand new concept for "{inputValue}"</p>
+                            <p className="font-bold text-sm">{t.generateNew}</p>
+                            <p className="text-xs text-gray-500">{t.createNewDesc} "{inputValue}"</p>
                         </div>
                     </button>
                 </div>
@@ -392,14 +454,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                 </svg>
-                <span className="hidden md:inline">Upload</span>
+                <span className="hidden md:inline">{t.upload}</span>
             </button>
 
             {/* Slot 4: Auth (Sign In / User Button) - Sign In HIDDEN ON MOBILE */}
             <SignedOut>
                 <SignInButton mode="modal">
                     <button className={`${authBtn} hidden md:block`}>
-                        Sign In
+                        {t.signIn}
                     </button>
                 </SignInButton>
             </SignedOut>
@@ -432,7 +494,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         onClick={() => onTabChange('personal')}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
                     >
-                        <span>👤</span> {isViewingOther ? 'User Gallery' : 'My Popku'}
+                        <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
                     </button>
                 )}
                 {categories.map((cat) => (
@@ -467,13 +529,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                           onClick={() => onLoadBlobConcept(item.blobUrl, item.prompt)} 
                           onUserClick={onUserClick} 
                           isFeatured={activeTab === 'featured'}
+                          t={t}
                         />
                     ))
                 ) : (
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
-                        <p className="text-2xl font-black text-gray-300">Nothing here yet!</p>
+                        <p className="text-2xl font-black text-gray-300">{t.empty}</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'featured' ? "Check back later for curated picks." : activeTab === 'personal' ? (isViewingOther ? "This user hasn't shared anything yet." : "You haven't created anything yet.") : "Be the first to create something in this category."}
+                           {activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat}
                         </p>
                     </div>
                 )}
