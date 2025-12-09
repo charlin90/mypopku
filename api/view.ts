@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let title = 'Popku - AI Interactive Concepts';
   let description = 'An interactive learning application that uses AI to generate live, hands-on simulations.';
   let imageUrl = 'https://popku.com/og-image.png';
-  let promptText = '';
+  let promptText = 'Popku';
   let authorName = 'Anonymous';
   let createdAt = new Date().toISOString();
   let appType = 'SoftwareApplication';
@@ -165,7 +165,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <!-- Server-Side Injected Content (Visible to bots and users while loading) -->
     <div id="root">
         <div class="server-preview">
-            <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">${title.split(' - ')[0]}</h1>
+            <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">${promptText}</h1>
             <p style="font-size: 1.25rem; max-width: 600px; margin: 0 auto 2rem; line-height: 1.6;">${description}</p>
             
             <div style="display: flex; gap: 1rem; justify-content: center; font-size: 0.9rem; color: #555;">
