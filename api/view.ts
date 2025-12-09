@@ -65,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta property="twitter:description" content="${description}">
     <meta property="twitter:image" content="${imageUrl}">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/output.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
