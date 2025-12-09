@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useRef, useState } from 'react';
 import type { GeneratedConcept } from '../types.js';
 import { marked, type Tokens } from 'marked';
@@ -38,10 +37,12 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const viewRef = useRef<HTMLDivElement>(null);
   const [initialHtml, setInitialHtml] = useState('');
 
+  const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [customScreenshot, setCustomScreenshot] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
   
@@ -50,6 +51,9 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
+  
+  // New state for collapsible navigation
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
   
   const { openSignIn } = useClerk();
 
@@ -64,7 +68,6 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
         console.log('[ExplainerView] User not logged in. Saving state and setting pending flag.');
-        // Persist the current view state so App.tsx can restore it after a potential page reload during auth
         sessionStorage.setItem('restore_state', JSON.stringify({
             view: 'explainer',
             content,
@@ -76,14 +79,19 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
     }
 
     setShowShareModal(true);
-    if (shareUrl || isSharing) return;
+    if (shareUrl) return; // Already shared
 
-    setIsSharing(true);
+    // Start Capture Process
+    setIsCapturing(true);
     setShareError(null);
     setCopyButtonText('Copy');
     setScreenshotUrl(null);
+    setCustomScreenshot(null);
 
     try {
+        // Wait a tiny bit for the modal to render (though it shouldn't block the canvas capture of the underlying view)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const screenshotCanvas = viewRef.current
             ? await html2canvas(viewRef.current, { 
                 useCORS: true, 
@@ -94,7 +102,30 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         
         const screenshotDataUrl = screenshotCanvas ? screenshotCanvas.toDataURL('image/jpeg', 0.9) : null;
         setScreenshotUrl(screenshotDataUrl);
-        
+    } catch (err) {
+        console.error("Screenshot failed:", err);
+        setShareError("Failed to capture screenshot automatically. You can upload one manually.");
+    } finally {
+        setIsCapturing(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomScreenshot(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePublish = async () => {
+      setIsSharing(true);
+      setShareError(null);
+
+      try {
         const response = await fetch('/api/share', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,7 +133,7 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                 ...content, 
                 prompt,
                 type: 'learn',
-                screenshot: screenshotDataUrl,
+                screenshot: customScreenshot || screenshotUrl,
                 userId: userId,
                 authorName: userName,
                 authorAvatarUrl: userAvatarUrl,
@@ -116,12 +147,12 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
         const data = await response.json();
         setShareUrl(data.url);
-    } catch (err) {
+      } catch (err) {
         const message = err instanceof Error ? err.message : 'An unknown error occurred.';
         setShareError(message);
-    } finally {
+      } finally {
         setIsSharing(false);
-    }
+      }
   };
 
   // Automatically trigger share if pending share flag exists in sessionStorage and user logs in
@@ -146,10 +177,10 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
   const closeShareModal = () => {
     setShowShareModal(false);
-    setShareUrl(null);
-    setShareError(null);
+    // We do NOT clear shareUrl here so if they open it again, it's still there.
+    // But we reset loading states.
     setIsSharing(false);
-    setScreenshotUrl(null);
+    setIsCapturing(false);
   };
 
   const handleCopyPrompt = () => {
@@ -257,15 +288,36 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         }
        `}</style>
       <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-4 box-border bg-amber-50">
-        <div className="absolute top-4 left-4 flex gap-3 z-30">
-            <button onClick={onBack} className={buttonStyle} aria-label="Go back">
-                Back
-            </button>
-            <button onClick={handleShareClick} className={buttonStyle} aria-label="Share experiment">
-                Share
-            </button>
-            <button onClick={() => setShowPromptModal(true)} className={buttonStyle} aria-label="Show prompt">
-                Prompt
+        
+        {/* Navigation Controls */}
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-3">
+             {isNavExpanded && (
+                <div className="flex gap-3">
+                    <button onClick={onBack} className={buttonStyle} aria-label="Go back">
+                        Back
+                    </button>
+                    <button onClick={handleShareClick} className={buttonStyle} aria-label="Share experiment">
+                        Share
+                    </button>
+                    <button onClick={() => setShowPromptModal(true)} className={buttonStyle} aria-label="Show prompt">
+                        Prompt
+                    </button>
+                </div>
+            )}
+            <button
+                onClick={() => setIsNavExpanded(!isNavExpanded)}
+                className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-0.5 hover:shadow-none ${!isNavExpanded ? 'opacity-50 hover:opacity-100' : ''}`}
+                aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+            >
+                {isNavExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                         <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                )}
             </button>
         </div>
 
@@ -322,14 +374,53 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
 
       {showShareModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
-            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-3xl font-black text-black">Share It!</h2>
 
-                {isSharing && (
+                {/* State 1: Capturing */}
+                {isCapturing && (
                     <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
                          <div className="w-full aspect-video bg-gray-100 border-2 border-black rounded-lg flex items-center justify-center animate-pulse">
                             📸 Snapping...
                         </div>
+                    </div>
+                )}
+
+                {/* State 2: Preview & Confirm (Only if not sharing and not success yet) */}
+                {!isCapturing && !isSharing && !shareUrl && (
+                    <div className="flex flex-col gap-4">
+                        <div className="relative border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-gray-100 aspect-video group">
+                            {customScreenshot || screenshotUrl ? (
+                                <img src={customScreenshot || screenshotUrl!} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">No Preview</div>
+                            )}
+                            <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold">
+                                <span>Change Cover 📷</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                            </label>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-500 font-bold">
+                            <span>Preview</span>
+                            <label className="cursor-pointer text-teal-600 hover:underline">
+                                Upload Custom Image
+                                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                            </label>
+                        </div>
+
+                        <button 
+                            onClick={handlePublish} 
+                            className="bg-black text-white border-2 border-black font-bold py-3 px-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all mt-2"
+                        >
+                            Confirm & Publish
+                        </button>
+                    </div>
+                )}
+
+                {/* State 3: Uploading */}
+                {isSharing && (
+                     <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
                         <div className="flex items-center gap-3 mt-2">
                             <LoadingSpinnerInline />
                             <span>Creating your link...</span>
@@ -337,17 +428,19 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
                     </div>
                 )}
                 
+                {/* Error State */}
                 {shareError && (
                     <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl font-bold">
                         <p>Oops! {shareError}</p>
                     </div>
                 )}
 
+                {/* State 4: Success */}
                 {!isSharing && shareUrl && (
                      <div className="flex flex-col gap-4">
-                        {screenshotUrl && (
-                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1">
-                            <img src={screenshotUrl} alt="Screenshot" className="w-full h-auto object-contain" />
+                        {(customScreenshot || screenshotUrl) && (
+                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1 aspect-video">
+                            <img src={customScreenshot || screenshotUrl!} alt="Screenshot" className="w-full h-full object-cover" />
                           </div>
                         )}
                         <p className="text-black font-medium">Here is your magic link:</p>

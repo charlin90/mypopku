@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -23,14 +22,19 @@ const LoadingSpinnerInline: React.FC = () => (
 
 export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [customScreenshot, setCustomScreenshot] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState('Copy');
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
+  
+  // New state for collapsible navigation
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
   
   const { openSignIn } = useClerk();
 
@@ -45,7 +49,6 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     // If user is not logged in, trigger sign in modal and set pending flag in session storage
     if (!userId) {
         console.log('[CreativeView] User not logged in. Saving state and setting pending flag.');
-        // Persist the current view state so App.tsx can restore it after a potential page reload during auth
         sessionStorage.setItem('restore_state', JSON.stringify({
             view: 'creativeView',
             html,
@@ -57,12 +60,13 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
     }
 
     setShowShareModal(true);
-    if (shareUrl || isSharing) return;
+    if (shareUrl) return;
 
-    setIsSharing(true);
+    setIsCapturing(true);
     setShareError(null);
     setCopyButtonText('Copy');
     setScreenshotUrl(null);
+    setCustomScreenshot(null);
 
     try {
         const iframe = iframeRef.current;
@@ -71,6 +75,9 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         if (!iframeDoc?.body) {
             throw new Error("Could not access content.");
         }
+
+        // Slight delay to ensure modal render doesn't glitch capture
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const screenshotCanvas = await html2canvas(iframeDoc.body, { 
             useCORS: true, 
@@ -81,34 +88,57 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         
         const screenshotDataUrl = screenshotCanvas ? screenshotCanvas.toDataURL('image/jpeg', 0.9) : null;
         setScreenshotUrl(screenshotDataUrl);
-
-        const response = await fetch('/api/share', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              html, 
-              prompt,
-              type: 'create',
-              screenshot: screenshotDataUrl,
-              userId: userId,
-              authorName: userName,
-              authorAvatarUrl: userAvatarUrl,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create share link.');
-        }
-
-        const data = await response.json();
-        setShareUrl(data.url);
     } catch (err) {
-        const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setShareError(message);
+        console.error("Screenshot failed:", err);
+        setShareError("Failed to capture screenshot automatically. You can upload one manually.");
     } finally {
-        setIsSharing(false);
+        setIsCapturing(false);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomScreenshot(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePublish = async () => {
+        setIsSharing(true);
+        setShareError(null);
+        
+        try {
+            const response = await fetch('/api/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                html, 
+                prompt,
+                type: 'create',
+                screenshot: customScreenshot || screenshotUrl,
+                userId: userId,
+                authorName: userName,
+                authorAvatarUrl: userAvatarUrl,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create share link.');
+            }
+
+            const data = await response.json();
+            setShareUrl(data.url);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setShareError(message);
+        } finally {
+            setIsSharing(false);
+        }
   };
 
   // Automatically trigger share if pending share flag exists in sessionStorage and user logs in
@@ -133,10 +163,10 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
 
   const closeShareModal = () => {
     setShowShareModal(false);
-    setShareUrl(null);
-    setShareError(null);
+    // Preserve shareUrl for subsequent opens, but reset active states
     setIsSharing(false);
-    setScreenshotUrl(null);
+    setIsCapturing(false);
+    
     if (initialShareUrl) {
       onClearInitialShareUrl();
     }
@@ -153,11 +183,32 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
   return (
     <>
       <div className="w-full h-full bg-amber-50 relative">
-        <div className="absolute top-4 left-4 flex gap-4 z-20">
-            <button onClick={onBack} className={btnStyle}>Back</button>
-            <button onClick={handleShareClick} className={btnStyle}>Share</button>
-            <button onClick={() => setShowPromptModal(true)} className={btnStyle}>Prompt</button>
+        {/* Navigation Controls */}
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-3">
+             {isNavExpanded && (
+                <div className="flex gap-3">
+                    <button onClick={onBack} className={btnStyle}>Back</button>
+                    <button onClick={handleShareClick} className={btnStyle}>Share</button>
+                    <button onClick={() => setShowPromptModal(true)} className={btnStyle}>Prompt</button>
+                </div>
+            )}
+            <button
+                onClick={() => setIsNavExpanded(!isNavExpanded)}
+                className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-0.5 hover:shadow-none ${!isNavExpanded ? 'opacity-50 hover:opacity-100' : ''}`}
+                aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+            >
+                {isNavExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                         <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                )}
+            </button>
         </div>
+
         <iframe
             ref={iframeRef}
             srcDoc={html}
@@ -169,29 +220,73 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
 
       {showShareModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeShareModal}>
-            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+            <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-8 w-full max-w-md flex flex-col gap-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h2 className="text-3xl font-black text-black">Share It!</h2>
-                {isSharing && (
+                
+                {/* State 1: Capturing */}
+                {isCapturing && (
                     <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
                         <div className="w-full aspect-video bg-gray-100 border-2 border-black rounded-lg flex items-center justify-center animate-pulse">
                             📸 Snapping...
                         </div>
+                    </div>
+                )}
+                
+                {/* State 2: Preview & Confirm */}
+                {!isCapturing && !isSharing && !shareUrl && (
+                     <div className="flex flex-col gap-4">
+                        <div className="relative border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-gray-100 aspect-video group">
+                            {customScreenshot || screenshotUrl ? (
+                                <img src={customScreenshot || screenshotUrl!} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">No Preview</div>
+                            )}
+                            <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold">
+                                <span>Change Cover 📷</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                            </label>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-500 font-bold">
+                            <span>Preview</span>
+                            <label className="cursor-pointer text-teal-600 hover:underline">
+                                Upload Custom Image
+                                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                            </label>
+                        </div>
+
+                        <button 
+                            onClick={handlePublish} 
+                            className="bg-black text-white border-2 border-black font-bold py-3 px-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(255,255,255,0.5)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all mt-2"
+                        >
+                            Confirm & Publish
+                        </button>
+                    </div>
+                )}
+
+                {/* State 3: Uploading */}
+                {isSharing && (
+                    <div className="flex flex-col items-center justify-center gap-4 p-4 text-lg font-bold text-gray-600">
                         <div className="flex items-center gap-3 mt-2">
                             <LoadingSpinnerInline />
                             <span>Creating your link...</span>
                         </div>
                     </div>
                 )}
+
+                {/* Error */}
                 {shareError && (
                     <div className="bg-red-100 border-2 border-red-500 text-red-700 p-4 rounded-xl font-bold">
                         <p>Oops! {shareError}</p>
                     </div>
                 )}
+                
+                {/* State 4: Success */}
                 {!isSharing && shareUrl && (
                      <div className="flex flex-col gap-4">
-                        {screenshotUrl && (
-                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1">
-                            <img src={screenshotUrl} alt="Screenshot" className="w-full h-auto object-contain" />
+                        {(customScreenshot || screenshotUrl) && (
+                          <div className="border-2 border-black rounded-lg overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1 aspect-video">
+                            <img src={customScreenshot || screenshotUrl!} alt="Screenshot" className="w-full h-full object-cover" />
                           </div>
                         )}
                         <p className="text-black font-medium">Here is your magic link:</p>

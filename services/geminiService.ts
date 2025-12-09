@@ -1,21 +1,17 @@
-
 import type { GeneratedConcept } from '../types.js';
 
-export async function generateInteractiveConcept(concept: string, userId?: string): Promise<GeneratedConcept> {
+export async function generateInteractiveConcept(concept: string): Promise<GeneratedConcept> {
   // 1. Send the user's concept to our secure backend API endpoint.
   const response = await fetch('/api/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ concept, userId }),
+    body: JSON.stringify({ concept }),
   });
 
   // 2. Check if the API call was successful.
   if (!response.ok) {
-    if (response.status === 402) {
-        throw new Error("Daily limit reached");
-    }
     // Handle specific 503 error for model overload with a user-friendly message.
     if (response.status === 503) {
       throw new Error("The AI model is currently overloaded. We're sorry for the inconvenience. Please try again in a few moments.");
