@@ -8,6 +8,12 @@ export const AdminDashboard: React.FC = () => {
   const [items, setItems] = useState<{ latest: CommunityShare[], featured: CommunityShare[] }>({ latest: [], featured: [] });
   const [loading, setLoading] = useState(false);
 
+  // Edit State
+  const [editingItem, setEditingItem] = useState<CommunityShare | null>(null);
+  const [editPrompt, setEditPrompt] = useState('');
+  const [editScreenshotFile, setEditScreenshotFile] = useState<File | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   useEffect(() => {
     // Check for existing session
     const stored = localStorage.getItem('admin_secret');
@@ -67,6 +73,55 @@ export const AdminDashboard: React.FC = () => {
     } finally {
         setLoading(false);
     }
+  };
+
+  const openEditModal = (item: CommunityShare) => {
+      setEditingItem(item);
+      setEditPrompt(item.prompt);
+      setEditScreenshotFile(null);
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingItem) return;
+
+      setIsUpdating(true);
+      try {
+        let screenshotDataUrl: string | undefined = undefined;
+
+        if (editScreenshotFile) {
+            screenshotDataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => resolve(ev.target?.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(editScreenshotFile);
+            });
+        }
+
+        const res = await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 
+                'x-admin-secret': secret,
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ 
+                action: 'update',
+                id: editingItem.id,
+                prompt: editPrompt,
+                screenshot: screenshotDataUrl
+            })
+        });
+
+        if (!res.ok) throw new Error('Update failed');
+        
+        setEditingItem(null);
+        await fetchData(secret);
+      } catch (err) {
+          alert('Failed to update item');
+          console.error(err);
+      } finally {
+          setIsUpdating(false);
+      }
   };
 
   if (!isAuthenticated) {
@@ -152,7 +207,7 @@ export const AdminDashboard: React.FC = () => {
                             <th className="p-4 border-r-2 border-gray-100 w-32">Preview</th>
                             <th className="p-4 border-r-2 border-gray-100">Details</th>
                             <th className="p-4 border-r-2 border-gray-100">Author</th>
-                            <th className="p-4 w-48">Actions</th>
+                            <th className="p-4 w-64">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -191,6 +246,12 @@ export const AdminDashboard: React.FC = () => {
                                 <td className="p-4">
                                     <div className="flex flex-col gap-2">
                                         <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => openEditModal(item)}
+                                                className="flex-1 text-center bg-blue-200 border-2 border-black rounded py-1.5 text-xs font-bold hover:bg-blue-300"
+                                            >
+                                                Edit
+                                            </button>
                                             <a href={`/view/${item.id}`} target="_blank" className="flex-1 text-center bg-white border-2 border-black rounded py-1.5 text-xs font-bold hover:bg-gray-100">
                                                 View
                                             </a>
@@ -215,6 +276,60 @@ export const AdminDashboard: React.FC = () => {
                 </table>
             </div>
         </section>
+
+        {/* Edit Modal */}
+        {editingItem && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setEditingItem(null)}>
+                <div className="bg-white border-4 border-black rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-2xl font-black mb-4">Edit Item</h3>
+                    <form onSubmit={handleUpdateSubmit} className="flex flex-col gap-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-1">ID</label>
+                            <input type="text" value={editingItem.id} disabled className="w-full bg-gray-100 border-2 border-gray-300 rounded-lg p-2 font-mono text-xs text-gray-500" />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Title / Prompt</label>
+                            <textarea 
+                                value={editPrompt} 
+                                onChange={e => setEditPrompt(e.target.value)} 
+                                className="w-full border-2 border-black rounded-lg p-2 font-bold h-24"
+                                placeholder="Enter new prompt..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Cover Image (Optional)</label>
+                            <div className="flex gap-4 items-start">
+                                <div className="w-32 aspect-video bg-gray-100 border-2 border-black rounded overflow-hidden">
+                                     {editScreenshotFile ? (
+                                         <img src={URL.createObjectURL(editScreenshotFile)} className="w-full h-full object-cover" />
+                                     ) : (
+                                         <img src={editingItem.screenshotUrl} className="w-full h-full object-cover" />
+                                     )}
+                                </div>
+                                <div className="flex-1">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={e => setEditScreenshotFile(e.target.files?.[0] || null)}
+                                        className="w-full text-xs"
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">Recommended size: 1280x720 (16:9)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-4">
+                             <button type="button" onClick={() => setEditingItem(null)} className="px-4 py-2 bg-gray-100 border-2 border-black rounded-lg font-bold hover:bg-gray-200">Cancel</button>
+                             <button type="submit" disabled={isUpdating} className="px-4 py-2 bg-teal-300 border-2 border-black rounded-lg font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-teal-400 disabled:opacity-50">
+                                 {isUpdating ? 'Saving...' : 'Save Changes'}
+                             </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
     </div>
   );
 };

@@ -1,6 +1,9 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
+import { put } from '@vercel/blob';
+import { nanoid } from 'nanoid';
+import { Buffer } from 'buffer';
 import type { CommunityShare } from '../types.js';
 
 const redis = new Redis({
@@ -80,6 +83,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await redis.zrem('community:featured_ids', id);
             return res.status(200).json({ success: true });
         }
+
+        if (action === 'update') {
+            const { prompt, screenshot } = req.body;
+            
+            // 1. Fetch current item state
+            const currentItem = await redis.hget('shares', id) as CommunityShare;
+            if (!currentItem) return res.status(404).json({ error: 'Item not found' });
+
+            const updatedItem = { ...currentItem };
+
+            // 2. Update Prompt if provided
+            if (prompt !== undefined) {
+                updatedItem.prompt = prompt;
+            }
+
+            // 3. Update Screenshot if provided (Base64 -> Blob)
+            if (screenshot) {
+                try {
+                    const imageBuffer = Buffer.from(screenshot.split(',')[1], 'base64');
+                    const filename = `app_images/${nanoid()}.jpeg`;
+                    const blob = await put(filename, imageBuffer, {
+                        access: 'public',
+                        token: process.env.conceptxlab_READ_WRITE_TOKEN,
+                        addRandomSuffix: false,
+                        contentType: 'image/jpeg'
+                    });
+                    updatedItem.screenshotUrl = blob.url;
+                } catch (err) {
+                    console.error("Failed to upload new screenshot:", err);
+                    return res.status(500).json({ error: "Failed to upload image" });
+                }
+            }
+
+            // 4. Save to Hash (Single Source of Truth)
+            await redis.hset('shares', { [id]: updatedItem });
+
+            // 5. Update Feed List (Cache Consistency)
+            // We scan the top 200 items to see if this item is in the feed, and update it in place.
+            // This prevents the feed from showing old data until a full refresh/rotation.
+            const listItems = await redis.lrange('community:shares', 0, 199);
+            const index = listItems.findIndex((item: any) => item.id === id);
+            
+            if (index !== -1) {
+                // LSET updates the element at the specified index
+                await redis.lset('community:shares', index, JSON.stringify(updatedItem));
+            }
+
+            return res.status(200).json({ success: true });
+        }
+
     } catch (e) {
         console.error("Admin action error:", e);
         return res.status(500).json({ error: String(e) });
