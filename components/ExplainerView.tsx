@@ -52,6 +52,9 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptCopyButtonText, setPromptCopyButtonText] = useState('Copy');
   
+  // New state for collapsible navigation
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
+  
   const { openSignIn } = useClerk();
 
   const handleAhaClick = () => {
@@ -285,15 +288,36 @@ export const ExplainerView: React.FC<ExplainerViewProps> = ({ content, prompt, o
         }
        `}</style>
       <div ref={viewRef} className="fixed top-0 left-0 w-full h-full p-2 sm:p-5 grid grid-cols-1 grid-rows-[minmax(0,_2fr)_minmax(0,_1fr)] lg:grid-cols-3 lg:grid-rows-1 gap-4 box-border bg-amber-50">
-        <div className="absolute top-4 left-4 flex gap-3 z-30">
-            <button onClick={onBack} className={buttonStyle} aria-label="Go back">
-                Back
-            </button>
-            <button onClick={handleShareClick} className={buttonStyle} aria-label="Share experiment">
-                Share
-            </button>
-            <button onClick={() => setShowPromptModal(true)} className={buttonStyle} aria-label="Show prompt">
-                Prompt
+        
+        {/* Navigation Controls */}
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-3">
+             {isNavExpanded && (
+                <div className="flex gap-3">
+                    <button onClick={onBack} className={buttonStyle} aria-label="Go back">
+                        Back
+                    </button>
+                    <button onClick={handleShareClick} className={buttonStyle} aria-label="Share experiment">
+                        Share
+                    </button>
+                    <button onClick={() => setShowPromptModal(true)} className={buttonStyle} aria-label="Show prompt">
+                        Prompt
+                    </button>
+                </div>
+            )}
+            <button
+                onClick={() => setIsNavExpanded(!isNavExpanded)}
+                className={`w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-0.5 hover:shadow-none ${!isNavExpanded ? 'opacity-50 hover:opacity-100' : ''}`}
+                aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+            >
+                {isNavExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                         <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                )}
             </button>
         </div>
 
