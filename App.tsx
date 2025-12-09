@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -7,9 +8,10 @@ import { generateCreativePage } from './services/creativeService.js';
 import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
+import { AdminDashboard } from './components/AdminDashboard.js';
 import { useUser } from '@clerk/clerk-react';
 
-type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView';
+type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'admin';
 export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
 
 const App: React.FC = () => {
@@ -63,9 +65,16 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Handle inbound links for SEO (Display Wall Strategy)
+  // Handle inbound links for SEO (Display Wall Strategy) & Admin routing
   useEffect(() => {
     const path = window.location.pathname;
+    
+    // Check for Admin Route
+    if (path === '/admin') {
+        setView('admin');
+        return;
+    }
+
     const match = path.match(/^\/view\/([a-zA-Z0-9_-]+)$/);
     
     if (match) {
@@ -266,6 +275,11 @@ const App: React.FC = () => {
     setError(null);
     setRefreshTrigger(prev => prev + 1);
   }, []);
+
+  // Simple Router Switch
+  if (view === 'admin') {
+      return <AdminDashboard />;
+  }
 
   return (
     <div className="relative w-full h-screen">
