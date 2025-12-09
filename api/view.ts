@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -18,6 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let authorName = 'Anonymous';
   let createdAt = new Date().toISOString();
   let appType = 'SoftwareApplication';
+  let shareItem: CommunityShare | null = null;
 
   const host = req.headers.host || 'popku.com';
   const canonicalUrl = `https://${host}/view/${id}`;
@@ -27,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const item = await redis.hget<CommunityShare>('shares', id);
         
         if (item) {
+            shareItem = item;
             // Enhanced Keywords in Title
             const typeLabel = item.type === 'learn' ? 'Interactive Lesson' : 'Web App';
             title = `${item.prompt} - ${typeLabel} | Popku`;
@@ -82,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="${canonicalUrl}">
-    <meta property="og:title" content>${title}</meta>
+    <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:site_name" content="Popku">
@@ -124,6 +125,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ::-webkit-scrollbar-track { background: #fff; border-left: 2px solid #000; }
         ::-webkit-scrollbar-thumb { background: #fbbf24; border: 2px solid #000; border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+        
+        /* Loading Placeholder Style */
+        .server-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            padding: 2rem;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
     </style>
     <script defer src="/_vercel/insights/script.js"></script>
 <script type="importmap">
@@ -148,16 +162,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </script>
 </head>
 <body class="selection:bg-pink-300 selection:text-black">
-    <!-- Server-Side Injected Content for Crawlers (Visible to bots, replaced by React for users) -->
+    <!-- Server-Side Injected Content (Visible to bots and users while loading) -->
     <div id="root">
-        <div style="padding: 2rem; max-width: 800px; margin: 0 auto; display: none;">
-            <h1>${title}</h1>
-            <p>${description}</p>
-            <p><strong>Prompt:</strong> ${promptText}</p>
-            <p><strong>Created by:</strong> ${authorName}</p>
-            <p><strong>Date:</strong> ${createdAt}</p>
+        <div class="server-preview">
+            <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">${title.split(' - ')[0]}</h1>
+            <p style="font-size: 1.25rem; max-width: 600px; margin: 0 auto 2rem; line-height: 1.6;">${description}</p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; font-size: 0.9rem; color: #555;">
+                <span><strong>Author:</strong> ${authorName}</span>
+                <span>•</span>
+                <span><strong>Created:</strong> ${new Date(createdAt).toLocaleDateString()}</span>
+            </div>
+            
+            <div style="margin-top: 3rem;">
+               <div style="width: 48px; height: 48px; border: 4px solid black; border-top-color: #f472b6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <style>
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            </style>
         </div>
     </div>
+    
+    <!-- Inject Data for Hydration -->
+    <script>
+      window.__INITIAL_DATA__ = ${JSON.stringify(shareItem)};
+    </script>
+    
     <script type="module" src="/index.js"></script>
 </body>
 </html>

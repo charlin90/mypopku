@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -40,6 +39,39 @@ const App: React.FC = () => {
     return user.username || user.firstName || 'Anonymous';
   }, [user]);
 
+  // Update Meta Tags Helper
+  const updateMetaTags = (title: string, description: string, image?: string) => {
+    document.title = title;
+    
+    const setMeta = (name: string, content: string) => {
+        let element = document.querySelector(`meta[name="${name}"]`);
+        if (!element) {
+            element = document.createElement('meta');
+            element.setAttribute('name', name);
+            document.head.appendChild(element);
+        }
+        element.setAttribute('content', content);
+    };
+
+    const setOg = (property: string, content: string) => {
+        let element = document.querySelector(`meta[property="${property}"]`);
+        if (!element) {
+            element = document.createElement('meta');
+            element.setAttribute('property', property);
+            document.head.appendChild(element);
+        }
+        element.setAttribute('content', content);
+    };
+
+    setMeta('description', description);
+    setOg('og:title', title);
+    setOg('og:description', description);
+    if (image) {
+        setOg('og:image', image);
+        setOg('twitter:image', image);
+    }
+  };
+
   // Restore state if returning from a login redirect (which causes page refresh)
   useEffect(() => {
     const restoreState = sessionStorage.getItem('restore_state');
@@ -79,31 +111,44 @@ const App: React.FC = () => {
     
     if (match) {
         const id = match[1];
-        setIsLoading(true);
-        fetch(`/api/item?id=${id}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Creation not found");
-                return res.json();
-            })
-            .then((data: CommunityShare) => {
-                // SEO Strategy: Title = User Prompt
-                if (data.prompt) {
-                    document.title = `${data.prompt} - Popku`;
-                }
-                
-                // SEO Strategy: Page contains generated App preview
-                if (data.blobUrl) {
-                    setBlobUrlToLoad(data.blobUrl);
-                    setBlobPromptToLoad(data.prompt);
-                    setView('blobExplainer');
-                }
-            })
-            .catch(err => {
-                console.error("Failed to load item:", err);
-                setError("Creation not found or link is expired.");
-                setView('home');
-            })
-            .finally(() => setIsLoading(false));
+
+        const loadItem = (data: CommunityShare) => {
+             // SEO Strategy: Title = User Prompt
+             if (data.prompt) {
+                const title = `${data.prompt} - Popku`;
+                const desc = `Explore "${data.prompt}" created by ${data.authorName || 'Anonymous'} on Popku.`;
+                updateMetaTags(title, desc, data.screenshotUrl);
+            }
+            
+            // SEO Strategy: Page contains generated App preview
+            if (data.blobUrl) {
+                setBlobUrlToLoad(data.blobUrl);
+                setBlobPromptToLoad(data.prompt);
+                setView('blobExplainer');
+            }
+        };
+
+        // Check for server-injected initial data to avoid double fetch
+        const initialData = (window as any).__INITIAL_DATA__;
+        if (initialData && initialData.id === id) {
+            loadItem(initialData);
+            // Clear to prevent reuse issues if navigating
+            (window as any).__INITIAL_DATA__ = undefined;
+        } else {
+            setIsLoading(true);
+            fetch(`/api/item?id=${id}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Creation not found");
+                    return res.json();
+                })
+                .then(loadItem)
+                .catch(err => {
+                    console.error("Failed to load item:", err);
+                    setError("Creation not found or link is expired.");
+                    setView('home');
+                })
+                .finally(() => setIsLoading(false));
+        }
     }
   }, []);
 
@@ -126,7 +171,12 @@ const App: React.FC = () => {
     }
     // Reset title when going back home
     if (view === 'home') {
-        document.title = 'Popku';
+        updateMetaTags(
+            'Popku - Generate Interactive Concepts with AI', 
+            'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.',
+            'https://popku.com/og-image.png'
+        );
+        window.history.pushState({}, '', '/');
     }
   }, [view]);
 
@@ -257,6 +307,11 @@ const App: React.FC = () => {
     setBlobUrlToLoad(blobUrl);
     setBlobPromptToLoad(prompt);
     setView('blobExplainer');
+    
+    // Update Meta Tags for internal navigation
+    const title = `${prompt} - Popku`;
+    const desc = `Play and explore "${prompt}". An AI-generated interactive concept on Popku.`;
+    updateMetaTags(title, desc);
   }, []);
 
   const handleGoBack = useCallback(() => {

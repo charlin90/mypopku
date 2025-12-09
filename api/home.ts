@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -18,25 +17,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2. Build the SEO Content (Hidden from users, visible to bots via <noscript>)
     // This provides the internal linking structure search engines need.
     const seoLinks = shares.map(item => `
-        <li>
-            <a href="/view/${item.id}">
+        <li style="margin-bottom: 0.5rem;">
+            <a href="/view/${item.id}" style="color: #2563eb; text-decoration: underline;">
                 <strong>${item.prompt.replace(/</g, '&lt;')}</strong> 
-                by ${item.authorName || 'Anonymous'}
             </a>
-            <p>Interactive ${item.type} app generated with AI.</p>
+            <span style="color: #666; font-size: 0.9em;"> by ${item.authorName || 'Anonymous'}</span>
         </li>
     `).join('');
 
-    const seoContent = `
-      <noscript>
-        <div id="seo-content">
-            <h1>Popku - Interactive AI Concept Generator</h1>
-            <p>Create live, hands-on simulations for any concept you want to understand. 
-               Browse our community gallery of AI-generated interactive apps, games, and educational tools.</p>
-            <h2>Latest Community Creations</h2>
-            <ul>${seoLinks}</ul>
+    const serverContent = `
+        <div id="server-content" style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: system-ui, sans-serif;">
+            <div style="margin-bottom: 2rem; text-align: center;">
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">Popku</h1>
+                <p style="font-size: 1.2rem; color: #444;">An AI-native community for creating and sharing interactive content.</p>
+                <div style="margin-top: 2rem;">
+                   <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #000; border-top-color: #f472b6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                   <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                </div>
+            </div>
+            
+            <div style="margin-top: 3rem; border-top: 1px solid #eee; padding-top: 2rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Latest Creations</h2>
+                <ul style="list-style: none; padding: 0;">${seoLinks}</ul>
+            </div>
         </div>
-      </noscript>
     `;
 
     // 3. Construct the full HTML response
@@ -108,8 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </script>
 </head>
 <body class="selection:bg-pink-300 selection:text-black">
-    <div id="root"></div>
-    ${seoContent}
+    <div id="root">${serverContent}</div>
     <script type="module" src="/index.js"></script>
 </body>
 </html>

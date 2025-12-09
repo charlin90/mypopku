@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -51,8 +50,11 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUse
           <img
             src={item.screenshotUrl}
             alt={`Preview for ${item.prompt}`}
+            width={640}
+            height={360}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 bg-white">
@@ -81,7 +83,7 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUse
                   {showOfficial ? (
                       <div className="w-full h-full flex items-center justify-center font-serif font-black italic text-black text-xs">P</div>
                   ) : item.authorAvatarUrl ? (
-                      <img src={item.authorAvatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                      <img src={item.authorAvatarUrl} alt={displayName} width={24} height={24} className="w-full h-full object-cover" />
                   ) : (
                       <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-500 bg-gray-200">
                           {displayName[0].toUpperCase()}
@@ -313,7 +315,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                     className="text-left px-4 py-3 hover:bg-yellow-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
                                 >
                                      <div className="w-10 h-8 bg-gray-200 rounded border border-black overflow-hidden flex-shrink-0">
-                                        {share.screenshotUrl ? <img src={share.screenshotUrl} alt="" className="w-full h-full object-cover" /> : null}
+                                        {share.screenshotUrl ? <img src={share.screenshotUrl} alt="" width={40} height={32} className="w-full h-full object-cover" /> : null}
                                      </div>
                                      <div className="flex-grow min-w-0">
                                         <p className="text-sm font-bold text-black truncate">{share.prompt}</p>
@@ -560,6 +562,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <img 
                         src="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/WECHAT/wechat.png" 
                         alt="WeChat QR Code" 
+                        width={192}
+                        height={192}
                         className="w-full h-full object-cover" 
                         onError={(e) => {
                             const target = e.target as HTMLImageElement;

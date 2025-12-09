@@ -9,8 +9,8 @@ const redis = new Redis({
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // Fetch all community shares from Redis
-    const shares = await redis.lrange('community:shares', 0, -1) as unknown as CommunityShare[];
+    // Limit to 5000 recent items to prevent timeouts and memory issues on serverless
+    const shares = await redis.lrange('community:shares', 0, 4999) as unknown as CommunityShare[];
     
     const host = req.headers.host || 'popku.com';
     const protocol = host.includes('localhost') ? 'http' : 'https';
