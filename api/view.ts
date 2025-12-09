@@ -1,3 +1,4 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -10,30 +11,64 @@ const redis = new Redis({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
 
-  let title = 'Popku';
-  let description = 'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.';
-  let imageUrl = 'https://popku.com/og-image.png'; // Default or placeholder
+  let title = 'Popku - AI Interactive Concepts';
+  let description = 'An interactive learning application that uses AI to generate live, hands-on simulations.';
+  let imageUrl = 'https://popku.com/og-image.png';
+  let promptText = '';
+  let authorName = 'Anonymous';
+  let createdAt = new Date().toISOString();
+  let appType = 'SoftwareApplication';
+
+  const host = req.headers.host || 'popku.com';
+  const canonicalUrl = `https://${host}/view/${id}`;
 
   if (id && typeof id === 'string') {
     try {
-        // Fetch from Hash 'shares'
-        // Upstash hget automatically parses JSON if it was stored as such, so we type it
         const item = await redis.hget<CommunityShare>('shares', id);
         
         if (item) {
-            title = `${item.prompt} - Popku`;
-            description = `Check out this interactive interactive concept generated on Popku: ${item.prompt}`;
+            // Enhanced Keywords in Title
+            const typeLabel = item.type === 'learn' ? 'Interactive Lesson' : 'Web App';
+            title = `${item.prompt} - ${typeLabel} | Popku`;
+            
+            // Richer Description
+            description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on Popku.`;
+            
             if (item.screenshotUrl) {
                 imageUrl = item.screenshotUrl;
             }
+            promptText = item.prompt;
+            authorName = item.authorName || 'Anonymous';
+            createdAt = new Date(item.createdAt).toISOString();
+            appType = item.type === 'learn' ? 'LearningResource' : 'SoftwareApplication';
         }
     } catch (e) {
         console.error("Failed to fetch item for SEO:", e);
     }
   }
 
-  // We serve the index.html content manually here, injecting the SEO tags.
-  // We MUST ensure the script src is absolute (/index.js).
+  // Structured Data (JSON-LD) for Rich Snippets
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": appType,
+    "name": title,
+    "description": description,
+    "applicationCategory": "EducationalGame",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": authorName
+    },
+    "dateCreated": createdAt,
+    "image": imageUrl,
+    "url": canonicalUrl
+  };
+
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -41,20 +76,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-7Y6YH2EXW9');
-    </script>
     <meta name="description" content="${description}">
+    <link rel="canonical" href="${canonicalUrl}">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="${title}">
+    <meta property="og:url" content="${canonicalUrl}">
+    <meta property="og:title" content>${title}</meta>
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:site_name" content="Popku">
@@ -64,6 +92,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta property="twitter:title" content="${title}">
     <meta property="twitter:description" content="${description}">
     <meta property="twitter:image" content="${imageUrl}">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      ${JSON.stringify(jsonLd)}
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7Y6YH2EXW9');
+    </script>
 
     <link href="/output.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,28 +115,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <style>
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #ffffff; /* White background */
+            background-color: #ffffff;
             background-image: radial-gradient(#e5e7eb 2px, transparent 2px);
             background-size: 24px 24px;
             color: #111827;
         }
-        
-        /* Custom Scrollbar for a fun look */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #fff;
-            border-left: 2px solid #000;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #fbbf24; /* amber-400 */
-            border: 2px solid #000;
-            border-radius: 6px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #f59e0b;
-        }
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #fff; border-left: 2px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border: 2px solid #000; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
     </style>
     <script defer src="/_vercel/insights/script.js"></script>
 <script type="importmap">
@@ -118,14 +148,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </script>
 </head>
 <body class="selection:bg-pink-300 selection:text-black">
-    <div id="root"></div>
+    <!-- Server-Side Injected Content for Crawlers (Visible to bots, replaced by React for users) -->
+    <div id="root">
+        <div style="padding: 2rem; max-width: 800px; margin: 0 auto; display: none;">
+            <h1>${title}</h1>
+            <p>${description}</p>
+            <p><strong>Prompt:</strong> ${promptText}</p>
+            <p><strong>Created by:</strong> ${authorName}</p>
+            <p><strong>Date:</strong> ${createdAt}</p>
+        </div>
+    </div>
     <script type="module" src="/index.js"></script>
 </body>
 </html>
   `;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  // Cache for 1 minute (SWR) to balance SEO freshness with performance
   res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
   
   return res.status(200).send(html);
