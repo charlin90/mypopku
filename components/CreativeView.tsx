@@ -10,6 +10,7 @@ interface CreativeViewProps {
   prompt: string;
   title?: string;
   description?: string;
+  keywords?: string;
   onBack: () => void;
   initialShareUrl?: string | null;
   onClearInitialShareUrl: () => void;
@@ -23,7 +24,7 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title, description, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title, description, keywords, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -57,7 +58,8 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title,
             html,
             prompt,
             title,
-            description
+            description,
+            keywords
         }));
         sessionStorage.setItem('pending_share_creative', 'true');
         openSignIn();
@@ -125,6 +127,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title,
                 prompt,
                 title,
                 description,
+                keywords,
                 type: 'create',
                 screenshot: customScreenshot || screenshotUrl,
                 userId: userId,

@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [blobPromptToLoad, setBlobPromptToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
-  const [creativeMetadata, setCreativeMetadata] = useState<{title: string, description: string} | null>(null);
+  const [creativeMetadata, setCreativeMetadata] = useState<{title: string, description: string, keywords?: string} | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
@@ -108,7 +108,11 @@ const App: React.FC = () => {
                 setCreativeHtml(parsed.html);
                 setCreativePrompt(parsed.prompt);
                 if (parsed.title && parsed.description) {
-                    setCreativeMetadata({ title: parsed.title, description: parsed.description });
+                    setCreativeMetadata({ 
+                      title: parsed.title, 
+                      description: parsed.description, 
+                      keywords: parsed.keywords 
+                    });
                 }
                 setView('creativeView');
                 setHomeFeedTab('personal');
@@ -256,7 +260,11 @@ const App: React.FC = () => {
         const result = await generateCreativePage(prompt);
         setCreativeHtml(result.html);
         setCreativePrompt(prompt);
-        setCreativeMetadata({ title: result.title, description: result.description });
+        setCreativeMetadata({ 
+          title: result.title, 
+          description: result.description,
+          keywords: result.keywords 
+        });
         setView('creativeView');
     } catch (err) {
         console.error("Creative page generation failed:", err);
@@ -421,6 +429,7 @@ const App: React.FC = () => {
             prompt={creativePrompt!}
             title={creativeMetadata?.title}
             description={creativeMetadata?.description}
+            keywords={creativeMetadata?.keywords}
             onBack={handleGoBack}
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}

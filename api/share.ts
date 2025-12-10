@@ -315,7 +315,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = req.body;
     let htmlContent: string;
-    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl, title, description } = body;
+    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl, title, description, keywords } = body;
 
     if (!prompt || !type) {
       return res.status(400).json({ error: 'Invalid payload.' });
@@ -375,6 +375,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         prompt,
         title: title || undefined,
         description: description || undefined,
+        keywords: keywords || undefined,
         screenshotUrl,
         blobUrl,
         createdAt: Date.now(),

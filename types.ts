@@ -33,6 +33,7 @@ export interface CommunityShare {
   prompt: string;
   title?: string;
   description?: string;
+  keywords?: string;
   screenshotUrl: string;
   blobUrl: string;
   createdAt: number;

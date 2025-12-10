@@ -34,11 +34,12 @@ function getPrompt(prompt: string): string {
         *   Load: On load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). Merge cloud data into state.
         *   Save: On state change, if \`appId\` exists, \`POST\` to \`/api/storage?id=\${appId}\`. Use debounce.
         *   UI: Show a small "☁️ Saved" indicator.
+    5.  **Language Consistency:** All generated content, including the App UI text, Title, Description, and Keywords, MUST be in the same language as the User Prompt. (e.g., if the prompt is Chinese, the app and metadata must be in Chinese).
 
     **Output JSON Requirements:**
-    *   **title:** A short, catchy name for the app.
-    *   **description:** An engaging summary for SEO.
-    *   **keywords:** Relevant SEO tags.
+    *   **title:** A short, catchy name for the app (in the prompt's language).
+    *   **description:** An engaging summary for SEO (in the prompt's language).
+    *   **keywords:** Relevant SEO tags (in the prompt's language).
     *   **html:** The raw HTML code starting with <!DOCTYPE html>...
 
     User Prompt: "${prompt}"

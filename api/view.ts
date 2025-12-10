@@ -14,6 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   let title = 'MyPopku - AI Interactive Concepts';
   let description = 'An interactive learning application that uses AI to generate live, hands-on simulations.';
+  let keywords = '';
   let imageUrl = 'https://popku.com/og-image.png';
   let promptText = 'MyPopku';
   let authorName = 'Anonymous';
@@ -40,6 +41,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 description = item.description;
             } else {
                 description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on MyPopku.`;
+            }
+
+            if (item.keywords) {
+                keywords = item.keywords;
             }
             
             if (item.screenshotUrl) {
@@ -85,6 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <meta name="description" content="${description}">
+    ${keywords ? `<meta name="keywords" content="${keywords}">` : ''}
     <link rel="canonical" href="${canonicalUrl}">
     
     <!-- Open Graph / Facebook -->
