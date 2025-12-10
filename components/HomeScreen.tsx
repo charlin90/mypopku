@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -45,7 +46,8 @@ const translations = {
     generateNew: 'Generate New',
     createNewDesc: 'Create a brand new concept for',
     learnTag: 'LEARN',
-    appTag: 'APP'
+    appTag: 'APP',
+    createBtn: 'Create ⚡️',
   },
   zh: {
     latest: '最新',
@@ -73,7 +75,8 @@ const translations = {
     generateNew: '生成新的',
     createNewDesc: '创建一个全新的概念：',
     learnTag: '学习',
-    appTag: '应用'
+    appTag: '应用',
+    createBtn: '生成 ✨',
   }
 };
 
@@ -202,6 +205,53 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // Placeholder Typewriter State
+  const [placeholderText, setPlaceholderText] = useState('');
+
+  // Typewriter effect logic
+  useEffect(() => {
+    const examples = language === 'zh' 
+        ? ['帮我做一个贪吃蛇游戏...', '模拟太阳系...', '创建一个待办事项列表...', '生成一个计算器...', '制作一个打砖块游戏...', '解释量子纠缠...']
+        : ['Make a Snake game...', 'Simulate the Solar System...', 'Create a Todo List...', 'Generate a Calculator...', 'Make a Brick Breaker game...', 'Explain Quantum Entanglement...'];
+    
+    let currentStringIndex = 0;
+    let currentCharIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const type = () => {
+      const currentString = examples[currentStringIndex];
+      
+      if (isDeleting) {
+        setPlaceholderText(currentString.substring(0, currentCharIndex - 1));
+        currentCharIndex--;
+        typingSpeed = 50;
+      } else {
+        setPlaceholderText(currentString.substring(0, currentCharIndex + 1));
+        currentCharIndex++;
+        typingSpeed = 100;
+      }
+
+      if (!isDeleting && currentCharIndex === currentString.length) {
+        isDeleting = true;
+        typingSpeed = 2000; // Pause at end of string
+      } else if (isDeleting && currentCharIndex === 0) {
+        isDeleting = false;
+        currentStringIndex = (currentStringIndex + 1) % examples.length;
+        typingSpeed = 500; // Pause before typing next string
+      }
+
+      timeout = setTimeout(type, typingSpeed);
+    };
+
+    // Start typing after a short delay
+    timeout = setTimeout(type, 500);
+
+    return () => clearTimeout(timeout);
+  }, [language]);
+
+
   // Determine effective user ID for the personal tab (either viewing another user or self)
   const effectiveUserId = viewingProfileId || userId;
   const isViewingOther = viewingProfileId && viewingProfileId !== userId;
@@ -322,7 +372,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     <div className="flex flex-col w-full h-full bg-white relative overflow-hidden">
       
       {/* Sticky Header */}
-      <header className="flex-none w-full h-20 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0">
+      <header className="flex-none w-full h-20 sm:h-24 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0 transition-all duration-300">
          {/* Left: Logo */}
          <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0">
              <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
@@ -339,20 +389,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
          {/* Center: Unified Input Omni-box */}
          <div className="flex-grow max-w-2xl mx-4 relative z-50 lg:flex-grow-0 lg:w-full" ref={searchContainerRef}>
              <form onSubmit={handleSubmit} className="relative z-20">
-                 <input
-                     type="text"
-                     value={inputValue}
-                     onChange={handleInputChange}
-                     onFocus={() => setShowDropdown(true)}
-                     className="w-full h-12 rounded-full border-2 border-black px-6 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all bg-white hover:bg-gray-50 placeholder-gray-400"
-                     placeholder={t.searchPlaceholder}
-                     disabled={isLoading}
-                 />
-                 <button type="submit" className="absolute right-2 top-1.5 bg-black text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors" disabled={isLoading}>
-                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                     </svg>
-                 </button>
+                 <div className="relative group">
+                     <input
+                         type="text"
+                         value={inputValue}
+                         onChange={handleInputChange}
+                         onFocus={() => setShowDropdown(true)}
+                         className="w-full h-14 sm:h-16 rounded-2xl border-4 border-black px-6 pr-36 font-bold text-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all bg-white hover:bg-gray-50 placeholder-gray-400 text-black"
+                         placeholder={placeholderText}
+                         disabled={isLoading}
+                     />
+                     <button 
+                        type="submit" 
+                        className="absolute right-2 top-2 bottom-2 bg-pink-400 hover:bg-pink-500 text-black border-2 border-black rounded-xl px-4 sm:px-6 font-black text-sm sm:text-base flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none" 
+                        disabled={isLoading}
+                     >
+                         {t.createBtn}
+                     </button>
+                 </div>
              </form>
 
              {/* Omni-box Dropdown */}
