@@ -10,10 +10,10 @@ const redis = new Redis({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
 
-  let title = 'Popku - AI Interactive Concepts';
+  let title = 'MyPopku - AI Interactive Concepts';
   let description = 'An interactive learning application that uses AI to generate live, hands-on simulations.';
   let imageUrl = 'https://popku.com/og-image.png';
-  let promptText = 'Popku';
+  let promptText = 'MyPopku';
   let authorName = 'Anonymous';
   let createdAt = new Date().toISOString();
   let appType = 'SoftwareApplication';
@@ -30,10 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             shareItem = item;
             // Enhanced Keywords in Title
             const typeLabel = item.type === 'learn' ? 'Interactive Lesson' : 'Web App';
-            title = `${item.prompt} - ${typeLabel} | Popku`;
+            title = `${item.prompt} - ${typeLabel} | MyPopku`;
             
             // Richer Description
-            description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on Popku.`;
+            description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on MyPopku.`;
             
             if (item.screenshotUrl) {
                 imageUrl = item.screenshotUrl;
@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${imageUrl}">
-    <meta property="og:site_name" content="Popku">
+    <meta property="og:site_name" content="MyPopku">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">

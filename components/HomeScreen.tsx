@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -32,7 +31,7 @@ const translations = {
     ai: 'AI',
     music: 'Music',
     misc: 'Misc',
-    personal: 'My Popku',
+    personal: 'My Creations',
     userGallery: 'User Gallery',
     searchPlaceholder: 'Search or type to create...',
     upload: 'Upload',
@@ -83,7 +82,7 @@ const translations = {
 const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUserClick: (id: string) => void, isFeatured?: boolean, t: any }> = ({ item, onClick, onUserClick, isFeatured, t }) => {
   const isAnonymous = !item.authorName || item.authorName === 'Anonymous';
   const showOfficial = isFeatured && isAnonymous;
-  const displayName = showOfficial ? 'Popku Official' : (item.authorName || 'Anonymous');
+  const displayName = showOfficial ? 'MyPopku Official' : (item.authorName || 'Anonymous');
 
   return (
     <a 
@@ -379,7 +378,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
                      P
                  </div>
-                 <span className="hidden sm:inline">Popku</span>
+                 <span className="hidden sm:inline">MyPopku</span>
              </div>
              <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
                 {language === 'zh' ? 'AI原生互动内容创作社区' : 'An AI-native community for creating and sharing interactive content'}
@@ -674,7 +673,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWeChatModal(false)}>
             <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 max-w-sm w-full relative text-center" onClick={e => e.stopPropagation()}>
                  <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold">✕</button>
-                 <h3 className="text-xl font-black mb-4">群聊：Popku</h3>
+                 <h3 className="text-xl font-black mb-4">群聊：MyPopku</h3>
                  <div className="w-48 h-48 mx-auto bg-gray-200 border-2 border-black rounded-xl flex items-center justify-center mb-4 relative overflow-hidden">
                     <img 
                         src="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/WECHAT/wechat.png" 

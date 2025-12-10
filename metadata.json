@@ -1,5 +1,5 @@
 {
-  "name": "Popku",
+  "name": "MyPopku",
   "description": "An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand. Enter a topic, and get a custom-built interactive experiment.",
   "requestFramePermissions": []
 }

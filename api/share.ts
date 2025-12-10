@@ -22,7 +22,7 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${concept.explanation.split('\n')[0].replace('##', '').trim()} - Popku</title>
+      <title>${concept.explanation.split('\n')[0].replace('##', '').trim()} - MyPopku</title>
       <!-- Google tag (gtag.js) -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
       <script>

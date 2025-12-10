@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import type { CommunityShare } from '../types.js';
 
@@ -95,7 +94,7 @@ export const MyPopkuView: React.FC<MyPopkuViewProps> = ({ userId, onLoadBlobConc
           >
              Back Home
           </button>
-          <h2 className="text-2xl font-black">My Popku Gallery</h2>
+          <h2 className="text-2xl font-black">MyPopku Gallery</h2>
       </header>
 
       <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white relative z-0">

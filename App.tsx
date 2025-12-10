@@ -133,8 +133,8 @@ const App: React.FC = () => {
         const loadItem = (data: CommunityShare) => {
              // SEO Strategy: Title = User Prompt
              if (data.prompt) {
-                const title = `${data.prompt} - Popku`;
-                const desc = `Explore "${data.prompt}" created by ${data.authorName || 'Anonymous'} on Popku.`;
+                const title = `${data.prompt} - MyPopku`;
+                const desc = `Explore "${data.prompt}" created by ${data.authorName || 'Anonymous'} on MyPopku.`;
                 updateMetaTags(title, desc, data.screenshotUrl);
             }
             
@@ -170,7 +170,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Redirect to My Popku (Personal Tab) when user signs in
+  // Redirect to My MyPopku (Personal Tab) when user signs in
   useEffect(() => {
     if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
         // Don't redirect if we are already viewing a deep link (e.g., view/ID)
@@ -190,7 +190,7 @@ const App: React.FC = () => {
     // Reset title when going back home
     if (view === 'home') {
         updateMetaTags(
-            language === 'zh' ? 'Popku - AI原生互动内容社区' : 'Popku - Generate Interactive Concepts with AI', 
+            language === 'zh' ? 'MyPopku - AI原生互动内容社区' : 'MyPopku - Generate Interactive Concepts with AI', 
             'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.',
             'https://popku.com/og-image.png'
         );
@@ -329,8 +329,8 @@ const App: React.FC = () => {
     setView('blobExplainer');
     
     // Update Meta Tags for internal navigation
-    const title = `${prompt} - Popku`;
-    const desc = `Play and explore "${prompt}". An AI-generated interactive concept on Popku.`;
+    const title = `${prompt} - MyPopku`;
+    const desc = `Play and explore "${prompt}". An AI-generated interactive concept on MyPopku.`;
     updateMetaTags(title, desc);
   }, []);
 

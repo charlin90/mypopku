@@ -14,7 +14,7 @@ async function createSavableHtml(concept: GeneratedConcept & { prompt?: string }
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Popku (Saved): ${concept.explanation.split('\n')[0].replace('##', '').trim()}</title>
+      <title>MyPopku (Saved): ${concept.explanation.split('\n')[0].replace('##', '').trim()}</title>
       <!-- Google tag (gtag.js) -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
       <script>

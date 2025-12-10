@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const serverContent = `
         <div id="server-content" style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: system-ui, sans-serif;">
             <div style="margin-bottom: 2rem; text-align: center;">
-                <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">Popku</h1>
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">MyPopku</h1>
                 <p style="font-size: 1.2rem; color: #444;">An AI-native community for creating and sharing interactive content.</p>
                 <div style="margin-top: 2rem;">
                    <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #000; border-top-color: #f472b6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
@@ -51,12 +51,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popku - Generate Interactive Concepts with AI</title>
+    <title>MyPopku - Generate Interactive Concepts with AI</title>
     <meta name="description" content="An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand. Enter a topic, and get a custom-built interactive experiment.">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Popku - Generate Interactive Concepts with AI">
+    <meta property="og:title" content="MyPopku - Generate Interactive Concepts with AI">
     <meta property="og:description" content="An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.">
     <meta property="og:image" content="https://popku.com/og-image.png">
     
