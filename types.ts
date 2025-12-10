@@ -8,6 +8,13 @@ export interface GeneratedConcept {
   libraryUrl?: string;
 }
 
+export interface GeneratedCreative {
+  html: string;
+  title: string;
+  description: string;
+  keywords: string;
+}
+
 export interface EncyclopediaEntry {
   id: string;
   title: string;
@@ -24,6 +31,8 @@ export interface CommunityShare {
   id: string;
   type: 'learn' | 'create';
   prompt: string;
+  title?: string;
+  description?: string;
   screenshotUrl: string;
   blobUrl: string;
   createdAt: number;

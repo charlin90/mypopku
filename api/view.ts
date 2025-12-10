@@ -1,3 +1,5 @@
+
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -29,16 +31,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (item) {
             shareItem = item;
             // Enhanced Keywords in Title
+            const itemTitle = item.title || item.prompt;
             const typeLabel = item.type === 'learn' ? 'Interactive Lesson' : 'Web App';
-            title = `${item.prompt} - ${typeLabel} | MyPopku`;
+            title = `${itemTitle} - ${typeLabel} | MyPopku`;
             
             // Richer Description
-            description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on MyPopku.`;
+            if (item.description) {
+                description = item.description;
+            } else {
+                description = `Play and explore "${item.prompt}". An AI-generated interactive ${item.type === 'learn' ? 'educational simulation' : 'game/tool'} created by ${item.authorName || 'Anonymous'} on MyPopku.`;
+            }
             
             if (item.screenshotUrl) {
                 imageUrl = item.screenshotUrl;
             }
-            promptText = item.prompt;
+            promptText = item.title || item.prompt;
             authorName = item.authorName || 'Anonymous';
             createdAt = new Date(item.createdAt).toISOString();
             appType = item.type === 'learn' ? 'LearningResource' : 'SoftwareApplication';

@@ -1,3 +1,5 @@
+
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
 import { put } from '@vercel/blob';
@@ -313,7 +315,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = req.body;
     let htmlContent: string;
-    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl } = body;
+    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl, title, description } = body;
 
     if (!prompt || !type) {
       return res.status(400).json({ error: 'Invalid payload.' });
@@ -371,6 +373,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         id,
         type,
         prompt,
+        title: title || undefined,
+        description: description || undefined,
         screenshotUrl,
         blobUrl,
         createdAt: Date.now(),

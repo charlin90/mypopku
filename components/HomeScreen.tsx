@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -127,9 +129,12 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUse
         )}
       </div>
       <div className="p-4 flex flex-col flex-grow bg-white">
-        <p className="text-sm font-bold text-black flex-grow line-clamp-3 leading-snug" title={item.prompt}>
-          {item.prompt}
-        </p>
+        <h3 className="text-sm font-bold text-black flex-grow line-clamp-2 leading-snug" title={item.prompt}>
+          {item.title || item.prompt}
+        </h3>
+        {item.title && item.description && (
+             <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+        )}
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
                <div 
@@ -316,7 +321,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }, []);
 
   const filteredShares = inputValue.trim().length > 1 
-    ? shares.filter(item => item.prompt.toLowerCase().includes(inputValue.toLowerCase().trim())).slice(0, 4)
+    ? shares.filter(item => (item.title || item.prompt).toLowerCase().includes(inputValue.toLowerCase().trim())).slice(0, 4)
     : [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -433,7 +438,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         {share.screenshotUrl ? <img src={share.screenshotUrl} alt="" width={40} height={32} className="w-full h-full object-cover" /> : null}
                                      </div>
                                      <div className="flex-grow min-w-0">
-                                        <p className="text-sm font-bold text-black truncate">{share.prompt}</p>
+                                        <p className="text-sm font-bold text-black truncate">{share.title || share.prompt}</p>
                                         <p className="text-xs text-gray-500">{new Date(share.createdAt).toLocaleDateString()}</p>
                                      </div>
                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>

@@ -1,5 +1,8 @@
 
-export async function generateCreativePage(prompt: string): Promise<string> {
+
+import type { GeneratedCreative } from '../types.js';
+
+export async function generateCreativePage(prompt: string): Promise<GeneratedCreative> {
   const response = await fetch('/api/create', {
     method: 'POST',
     headers: {
@@ -23,11 +26,11 @@ export async function generateCreativePage(prompt: string): Promise<string> {
     }
   }
 
-  // The API is expected to return a JSON object like { html: "..." }
+  // The API is expected to return a JSON object like { html, title, description, keywords }
   const result = await response.json();
   if (typeof result.html !== 'string') {
     throw new Error("The server response did not contain the expected HTML content.");
   }
 
-  return result.html;
+  return result as GeneratedCreative;
 }

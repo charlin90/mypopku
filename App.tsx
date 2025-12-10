@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -27,6 +29,7 @@ const App: React.FC = () => {
   const [blobPromptToLoad, setBlobPromptToLoad] = useState<string | null>(null);
   const [creativeHtml, setCreativeHtml] = useState<string | null>(null);
   const [creativePrompt, setCreativePrompt] = useState<string | null>(null);
+  const [creativeMetadata, setCreativeMetadata] = useState<{title: string, description: string} | null>(null);
   const [shareUrlOnLoad, setShareUrlOnLoad] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
@@ -104,6 +107,9 @@ const App: React.FC = () => {
             } else if (parsed.view === 'creativeView' && parsed.html && parsed.prompt) {
                 setCreativeHtml(parsed.html);
                 setCreativePrompt(parsed.prompt);
+                if (parsed.title && parsed.description) {
+                    setCreativeMetadata({ title: parsed.title, description: parsed.description });
+                }
                 setView('creativeView');
                 setHomeFeedTab('personal');
             }
@@ -131,12 +137,14 @@ const App: React.FC = () => {
         const id = match[1];
 
         const loadItem = (data: CommunityShare) => {
-             // SEO Strategy: Title = User Prompt
-             if (data.prompt) {
-                const title = `${data.prompt} - MyPopku`;
-                const desc = `Explore "${data.prompt}" created by ${data.authorName || 'Anonymous'} on MyPopku.`;
-                updateMetaTags(title, desc, data.screenshotUrl);
-            }
+             // SEO Strategy: Title = Item Title or User Prompt
+             const titleText = data.title || data.prompt;
+             const title = `${titleText} - MyPopku`;
+             const desc = data.description 
+                ? data.description 
+                : `Explore "${data.prompt}" created by ${data.authorName || 'Anonymous'} on MyPopku.`;
+                
+             updateMetaTags(title, desc, data.screenshotUrl);
             
             // SEO Strategy: Page contains generated App preview
             if (data.blobUrl) {
@@ -242,11 +250,13 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setCreativeHtml(null);
+    setCreativeMetadata(null);
 
     try {
-        const html = await generateCreativePage(prompt);
-        setCreativeHtml(html);
+        const result = await generateCreativePage(prompt);
+        setCreativeHtml(result.html);
         setCreativePrompt(prompt);
+        setCreativeMetadata({ title: result.title, description: result.description });
         setView('creativeView');
     } catch (err) {
         console.error("Creative page generation failed:", err);
@@ -311,6 +321,8 @@ const App: React.FC = () => {
 
         setCreativeHtml(htmlContent);
         setCreativePrompt(prompt);
+        // For uploaded files, we lack AI generated metadata, so passing null will fallback to prompt usage
+        setCreativeMetadata(null);
         setView('creativeView');
     } catch (err) {
         console.error("File upload and share failed:", err);
@@ -347,6 +359,7 @@ const App: React.FC = () => {
     setBlobPromptToLoad(null);
     setCreativeHtml(null);
     setCreativePrompt(null);
+    setCreativeMetadata(null);
     setShareUrlOnLoad(null);
     setError(null);
     setRefreshTrigger(prev => prev + 1);
@@ -405,7 +418,9 @@ const App: React.FC = () => {
         {creativeHtml && view === 'creativeView' && (
           <CreativeView 
             html={creativeHtml} 
-            prompt={creativePrompt!} 
+            prompt={creativePrompt!}
+            title={creativeMetadata?.title}
+            description={creativeMetadata?.description}
             onBack={handleGoBack}
             initialShareUrl={shareUrlOnLoad}
             onClearInitialShareUrl={() => setShareUrlOnLoad(null)}

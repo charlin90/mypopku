@@ -1,6 +1,7 @@
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
@@ -8,21 +9,37 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN!,
 });
 
+const responseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    title: { type: Type.STRING, description: "A short, catchy, and descriptive title for the application (max 50 chars)." },
+    description: { type: Type.STRING, description: "A concise, SEO-friendly description of what the application does (max 160 chars)." },
+    keywords: { type: Type.STRING, description: "Comma-separated SEO keywords relevant to the application." },
+    html: { type: Type.STRING, description: "The complete, functional, single-file HTML code for the application." }
+  },
+  required: ["title", "description", "keywords", "html"]
+};
+
 function getPrompt(prompt: string): string {
     return `
-    You are a world-class frontend developer with a flair for creating creative and interactive content/app. Your response must be only the HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not wrap it in markdown fences (\`\`\`) or add any other explanatory text.mobile-first, SEO-friendly, interactive single-page applications.
-    The app must be fully functional. Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
-    
-    **CRITICAL REQUIREMENT: PERSISTENCE & CLOUD SYNC**
-    1.  **Local State (MANDATORY):** The app MUST automatically save its entire state (all input values, text areas, drawings as Base64, positions, scores, etc.) to \`localStorage\` whenever data changes. Restore this state immediately when the page loads so user progress is never lost.
-    
-    2.  **Automatic Cloud Sync (CONDITIONAL):**
-        *   **DECISION RULE:** Implement this logic **ONLY IF** the app involves user-generated content that needs saving (e.g., a diary, drawing canvas, todo list, game high scores, custom dashboard).
-        *   **Logic:**
-            *   **Get App ID:** \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
-            *   **Load (Init):** On page load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). If cloud data returns, merge it into the app state (prioritizing cloud data over local).
-            *   **Auto-Save:** Whenever state changes (and is saved to localStorage), if \`appId\` exists, \`POST\` the state to \`/api/storage?id=\${appId}\`. **Use a debounce (e.g. 1000ms)** to avoid frequent network requests.
-            *   **UI Feedback:** Add a small, unobtrusive fixed status indicator (e.g., bottom-right) showing "☁️ Saved" or "☁️ Saving..." to inform the user.
+    You are a world-class frontend developer with a flair for creating creative and interactive content/apps. 
+    Your task is to generate a JSON object containing the application code and metadata based on the user's prompt.
+
+    **App Requirements:**
+    1.  **Mobile-First & Interactive:** The app must be fully functional, responsive, and SEO-friendly.
+    2.  **Robustness:** Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
+    3.  **Persistence (Local):** The app MUST automatically save its entire state to \`localStorage\` whenever data changes and restore it on load.
+    4.  **Persistence (Cloud - Conditional):** IF the app involves user-generated content (diary, drawing, scores, etc.), implement the following auto-sync logic:
+        *   Get App ID: \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
+        *   Load: On load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). Merge cloud data into state.
+        *   Save: On state change, if \`appId\` exists, \`POST\` to \`/api/storage?id=\${appId}\`. Use debounce.
+        *   UI: Show a small "☁️ Saved" indicator.
+
+    **Output JSON Requirements:**
+    *   **title:** A short, catchy name for the app.
+    *   **description:** An engaging summary for SEO.
+    *   **keywords:** Relevant SEO tags.
+    *   **html:** The raw HTML code starting with <!DOCTYPE html>...
 
     User Prompt: "${prompt}"
   `;
@@ -72,6 +89,8 @@ export default async function handler(
         model: "gemini-3-pro-preview",
         contents: geminiPrompt,
         config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
           temperature: 1.0,
         },
       });
@@ -86,32 +105,21 @@ export default async function handler(
         model: "gemini-3-pro-preview",
         contents: geminiPrompt,
         config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
           temperature: 1.0,
         },
       });
     }
 
-    let htmlContent = response.text;
-
-    if (!htmlContent) {
-      const finishReason = response.candidates?.[0]?.finishReason;
-      let errorMessage = "The AI returned an empty response. Please try again or rephrase your prompt.";
-      if (finishReason === 'SAFETY') {
-        errorMessage = "The request was blocked for safety reasons. Please try a different prompt.";
-      }
-      return res.status(500).json({ error: errorMessage });
+    if (!response.text) {
+       throw new Error("The AI returned an empty response.");
     }
     
-    // Robust parsing: clean potential markdown fences before sending.
-    htmlContent = htmlContent.trim();
-    const codeBlockRegex = /```(?:html)?\s*([\s\S]*?)\s*```/;
-    const match = htmlContent.match(codeBlockRegex);
-
-    if (match && match[1]) {
-      htmlContent = match[1];
-    }
+    // The response is guaranteed to be JSON structure by responseSchema
+    const parsedData = JSON.parse(response.text);
     
-    return res.status(200).json({ html: htmlContent });
+    return res.status(200).json(parsedData);
 
   } catch (error) {
     console.error("Error in /api/create:", error);

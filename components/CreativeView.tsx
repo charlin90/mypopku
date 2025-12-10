@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -7,6 +8,8 @@ import { useClerk } from '@clerk/clerk-react';
 interface CreativeViewProps {
   html: string;
   prompt: string;
+  title?: string;
+  description?: string;
   onBack: () => void;
   initialShareUrl?: string | null;
   onClearInitialShareUrl: () => void;
@@ -20,7 +23,7 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title, description, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -52,7 +55,9 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         sessionStorage.setItem('restore_state', JSON.stringify({
             view: 'creativeView',
             html,
-            prompt
+            prompt,
+            title,
+            description
         }));
         sessionStorage.setItem('pending_share_creative', 'true');
         openSignIn();
@@ -118,6 +123,8 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
                 body: JSON.stringify({ 
                 html, 
                 prompt,
+                title,
+                description,
                 type: 'create',
                 screenshot: customScreenshot || screenshotUrl,
                 userId: userId,
@@ -212,7 +219,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, onBack
         <iframe
             ref={iframeRef}
             srcDoc={html}
-            title="Generated AI Content"
+            title={title || "Generated AI Content"}
             className="w-full h-full border-none"
             sandbox="allow-scripts allow-same-origin allow-modals"
         />
