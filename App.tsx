@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -10,7 +8,7 @@ import type { GeneratedConcept, CommunityShare } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
 import { AdminDashboard } from './components/AdminDashboard.js';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'admin';
 export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
@@ -37,6 +35,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<'en' | 'zh'>('en');
   
   const { user, isSignedIn, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
   const hasRedirectedRef = useRef(false);
 
   // Initialize Language based on URL or Browser
@@ -226,8 +225,28 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Helper to check guest usage limit
+  const checkGuestUsage = useCallback(() => {
+    if (isSignedIn) return true;
+    const count = parseInt(localStorage.getItem('guest_gen_count') || '0', 10);
+    if (count >= 2) {
+        openSignIn();
+        return false;
+    }
+    return true;
+  }, [isSignedIn, openSignIn]);
+
+  const incrementGuestUsage = useCallback(() => {
+    if (!isSignedIn) {
+        const count = parseInt(localStorage.getItem('guest_gen_count') || '0', 10);
+        localStorage.setItem('guest_gen_count', (count + 1).toString());
+    }
+  }, [isSignedIn]);
+
   const handleConceptSubmit = useCallback(async (concept: string) => {
     if (!concept.trim()) return;
+
+    if (!checkGuestUsage()) return;
     
     setIsLoading(true);
     setError(null);
@@ -235,6 +254,7 @@ const App: React.FC = () => {
 
     try {
       const content = await generateInteractiveConcept(concept);
+      incrementGuestUsage();
       setGeneratedContent(content);
       setConceptPrompt(concept);
       setView('explainer');
@@ -246,10 +266,12 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [checkGuestUsage, incrementGuestUsage]);
   
   const handleCreativeSubmit = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
+
+    if (!checkGuestUsage()) return;
 
     setIsLoading(true);
     setError(null);
@@ -258,6 +280,7 @@ const App: React.FC = () => {
 
     try {
         const result = await generateCreativePage(prompt);
+        incrementGuestUsage();
         setCreativeHtml(result.html);
         setCreativePrompt(prompt);
         setCreativeMetadata({ 
@@ -274,7 +297,7 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [checkGuestUsage, incrementGuestUsage]);
 
   // Heuristic to decide whether to use Learn (Concept) or Create (Creative) mode
   const handleUnifiedSubmit = useCallback(async (input: string) => {
