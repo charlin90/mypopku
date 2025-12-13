@@ -90,6 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon32.png">
     <meta name="description" content="${description}">
     ${keywords ? `<meta name="keywords" content="${keywords}">` : ''}
+    <meta name="baidu-site-verification" content="codeva-F9xglRgtNy" />
     <link rel="canonical" href="${canonicalUrl}">
     
     <!-- Open Graph / Facebook -->

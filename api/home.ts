@@ -102,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     <meta name="description" content="MyPopku is an AI-native community for natural language programming. Generate interactive mini-apps, HTML5 games, tools, and simulations with a single prompt. Experience the potential of Generative UI. The best free alternative to Websim and Wabi. Try it now.">
     <meta name="keywords" content="AI App Generator, Natural Language Programming, Generative UI, Websim Alternative, Wabi Alternative, AI Game Maker, No-code Tool, Interactive Learning, Prompt-to-App, MyPopku, 一句话生成App, 自然语言编程, 互动内容社区, HTML5生成工具">
+    <meta name="baidu-site-verification" content="codeva-F9xglRgtNy" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
