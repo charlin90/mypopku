@@ -198,7 +198,7 @@ export const AdminDashboard: React.FC = () => {
         {/* Latest Feed Section */}
         <section>
             <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
-                <span className="text-3xl">🔥</span> Latest Feed (Recent 100)
+                <span className="text-3xl">🔥</span> Latest Feed ({items.latest.length})
             </h2>
             <div className="overflow-x-auto bg-white border-2 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                 <table className="w-full text-left border-collapse">

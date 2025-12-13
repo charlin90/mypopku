@@ -22,8 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     try {
-        // 1. Get Latest (first 100)
-        const latestRaw = await redis.lrange('community:shares', 0, 99);
+        // 1. Get All items
+        const latestRaw = await redis.lrange('community:shares', 0, -1);
         const latest = latestRaw as unknown as CommunityShare[];
 
         // 2. Get Featured IDs
@@ -58,8 +58,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await redis.hdel('shares', id);
             
             // 2. Remove from Feed List
-            // We fetch a chunk of the list to find the exact object to remove
-            const listItems = await redis.lrange('community:shares', 0, 200);
+            // We fetch the full list to find the exact object to remove
+            const listItems = await redis.lrange('community:shares', 0, -1);
             const targetItem = listItems.find((s: any) => s.id === id);
             
             if (targetItem) {
@@ -120,9 +120,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await redis.hset('shares', { [id]: updatedItem });
 
             // 5. Update Feed List (Cache Consistency)
-            // We scan the top 200 items to see if this item is in the feed, and update it in place.
-            // This prevents the feed from showing old data until a full refresh/rotation.
-            const listItems = await redis.lrange('community:shares', 0, 199);
+            // We scan all items to see if this item is in the feed, and update it in place.
+            const listItems = await redis.lrange('community:shares', 0, -1);
             const index = listItems.findIndex((item: any) => item.id === id);
             
             if (index !== -1) {
