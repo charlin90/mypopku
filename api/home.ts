@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyPopku - Generate Interactive Concepts with AI</title>
-    <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon.ico">
+    <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon32.png">
     <meta name="description" content="An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand. Enter a topic, and get a custom-built interactive experiment.">
     
     <!-- Open Graph / Facebook -->

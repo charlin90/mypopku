@@ -25,7 +25,7 @@ async function createShareableHtml(concept: GeneratedConcept & { prompt?: string
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${concept.explanation.split('\n')[0].replace('##', '').trim()} - MyPopku</title>
-      <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon.ico">
+      <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon32.png">
       <!-- Google tag (gtag.js) -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y6YH2EXW9"></script>
       <script>

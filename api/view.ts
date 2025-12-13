@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon.ico">
+    <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon32.png">
     <meta name="description" content="${description}">
     ${keywords ? `<meta name="keywords" content="${keywords}">` : ''}
     <link rel="canonical" href="${canonicalUrl}">
