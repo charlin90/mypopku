@@ -10,8 +10,8 @@ const redis = new Redis({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
 
-  let title = 'MyPopku - AI Interactive Concepts';
-  let description = 'An interactive learning application that uses AI to generate live, hands-on simulations.';
+  let title = 'MyPopku - AI Mini App Generator';
+  let description = 'An AI-native community for natural language programming. Generate interactive mini-apps, games, tools, and simulations with a single prompt.';
   let keywords = '';
   let imageUrl = 'https://popku.com/og-image.png';
   let promptText = 'MyPopku';

@@ -9,32 +9,42 @@ const redis = new Redis({
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // 1. Fetch latest community shares for SEO (Server-Side)
-    // We fetch a reasonable batch (e.g., 50) to give crawlers plenty of paths
-    const sharesRaw = await redis.lrange('community:shares', 0, 49);
+    // 1. Fetch a larger batch to categorization
+    const sharesRaw = await redis.lrange('community:shares', 0, 99);
     const shares = sharesRaw as unknown as CommunityShare[];
+
+    // Simple categorization logic for SEO grouping
+    const categories = {
+        games: shares.filter(s => /game|play|arcade|tetris|snake|pong|minecraft|mario|zelda|rpg|游戏/i.test(s.prompt)).slice(0, 10),
+        tools: shares.filter(s => /tool|calc|convert|generate|track|clock|todo|list|note|工具|计算/i.test(s.prompt)).slice(0, 10),
+        learning: shares.filter(s => s.type === 'learn' || /learn|study|explain|simulat|math|physics|chem|教育|学习|模拟/i.test(s.prompt)).slice(0, 10),
+        latest: shares.slice(0, 20) // Fallback mix
+    };
     
-    // 2. Build the SEO Content (Hidden from users, visible to bots via <noscript>)
-    // This provides the internal linking structure search engines need.
-    const seoLinks = shares.map(item => `
+    // Helper to generate list items with dynamic suffixes
+    const renderList = (items: CommunityShare[], defaultSuffix: string) => items.map(item => {
+        let suffix = defaultSuffix;
+        if (item.type === 'learn') suffix = "Interactive Lesson";
+        else if (/game/i.test(item.prompt)) suffix = "AI Generated Game";
+        else if (/tool/i.test(item.prompt)) suffix = "AI Tool";
+        
+        return `
         <li style="margin-bottom: 0.5rem;">
             <a href="/view/${item.id}" style="color: #2563eb; text-decoration: underline;">
-                <strong>${item.prompt.replace(/</g, '&lt;')}</strong> - AI Generated Mini App
+                <strong>${item.prompt.replace(/</g, '&lt;')}</strong> - ${suffix}
             </a>
             <span style="color: #666; font-size: 0.9em;"> by ${item.authorName || 'Anonymous'}</span>
         </li>
-    `).join('');
+    `}).join('');
 
     const serverContent = `
         <div id="server-content" style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: system-ui, sans-serif;">
-            <div style="margin-bottom: 2rem; text-align: center;">
-                <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">MyPopku - AI Mini App Generator</h1>
+            <div style="margin-bottom: 3rem; text-align: center;">
+                <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">MyPopku: Create Interactive Mini Apps with AI</h1>
                 <p style="font-size: 1.25rem; color: #444; line-height: 1.6;">
-                    An AI-native community for <strong>Natural Language Programming</strong>. 
-                    Create, play, and share interactive <strong>Mini Apps</strong>, <strong>Games</strong>, <strong>Tools</strong>, and <strong>Simulations</strong> with a single sentence (Prompt-to-App).
-                </p>
-                <p style="font-size: 1rem; color: #666; margin-top: 0.5rem;">
-                   Experience the infinite potential of <strong>Generative UI</strong>. The best free alternative to <strong>Websim</strong> and <strong>Wabi</strong>.
+                    MyPopku is an AI-native platform for <strong>Natural Language Programming</strong>. 
+                    Instantly generate HTML5 games, useful tools, and interactive simulations with a single prompt.
+                    <br><strong>Try it now</strong> - The best free alternative to Websim and Wabi.
                 </p>
                 <div style="margin-top: 2rem;">
                    <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #000; border-top-color: #f472b6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
@@ -42,20 +52,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 </div>
             </div>
             
-            <div style="margin-top: 3rem; border-top: 1px solid #eee; padding-top: 2rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Latest Community Creations</h2>
-                <ul style="list-style: none; padding: 0;">${seoLinks}</ul>
+            <div style="display: grid; gap: 2rem; border-top: 1px solid #eee; padding-top: 2rem;">
+                ${categories.games.length > 0 ? `
+                <section>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">AI Generated Games</h2>
+                    <ul style="list-style: none; padding: 0;">${renderList(categories.games, 'HTML5 Game')}</ul>
+                </section>` : ''}
+
+                ${categories.tools.length > 0 ? `
+                <section>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Useful Tools & Utilities</h2>
+                    <ul style="list-style: none; padding: 0;">${renderList(categories.tools, 'Web Tool')}</ul>
+                </section>` : ''}
+
+                ${categories.learning.length > 0 ? `
+                <section>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Interactive Simulations</h2>
+                    <ul style="list-style: none; padding: 0;">${renderList(categories.learning, 'Simulation')}</ul>
+                </section>` : ''}
+                
+                <section>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Latest Community Creations</h2>
+                    <ul style="list-style: none; padding: 0;">${renderList(categories.latest, 'Mini App')}</ul>
+                </section>
             </div>
             
-             <div style="margin-top: 3rem; font-size: 0.9rem; color: #888;">
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Popular Searches</h3>
-                <p>AI Game Generator, No-code Tools, Prompt-to-App, Interactive Learning, Generative UI Examples, Websim Alternative, Wabi Alternative, HTML5 Generator.</p>
+            <div style="margin-top: 4rem; padding: 2rem; background: #f9fafb; border-radius: 1rem; color: #4b5563;">
+                <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: #000;">Why use MyPopku?</h3>
+                <p style="margin-bottom: 1rem; line-height: 1.6;">
+                    Want to know how to <strong>use AI to make a Snake game</strong>? Need a <strong>custom calculator</strong> for your finances? 
+                    Or looking for a <strong>Websim free alternative</strong>? MyPopku utilizes advanced LLM models to enable <strong>Natural Language Programming</strong> (Prompt-to-App).
+                </p>
+                <p style="line-height: 1.6;">
+                    Anyone can become a developer. Just describe your idea in English or Chinese, and watch as our Generative UI engine builds a fully functional mini-app, game, or educational visualization in seconds.
+                </p>
             </div>
         </div>
     `;
 
     // 3. Construct the full HTML response
-    // matches the client-side index.html structure but includes the pre-rendered data
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -65,13 +100,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <title>MyPopku - AI Mini App Generator | Create Games, Tools & Interactive Content</title>
     <link rel="icon" href="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/icon/favicon32.png">
     
-    <meta name="description" content="MyPopku is an AI-native community for natural language programming. Generate interactive mini-apps, HTML5 games, tools, and simulations with a single prompt. Experience the potential of Generative UI. The best free alternative to Websim and Wabi.">
+    <meta name="description" content="MyPopku is an AI-native community for natural language programming. Generate interactive mini-apps, HTML5 games, tools, and simulations with a single prompt. Experience the potential of Generative UI. The best free alternative to Websim and Wabi. Try it now.">
     <meta name="keywords" content="AI App Generator, Natural Language Programming, Generative UI, Websim Alternative, Wabi Alternative, AI Game Maker, No-code Tool, Interactive Learning, Prompt-to-App, MyPopku, 一句话生成App, 自然语言编程, 互动内容社区, HTML5生成工具">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="MyPopku - AI Mini App Generator | Create Games & Tools">
-    <meta property="og:description" content="Create interactive mini-apps, games, and tools instantly with AI. No code required. The best alternative to Websim and Wabi.">
+    <meta property="og:description" content="Create interactive mini-apps, games, and tools instantly with AI. No code required. The best alternative to Websim and Wabi. Try it now.">
     <meta property="og:image" content="https://popku.com/og-image.png">
     <meta property="og:site_name" content="MyPopku">
     
@@ -99,6 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web",
         "description": "An AI-native platform for natural language programming. Generate interactive mini-apps, games, tools, and simulations instantly.",
+        "featureList": "AI Game Generation, Generative UI, Interactive Simulations, Natural Language Programming",
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -164,13 +200,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    // Cache the homepage for 1 minute (SWR)
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
     
     return res.status(200).send(html);
   } catch (error) {
     console.error('Error rendering homepage:', error);
-    // Fallback to basic HTML if Redis fails
     return res.status(500).send('Error loading page');
   }
 }

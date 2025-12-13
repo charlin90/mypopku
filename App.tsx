@@ -201,8 +201,8 @@ const App: React.FC = () => {
     // Reset title when going back home
     if (view === 'home') {
         updateMetaTags(
-            language === 'zh' ? 'MyPopku - AI原生互动内容社区' : 'MyPopku - Generate Interactive Concepts with AI', 
-            'An interactive learning application that uses AI to generate live, hands-on simulations for any concept a user wants to understand.',
+            language === 'zh' ? 'MyPopku - AI原生互动内容创作社区 | 一句话生成Mini App' : 'MyPopku - AI Mini App Generator | Create Games, Tools & Interactive Content', 
+            language === 'zh' ? 'MyPopku是一个AI原生的自然语言编程社区。无需代码，一句话生成HTML5小游戏、实用工具、互动模拟。体验Generative UI的无限潜力，Websim和Wabi的最佳平替。立即体验。' : 'MyPopku is an AI-native community for natural language programming. Generate interactive mini-apps, HTML5 games, tools, and simulations with a single prompt. The best free alternative to Websim and Wabi. Try it now.',
             'https://popku.com/og-image.png'
         );
         // Only push '/' if we are not on /zh
@@ -373,7 +373,7 @@ const App: React.FC = () => {
     
     // Update Meta Tags for internal navigation
     const title = `${prompt} - MyPopku`;
-    const desc = `Play and explore "${prompt}". An AI-generated interactive concept on MyPopku.`;
+    const desc = `Play and explore "${prompt}". An AI-generated interactive mini-app on MyPopku.`;
     updateMetaTags(title, desc);
   }, []);
 
