@@ -344,6 +344,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowDropdown(false);
+
+    if (inputValue.length > maxLength) {
+        alert(language === 'zh' ? '输入内容过长，请控制在800字以内' : 'Input too long. Please keep it under 800 characters.');
+        return;
+    }
+
     if (inputValue && !isLoading) {
       onUnifiedSubmit(inputValue);
     }
@@ -409,13 +415,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                          className="w-full h-14 sm:h-16 rounded-2xl border-4 border-black px-6 pr-36 font-bold text-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all bg-white hover:bg-gray-50 placeholder-gray-400 text-black"
                          placeholder={placeholderText}
                          disabled={isLoading}
-                         maxLength={maxLength}
                      />
                      
                      {/* Character Count Indicator */}
                      {inputValue.length > 0 && (
                         <div className={`absolute bottom-2 right-36 mr-4 text-[10px] font-bold pointer-events-none transition-colors ${
-                             inputValue.length >= maxLength ? 'text-red-500' : 'text-gray-300'
+                             inputValue.length > maxLength ? 'text-red-500' : 'text-gray-300'
                         }`}>
                            {inputValue.length}/{maxLength}
                         </div>
@@ -469,6 +474,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     
                     <button 
                         onClick={() => {
+                            if (inputValue.length > maxLength) {
+                                alert(language === 'zh' ? '输入内容过长，请控制在800字以内' : 'Input too long. Please keep it under 800 characters.');
+                                return;
+                            }
                             onUnifiedSubmit(inputValue);
                             setShowDropdown(false);
                         }}
