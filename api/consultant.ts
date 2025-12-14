@@ -124,7 +124,7 @@ export default async function handler(
 
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3-pro-preview",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           systemInstruction: systemInstruction,
@@ -141,7 +141,7 @@ export default async function handler(
       console.warn('Primary API key failed, retrying with API_KEY_A');
       const backupAi = new GoogleGenAI({ apiKey: backupKey });
       response = await backupAi.models.generateContent({
-        model: "gemini-3-pro-preview",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
           systemInstruction: systemInstruction,
