@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -196,6 +195,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   language
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const maxLength = 800;
   const t = translations[language];
   
   // Community Feed State
@@ -409,7 +409,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                          className="w-full h-14 sm:h-16 rounded-2xl border-4 border-black px-6 pr-36 font-bold text-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all bg-white hover:bg-gray-50 placeholder-gray-400 text-black"
                          placeholder={placeholderText}
                          disabled={isLoading}
+                         maxLength={maxLength}
                      />
+                     
+                     {/* Character Count Indicator */}
+                     {inputValue.length > 0 && (
+                        <div className={`absolute bottom-2 right-36 mr-4 text-[10px] font-bold pointer-events-none transition-colors ${
+                             inputValue.length >= maxLength ? 'text-red-500' : 'text-gray-300'
+                        }`}>
+                           {inputValue.length}/{maxLength}
+                        </div>
+                     )}
+
                      <button 
                         type="submit" 
                         className="absolute right-2 top-2 bottom-2 bg-pink-400 hover:bg-pink-500 text-black border-2 border-black rounded-xl px-4 sm:px-6 font-black text-sm sm:text-base flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none" 
