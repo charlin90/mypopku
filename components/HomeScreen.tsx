@@ -20,8 +20,6 @@ interface HomeScreenProps {
   language: 'en' | 'zh';
 }
 
-const MAX_INPUT_LENGTH = 800;
-
 const translations = {
   en: {
     latest: 'Latest',
@@ -53,7 +51,6 @@ const translations = {
     createBtn: 'Create ⚡️',
     consultantTitle: "Let's pivot a bit!",
     consultantBtn: "Got it, I'll try that!",
-    inputTooLong: 'Input too long. Please keep it under 800 characters.',
   },
   zh: {
     latest: '最新',
@@ -85,7 +82,6 @@ const translations = {
     createBtn: '生成 ✨',
     consultantTitle: "换个思路试试！",
     consultantBtn: "好的，我试试！",
-    inputTooLong: '输入内容过长，请控制在800字以内',
   }
 };
 
@@ -199,6 +195,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   language
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const maxLength = 800;
   const t = translations[language];
   
   // Community Feed State
@@ -343,21 +340,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     onLoadBlobConcept(share.blobUrl, share.prompt);
     setShowDropdown(false);
   };
-  
-  // Validation Helper
-  const validateInput = (input: string): boolean => {
-    if (input.length > MAX_INPUT_LENGTH) {
-      window.alert(t.inputTooLong);
-      return false;
-    }
-    return true;
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowDropdown(false);
 
-    if (!validateInput(inputValue)) return;
+    if (inputValue.length > maxLength) {
+        alert(language === 'zh' ? '输入内容过长，请控制在800字以内' : 'Input too long. Please keep it under 800 characters.');
+        return;
+    }
 
     if (inputValue && !isLoading) {
       onUnifiedSubmit(inputValue);
@@ -367,8 +358,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading) return;
-
-    if (!validateInput(uploadPrompt)) return;
 
     try {
       const [htmlContent, screenshotDataUrl] = await Promise.all([
@@ -431,9 +420,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                      {/* Character Count Indicator */}
                      {inputValue.length > 0 && (
                         <div className={`absolute bottom-2 right-36 mr-4 text-[10px] font-bold pointer-events-none transition-colors ${
-                             inputValue.length > MAX_INPUT_LENGTH ? 'text-red-500' : 'text-gray-300'
+                             inputValue.length > maxLength ? 'text-red-500' : 'text-gray-300'
                         }`}>
-                           {inputValue.length}/{MAX_INPUT_LENGTH}
+                           {inputValue.length}/{maxLength}
                         </div>
                      )}
 
@@ -485,7 +474,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     
                     <button 
                         onClick={() => {
-                            if (!validateInput(inputValue)) return;
+                            if (inputValue.length > maxLength) {
+                                alert(language === 'zh' ? '输入内容过长，请控制在800字以内' : 'Input too long. Please keep it under 800 characters.');
+                                return;
+                            }
                             onUnifiedSubmit(inputValue);
                             setShowDropdown(false);
                         }}
