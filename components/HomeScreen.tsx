@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -16,6 +15,8 @@ interface HomeScreenProps {
   onLoadBlobConcept: (blobUrl: string, prompt: string) => void;
   isLoading: boolean;
   error: string | null;
+  consultantMessage?: string | null;
+  onClearConsultantMessage?: () => void;
   refreshTrigger: number;
   language: 'en' | 'zh';
 }
@@ -49,6 +50,8 @@ const translations = {
     learnTag: 'LEARN',
     appTag: 'APP',
     createBtn: 'Create ⚡️',
+    consultantTitle: "Let's pivot a bit!",
+    consultantBtn: "Got it, I'll try that!",
   },
   zh: {
     latest: '最新',
@@ -78,6 +81,8 @@ const translations = {
     learnTag: '学习',
     appTag: '应用',
     createBtn: '生成 ✨',
+    consultantTitle: "换个思路试试！",
+    consultantBtn: "好的，我试试！",
   }
 };
 
@@ -185,6 +190,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onLoadBlobConcept,
   isLoading, 
   error,
+  consultantMessage,
+  onClearConsultantMessage,
   refreshTrigger,
   language
 }) => {
@@ -670,6 +677,33 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </button>
                 </div>
             </form>
+        </div>
+      )}
+
+      {/* Consultant Modal */}
+      {consultantMessage && onClearConsultantMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={onClearConsultantMessage}>
+            <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 max-w-md w-full relative animate-fade-in" onClick={e => e.stopPropagation()}>
+                <button onClick={onClearConsultantMessage} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold transition-colors">✕</button>
+                
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-20 h-20 bg-yellow-300 rounded-full border-4 border-black flex items-center justify-center text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        🤔
+                    </div>
+                    <h3 className="text-2xl font-black text-black leading-tight">{t.consultantTitle}</h3>
+                    <div className="bg-gray-50 border-2 border-black rounded-xl p-4 text-left w-full shadow-inner">
+                        <p className="text-base text-gray-800 font-medium leading-relaxed whitespace-pre-wrap">
+                            {consultantMessage}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={onClearConsultantMessage}
+                        className="w-full mt-2 px-6 py-3 rounded-xl text-base font-black border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-pink-300 text-black hover:bg-pink-400 active:translate-y-0 active:shadow-none"
+                    >
+                        {t.consultantBtn} 🚀
+                    </button>
+                </div>
+            </div>
         </div>
       )}
 

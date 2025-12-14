@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HomeScreen } from './components/HomeScreen.js';
 import { ExplainerView } from './components/ExplainerView.js';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [consultantMessage, setConsultantMessage] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedConcept | null>(null);
   const [conceptPrompt, setConceptPrompt] = useState<string | null>(null);
   const [blobUrlToLoad, setBlobUrlToLoad] = useState<string | null>(null);
@@ -250,6 +252,7 @@ const App: React.FC = () => {
     
     setIsLoading(true);
     setError(null);
+    setConsultantMessage(null);
     setGeneratedContent(null);
 
     try {
@@ -275,6 +278,7 @@ const App: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
+    setConsultantMessage(null);
     setCreativeHtml(null);
     setCreativeMetadata(null);
 
@@ -292,7 +296,13 @@ const App: React.FC = () => {
     } catch (err) {
         console.error("Creative page generation failed:", err);
         const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
-        setError(message);
+        
+        // Handle Consultant Negotiation Message
+        if (message.startsWith("Technical Consultant:")) {
+            setConsultantMessage(message.replace("Technical Consultant:", "").trim());
+        } else {
+            setError(message);
+        }
         setView('home'); 
     } finally {
         setIsLoading(false);
@@ -393,6 +403,7 @@ const App: React.FC = () => {
     setCreativeMetadata(null);
     setShareUrlOnLoad(null);
     setError(null);
+    setConsultantMessage(null);
     setRefreshTrigger(prev => prev + 1);
   }, [language]);
 
@@ -417,6 +428,8 @@ const App: React.FC = () => {
           onLoadBlobConcept={handleLoadBlobConcept}
           isLoading={isLoading} 
           error={error}
+          consultantMessage={consultantMessage}
+          onClearConsultantMessage={() => setConsultantMessage(null)}
           refreshTrigger={refreshTrigger}
           language={language}
         />
