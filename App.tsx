@@ -203,8 +203,8 @@ const App: React.FC = () => {
     // Reset title when going back home
     if (view === 'home') {
         updateMetaTags(
-            language === 'zh' ? 'MyPopku - AI原生互动内容创作社区 | 一句话生成Mini App' : 'MyPopku - AI Mini App Generator | Create Games, Tools & Interactive Content', 
-            language === 'zh' ? 'MyPopku是一个AI原生的自然语言编程社区。无需代码，一句话生成HTML5小游戏、实用工具、互动模拟。体验Generative UI的无限潜力，Websim和Wabi的最佳平替。立即体验。' : 'MyPopku is an AI-native community for natural language programming. Generate interactive mini-apps, HTML5 games, tools, and simulations with a single prompt. The best free alternative to Websim and Wabi. Try it now.',
+            language === 'zh' ? 'MyPopku - 代码即魔法 | AI创意编程社区' : 'MyPopku - AI-Native Creative Coding Community | Code is Magic', 
+            language === 'zh' ? '代码即魔法。MyPopku是一个AI原生的创意编程社区。无需编程基础，用自然语言将你的情感、故事与想象力，瞬间转化为互动的数字艺术与沉浸式体验。Websim的最佳平替。' : 'Code is the closest thing we have to magic. MyPopku is an AI-Native Creative Coding Community. Turn your emotions, stories, and imagination into interactive digital art instantly. The best free alternative to Websim.',
             'https://popku.com/og-image.png'
         );
         // Only push '/' if we are not on /zh

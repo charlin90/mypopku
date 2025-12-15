@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
@@ -399,7 +400,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <span className="hidden sm:inline">MyPopku</span>
              </div>
              <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
-                {language === 'zh' ? 'AI原生互动内容创作社区' : 'An AI-native community for creating and sharing interactive content'}
+                {language === 'zh' ? '代码即魔法 · AI创意编程社区' : 'Code is Magic · An AI-Native Creative Coding Community'}
              </span>
          </div>
 
