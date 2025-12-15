@@ -223,8 +223,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Typewriter effect logic
   useEffect(() => {
     const examples = language === 'zh' 
-        ? ['帮我做一个贪吃蛇游戏...', '模拟太阳系...', '创建一个待办事项列表...', '生成一个计算器...', '制作一个打砖块游戏...', '解释量子纠缠...']
-        : ['Make a Snake game...', 'Simulate the Solar System...', 'Create a Todo List...', 'Generate a Calculator...', 'Make a Brick Breaker game...', 'Explain Quantum Entanglement...'];
+        ? ['生成流动的数字艺术...', '制作一个赛博朋克时钟...', '模拟星系碰撞...', '可视化我的情绪...', '创建一个禅意花园...', '解释量子纠缠...']
+        : ['Generate flowing digital art...', 'Make a cyberpunk clock...', 'Simulate a galaxy collision...', 'Visualize my emotions...', 'Create a zen garden...', 'Explain Quantum Entanglement...'];
     
     let currentStringIndex = 0;
     let currentCharIndex = 0;
