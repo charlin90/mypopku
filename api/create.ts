@@ -51,6 +51,9 @@ function getPrompt(prompt: string): string {
     *   **Self-Contained:** Single HTML file with embedded high-quality CSS/JS.
     *   **Persistence:** Auto-save state to \`localStorage\`. Implement the standard cloud sync logic (fetch/POST to \`/api/storage?id={id}\`) if user data is involved, with a subtle, elegantly designed status indicator.
 
+    **Language Consistency:** 
+       * All UI text, title, and descriptions MUST be in the same language as the User Prompt: "${prompt}".
+
     **Output JSON Requirements:**
     *   **title:** A compelling, premium app name.
     *   **description:** Engaging summary emphasizing the unique approach.
