@@ -28,6 +28,9 @@ export async function generateCreativePage(prompt: string): Promise<GeneratedCre
       throw new Error(`Technical Consultant: ${consultResult.reply}`);
   }
 
+  // Use the optimized prompt from the consultant if available.
+  const effectivePrompt = consultResult.optimizedPrompt || prompt;
+
   // 2. Generate Application
   // If status is PASS, we proceed to the generation phase.
   const response = await fetch('/api/create', {
@@ -35,7 +38,7 @@ export async function generateCreativePage(prompt: string): Promise<GeneratedCre
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt: effectivePrompt }),
   });
 
   if (!response.ok) {
