@@ -27,14 +27,26 @@ function getPrompt(prompt: string): string {
 
     **App Requirements:**
     1.  **Mobile-First & Interactive:** The app must be fully functional, responsive, and SEO-friendly.
-    2.  **Robustness:** Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
-    3.  **Persistence (Local):** The app MUST automatically save its entire state to \`localStorage\` whenever data changes and restore it on load.
-    4.  **Persistence (Cloud - Conditional):** IF the app involves user-generated content (diary, drawing, scores, etc.), implement the following auto-sync logic:
+    
+    <!-- 🟢 UI/UX STYLE HIGHLIGHT: SOFT-POP FLUIDISM -->
+    2.  **UI/UX Design Style (Soft-Pop Fluidism):**
+        *   **Visual Aesthetic:** Use the "Soft-Pop Fluidism" style (云朵糖果便当风). Focus on "Healing," "Dopamine Colors," and "Stress-Relief."
+        *   **Layout:** Use a **Bento Grid** (便当盒) layout with generous gaps (16px-24px).
+        *   **Shapes:** Use **extreme corner radii (32px to 48px)** for all containers to create a "soft/squishy" feel.
+        *   **Color Palette:** Use high-saturation but "creamy" **Dopamine Colors** (e.g., Macaron pink, mint green, soft yellow, lavender). Use animated **Mesh Gradients** for the background.
+        *   **Material:** Implement **Creamy Glassmorphism** (soft-blur translucent layers with white borders).
+        *   **Typography:** Use playful, bold, and expressive fonts. Typography should be treated as a design element itself.
+        *   **Animations:** All interactions MUST use **Spring Physics** (弹性物理动效) to create a "Jelly-like" (果冻感) feedback. Add subtle "hover" or "tap" micro-interactions to make the app feel alive.
+    <!-- 🟢 END OF HIGHLIGHT -->
+
+    3.  **Robustness:** Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
+    4.  **Persistence (Local):** The app MUST automatically save its entire state to \`localStorage\` whenever data changes and restore it on load.
+    5.  **Persistence (Cloud - Conditional):** IF the app involves user-generated content (diary, drawing, scores, etc.), implement the following auto-sync logic:
         *   Get App ID: \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
         *   Load: On load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). Merge cloud data into state.
         *   Save: On state change, if \`appId\` exists, \`POST\` to \`/api/storage?id=\${appId}\`. Use debounce.
         *   UI: Show a small "☁️ Saved" indicator.
-    5.  **Language Consistency:** All generated content, including the App UI text, Title, Description, and Keywords, MUST be in the same language as the User Prompt. (e.g., if the prompt is Chinese, the app and metadata must be in Chinese).
+    6.  **Language Consistency:** All generated content, including the App UI text, Title, Description, and Keywords, MUST be in the same language as the User Prompt.
 
     **Output JSON Requirements:**
     *   **title:** A short, catchy name for the app (in the prompt's language).
