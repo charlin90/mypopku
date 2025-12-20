@@ -22,37 +22,41 @@ const responseSchema = {
 
 function getPrompt(prompt: string): string {
     return `
-    You are a world-class frontend developer with a flair for creating creative and interactive content/apps. 
+    You are a world-class frontend developer with a flair for creating creative, emotional, and highly interactive content/apps. 
     Your task is to generate a JSON object containing the application code and metadata based on the user's prompt.
 
     **App Requirements:**
-    1.  **Mobile-First & Interactive:** The app must be fully functional, responsive, and SEO-friendly.
+    1.  **Mobile-First & Interactive:** The app must be fully functional, responsive, and SEO-friendly. Use modern CSS (like Flexbox/Grid) for a flawless mobile experience.
     
-    <!-- 🟢 UI/UX STYLE HIGHLIGHT: SOFT-POP FLUIDISM -->
-    2.  **UI/UX Design Style (Soft-Pop Fluidism):**
-        *   **Visual Aesthetic:** Use the "Soft-Pop Fluidism" style (云朵糖果便当风). Focus on "Healing," "Dopamine Colors," and "Stress-Relief."
+    2.  **UI/UX Design Style - "Soft-Pop Fluidism":**
+        *   **Visual Aesthetic:** Create a "Healing & Dopamine" (治愈与多巴胺) atmosphere. 
         *   **Layout:** Use a **Bento Grid** (便当盒) layout with generous gaps (16px-24px).
         *   **Shapes:** Use **extreme corner radii (32px to 48px)** for all containers to create a "soft/squishy" feel.
-        *   **Color Palette:** Use high-saturation but "creamy" **Dopamine Colors** (e.g., Macaron pink, mint green, soft yellow, lavender). Use animated **Mesh Gradients** for the background.
-        *   **Material:** Implement **Creamy Glassmorphism** (soft-blur translucent layers with white borders).
-        *   **Typography:** Use playful, bold, and expressive fonts. Typography should be treated as a design element itself.
-        *   **Animations:** All interactions MUST use **Spring Physics** (弹性物理动效) to create a "Jelly-like" (果冻感) feedback. Add subtle "hover" or "tap" micro-interactions to make the app feel alive.
-    <!-- 🟢 END OF HIGHLIGHT -->
+        *   **Color & Material:** Use high-saturation but "creamy" **Dopamine Colors** (Macaron palette). Implement **Creamy Glassmorphism** (translucent layers with soft white borders) over animated **Mesh Gradient** backgrounds.
+        *   **Typography:** Use playful, bold, and expressive fonts. Typography should be treated as a decorative design element.
+        *   **Animations:** All interactions MUST use **Spring Physics** (弹性物理动效) to create "Jelly-like" (果冻感) feedback. Add subtle hover/tap micro-interactions.
 
-    3.  **Robustness:** Ensure event listeners are attached correctly after the DOM loads. Handle user interactions (clicks, inputs) robustly.
-    4.  **Persistence (Local):** The app MUST automatically save its entire state to \`localStorage\` whenever data changes and restore it on load.
-    5.  **Persistence (Cloud - Conditional):** IF the app involves user-generated content (diary, drawing, scores, etc.), implement the following auto-sync logic:
-        *   Get App ID: \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
-        *   Load: On load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). Merge cloud data into state.
-        *   Save: On state change, if \`appId\` exists, \`POST\` to \`/api/storage?id=\${appId}\`. Use debounce.
-        *   UI: Show a small "☁️ Saved" indicator.
-    6.  **Language Consistency:** All generated content, including the App UI text, Title, Description, and Keywords, MUST be in the same language as the User Prompt.
+    3.  **App as Emotional Content (The Soul):**
+        *   **Interaction as Ritual:** Transform functional tasks into "Emotional Rituals." (e.g., use labels like "Release into the Wind" instead of "Submit", "Plant a Memory" instead of "Save").
+        *   **Reactive Vibe Mapping:** The UI must morph based on user input. For example, if the input tone is "peaceful," the background flow slows down; if "energetic," the colors brighten and animations quicken.
+        *   **Digital Keepsake:** Ensure the final UI state looks like an "Artistic Poster" (数字纪念品)—beautiful enough for a user to screenshot and share.
+
+    4.  **Robustness & Persistence:**
+        *   **Events:** Ensure event listeners are attached correctly after the DOM loads. 
+        *   **Local Persistence:** Automatically save the entire state to \`localStorage\` whenever data changes and restore it on load.
+        *   **Cloud Persistence (Conditional):** IF the app involves user-generated content (diary, drawing, scores, etc.), implement this auto-sync logic:
+            *   Get App ID: \`const appId = window.parent.location.pathname.startsWith('/view/') ? window.parent.location.pathname.split('/').pop() : null;\`
+            *   Load: On load, if \`appId\` exists, \`fetch('/api/storage?id=\${appId}\`). Merge cloud data into state.
+            *   Save: On state change, if \`appId\` exists, \`POST\` to \`/api/storage?id=\${appId}\`. Use debounce (e.g., 1000ms).
+            *   UI: Show a tiny "☁️ Saved" indicator in the corner.
+
+    5.  **Language Consistency:** All generated content (UI text, Title, Description, Keywords) MUST be in the same language as the User Prompt.
 
     **Output JSON Requirements:**
     *   **title:** A short, catchy name for the app (in the prompt's language).
-    *   **description:** An engaging summary for SEO (in the prompt's language).
+    *   **description:** An engaging, emotional summary for SEO (in the prompt's language).
     *   **keywords:** Relevant SEO tags (in the prompt's language).
-    *   **html:** The raw HTML code starting with <!DOCTYPE html>...
+    *   **html:** The raw HTML code starting with <!DOCTYPE html>... Include all CSS and JS within the HTML.
 
     User Prompt: "${prompt}"
   `;
