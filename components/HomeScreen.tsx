@@ -464,8 +464,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  <span className="hidden sm:inline">MyPopku</span>
                  {isEnterprise && (
                      <>
-                        <span className="border-l-2 border-black h-6 mx-1"></span>
-                        <span className="text-blue-600 not-italic tracking-normal whitespace-nowrap font-bold">{companyName}</span>
+                        <span className="border-l-2 border-black h-6 mx-2"></span>
+                        <span className="text-blue-600 font-black italic tracking-tight whitespace-nowrap">{companyName}</span>
                      </>
                  )}
              </div>
@@ -645,29 +645,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
-          {/* Unified Feed Tabs - Hide for Enterprise */}
+          {/* Unified Feed Tabs */}
           {!isEnterprise && (
-          <div className="flex justify-center mb-8">
-            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
-                {(effectiveUserId) && (
-                     <button 
-                        onClick={() => onTabChange('personal')}
-                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                        <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
-                    </button>
-                )}
-                {categories.map((cat) => (
-                     <button 
-                        key={cat.id}
-                        onClick={() => onTabChange(cat.id)}
-                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === cat.id ? `${cat.colorClass} text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]` : 'text-gray-500 hover:bg-gray-100'}`}
-                    >
-                        <span>{cat.emoji}</span> {cat.label}
-                    </button>
-                ))}
+            <div className="flex justify-center mb-8">
+                <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
+                    {(effectiveUserId) && (
+                         <button 
+                            onClick={() => onTabChange('personal')}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                        >
+                            <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
+                        </button>
+                    )}
+                    {categories.map((cat) => (
+                         <button 
+                            key={cat.id}
+                            onClick={() => onTabChange(cat.id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === cat.id ? `${cat.colorClass} text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]` : 'text-gray-500 hover:bg-gray-100'}`}
+                        >
+                            <span>{cat.emoji}</span> {cat.label}
+                        </button>
+                    ))}
+                </div>
             </div>
-          </div>
           )}
 
           {/* Feed Content */}
