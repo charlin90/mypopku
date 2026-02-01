@@ -325,7 +325,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       try {
         let endpoint = `/api/community?filter=${activeTab}&lang=${language}`;
         
-        if (activeTab === 'personal') {
+        // Force Enterprise mode if applicable, overriding whatever activeTab says
+        if (isEnterprise && companyId) {
+             endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
+        } else if (activeTab === 'personal') {
             if (!effectiveUserId) {
                 // If we somehow got here without a user ID, empty list
                 setShares([]);
@@ -351,7 +354,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId]);
+  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId, isEnterprise]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
