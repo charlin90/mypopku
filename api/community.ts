@@ -37,7 +37,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // --- ENTERPRISE LOGIC ---
         // Fetch items from the company-specific list
         const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
-        shares = data as unknown as CommunityShare[];
+        // Explicitly parse JSON strings if necessary, as lpush stringifies data
+        shares = data.map((item: any) => (typeof item === 'string' ? JSON.parse(item) : item)) as CommunityShare[];
 
         // Apply Enterprise Filters
         if (mode === 'company_marketing') {

@@ -302,6 +302,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const effectiveUserId = viewingProfileId || userId;
   const isViewingOther = viewingProfileId && viewingProfileId !== userId;
 
+  // Logic to hide "Personal/My Creations" tab for enterprise users unless viewing another user's profile
+  // This effectively makes the first category (e.g. "All" for enterprise) the first tab.
+  const showPersonalTab = effectiveUserId && (!isEnterprise || isViewingOther);
+
   // Define the main categories
   let categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [];
   
@@ -466,16 +470,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Sticky Header */}
       <header className="flex-none w-full h-20 sm:h-24 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0 transition-all duration-300">
          {/* Left: Logo */}
-         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0">
+         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0 max-w-[50%]">
              <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
-                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
+                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center flex-shrink-0">
                      P
                  </div>
-                 <span className="hidden sm:inline">MyPopku</span>
+                 {/* Only show MyPopku if NOT enterprise or if screen is large enough */}
+                 {!isEnterprise && <span className="hidden sm:inline">MyPopku</span>}
+                 {isEnterprise && <span className="hidden md:inline">MyPopku</span>}
+                 
                  {isEnterprise && (
                      <>
-                        <span className="border-l-2 border-black h-6 mx-1"></span>
-                        <span className="text-blue-600 whitespace-nowrap">{companyName}</span>
+                        <span className="border-l-2 border-black h-6 mx-1 hidden sm:block"></span>
+                        <span className="text-blue-600 leading-none break-words text-sm sm:text-lg">{companyName}</span>
                      </>
                  )}
              </div>
@@ -658,7 +665,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
-                {(effectiveUserId) && (
+                {(showPersonalTab) && (
                      <button 
                         onClick={() => onTabChange('personal')}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
