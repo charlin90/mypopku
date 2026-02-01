@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
