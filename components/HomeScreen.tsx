@@ -299,8 +299,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   
   if (isEnterprise) {
       categories = [
-          { id: 'company', label: companyName, emoji: '🏢', colorClass: 'bg-blue-200' },
-          // Enterprise users might still want to see some generic tools/misc or just personal
+          // Empty categories for enterprise as UI will hide them anyway or just show Personal if we kept it
+          // But per request to "remove labels classification", we effectively have no category navigation.
       ];
   } else {
       categories = [
@@ -646,6 +646,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           {/* Unified Feed Tabs */}
+          {!isEnterprise && (
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
                 {(effectiveUserId) && (
@@ -667,6 +668,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 ))}
             </div>
           </div>
+          )}
 
           {/* Feed Content */}
           {isFeedLoading ? (
