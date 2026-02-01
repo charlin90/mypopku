@@ -55,6 +55,12 @@ const translations = {
     createBtn: 'Create ⚡️',
     consultantTitle: "Let's pivot a bit!",
     consultantBtn: "Got it, I'll try that!",
+    uploadTabFile: 'File Upload',
+    uploadTabLink: 'Embed Link',
+    urlLabel: 'Target URL*',
+    urlPlaceholder: 'https://example.com/my-cool-app',
+    fileLabel: 'HTML File*',
+    chooseFile: 'Choose File',
   },
   zh: {
     latest: '最新',
@@ -87,6 +93,12 @@ const translations = {
     createBtn: '生成 ✨',
     consultantTitle: "换个思路试试！",
     consultantBtn: "好的，我试试！",
+    uploadTabFile: '文件上传',
+    uploadTabLink: '嵌入链接',
+    urlLabel: '目标网址*',
+    urlPlaceholder: 'https://example.com/my-cool-app',
+    fileLabel: 'HTML 文件*',
+    chooseFile: '选择文件',
   }
 };
 
@@ -218,7 +230,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // Upload Modal State
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file');
   const [htmlFile, setHtmlFile] = useState<File | null>(null);
+  const [embedUrl, setEmbedUrl] = useState('');
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [uploadPrompt, setUploadPrompt] = useState('');
 
@@ -381,24 +395,50 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading) return;
+    if (!screenshotFile || !uploadPrompt.trim() || isLoading) return;
+
+    // Validate mode specific inputs
+    if (uploadMode === 'file' && !htmlFile) return;
+    if (uploadMode === 'link' && !embedUrl.trim()) return;
 
     try {
-      const [htmlContent, screenshotDataUrl] = await Promise.all([
-        htmlFile.text(),
-        new Promise<string>((resolve, reject) => {
+      let htmlContent = '';
+      
+      if (uploadMode === 'file' && htmlFile) {
+          htmlContent = await htmlFile.text();
+      } else if (uploadMode === 'link') {
+          // Construct HTML wrapper for iframe
+          htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${uploadPrompt}</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+    </style>
+</head>
+<body>
+    <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</body>
+</html>`;
+      }
+
+      const screenshotDataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => resolve(event.target?.result as string);
           reader.onerror = (error) => reject(error);
           reader.readAsDataURL(screenshotFile);
-        })
-      ]);
+      });
 
       onFileUpload(htmlContent, uploadPrompt, screenshotDataUrl);
 
+      // Reset Form
       setHtmlFile(null);
       setScreenshotFile(null);
       setUploadPrompt('');
+      setEmbedUrl('');
       setShowUploadForm(false);
     } catch (error) {
       console.error("Error reading files for upload:", error);
@@ -668,7 +708,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowUploadForm(false)}>
             <form onSubmit={handleUploadSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
                 <button type="button" onClick={() => setShowUploadForm(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
-                <h3 className="text-2xl font-black text-black text-center mt-2">Upload Creation</h3>
+                <h3 className="text-2xl font-black text-black text-center mt-2">{t.upload}</h3>
+                
+                {/* Tabs */}
+                <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200">
+                    <button 
+                        type="button"
+                        onClick={() => setUploadMode('file')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${uploadMode === 'file' ? 'bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black' : 'text-gray-500 hover:text-black'}`}
+                    >
+                        {t.uploadTabFile}
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={() => setUploadMode('link')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${uploadMode === 'link' ? 'bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black' : 'text-gray-500 hover:text-black'}`}
+                    >
+                        {t.uploadTabLink}
+                    </button>
+                </div>
                 
                 <div>
                     <label className="block text-sm font-bold text-black mb-2 text-left">Prompt / Description*</label>
@@ -681,31 +739,45 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm font-bold text-black mb-2 text-left">HTML File*</label>
-                    <div className="flex items-center gap-3">
-                    <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
-                        Choose File
-                    </label>
-                    <input
-                        id="html-upload"
-                        type="file"
-                        onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
-                        className="hidden"
-                        accept="text/html,.html"
-                        required
-                    />
-                    <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
-                        {htmlFile ? htmlFile.name : 'No file chosen'}
-                    </span>
+                {uploadMode === 'file' ? (
+                    <div>
+                        <label className="block text-sm font-bold text-black mb-2 text-left">{t.fileLabel}</label>
+                        <div className="flex items-center gap-3">
+                        <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                            {t.chooseFile}
+                        </label>
+                        <input
+                            id="html-upload"
+                            type="file"
+                            onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                            accept="text/html,.html"
+                            required
+                        />
+                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                            {htmlFile ? htmlFile.name : 'No file chosen'}
+                        </span>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div>
+                        <label className="block text-sm font-bold text-black mb-2 text-left">{t.urlLabel}</label>
+                        <input
+                            type="url"
+                            value={embedUrl}
+                            onChange={(e) => setEmbedUrl(e.target.value)}
+                            className="w-full p-3 rounded-lg border-2 border-black focus:outline-none focus:ring-4 focus:ring-pink-200 font-medium"
+                            placeholder={t.urlPlaceholder}
+                            required
+                        />
+                    </div>
+                )}
 
                 <div>
                     <label className="block text-sm font-bold text-black mb-2 text-left">Screenshot*</label>
                     <div className="flex items-center gap-3">
                     <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-cyan-300 text-black hover:bg-cyan-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
-                        Choose File
+                        {t.chooseFile}
                     </label>
                     <input
                         id="screenshot-upload"
@@ -724,7 +796,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <div className="flex justify-end pt-2">
                     <button
                     type="submit"
-                    disabled={!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading}
+                    disabled={!screenshotFile || !uploadPrompt.trim() || isLoading || (uploadMode === 'file' ? !htmlFile : !embedUrl)}
                     className={primaryBtn + " w-full text-lg py-3"}
                     >
                     Upload & Share
