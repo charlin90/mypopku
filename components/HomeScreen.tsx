@@ -47,6 +47,7 @@ const translations = {
     emptySubPersonal: "You haven't created anything yet.",
     emptySubOther: "This user hasn't shared anything yet.",
     emptySubCat: "Be the first to create something in this category.",
+    emptySubEnterprise: "Your company workspace is empty. Create the first app!",
     foundInGallery: 'Found in Gallery',
     generateNew: 'Generate New',
     createNewDesc: 'Create a brand new concept for',
@@ -85,6 +86,7 @@ const translations = {
     emptySubPersonal: "你还没有创建任何内容。",
     emptySubOther: "该用户尚未分享任何内容。",
     emptySubCat: "成为第一个在这个分类下创作的人吧。",
+    emptySubEnterprise: "您的企业空间还是空的。快来创建第一个应用吧！",
     foundInGallery: '库中发现',
     generateNew: '生成新的',
     createNewDesc: '创建一个全新的概念：',
@@ -326,7 +328,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       try {
         let endpoint = `/api/community?filter=${activeTab}&lang=${language}`;
         
-        if (activeTab === 'personal') {
+        if (isEnterprise && companyId) {
+            // Enterprise Override: Always fetch company data regardless of the active tab
+            endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
+        } else if (activeTab === 'personal') {
             if (!effectiveUserId) {
                 // If we somehow got here without a user ID, empty list
                 setShares([]);
@@ -352,7 +357,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId]);
+  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId, isEnterprise]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -556,7 +561,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     >
                         <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0-1.423 1.423Z" />
                              </svg>
                         </div>
                         <div>
@@ -697,7 +702,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">{t.empty}</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat}
+                           {isEnterprise 
+                                ? t.emptySubEnterprise
+                                : activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat
+                           }
                         </p>
                     </div>
                 )}
