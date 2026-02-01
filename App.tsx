@@ -5,14 +5,14 @@ import { ExplainerView } from './components/ExplainerView.js';
 import { LoadingSpinner } from './components/LoadingSpinner.js';
 import { generateInteractiveConcept } from './services/geminiService.js';
 import { generateCreativePage } from './services/creativeService.js';
-import type { GeneratedConcept, CommunityShare } from './types.js';
+import type { GeneratedConcept, CommunityShare, UserRole } from './types.js';
 import { BlobExplainerView } from './components/BlobExplainerView.js';
 import { CreativeView } from './components/CreativeView.js';
 import { AdminDashboard } from './components/AdminDashboard.js';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'admin';
-export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc';
+export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc' | 'enterprise_workspace';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -20,6 +20,10 @@ const App: React.FC = () => {
   // Track specific user profile being viewed (null implies current user if logged in)
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   
+  // Enterprise State (Simulated for Prototype)
+  const [userRole, setUserRole] = useState<UserRole>('personal');
+  const [enterpriseName, setEnterpriseName] = useState<string>('Acme Corp');
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [consultantMessage, setConsultantMessage] = useState<string | null>(null);
@@ -53,6 +57,24 @@ const App: React.FC = () => {
         window.history.replaceState(null, '', '/zh');
         setLanguage('zh');
     }
+  }, []);
+
+  // Update role based on simulation or potential clerk metadata
+  useEffect(() => {
+    if (isSignedIn && user) {
+        // In a real app, role would come from user.publicMetadata.role
+        const savedRole = localStorage.getItem('sim_user_role') as UserRole;
+        if (savedRole) setUserRole(savedRole);
+    } else {
+        setUserRole('personal');
+    }
+  }, [isSignedIn, user]);
+
+  const handleToggleRole = useCallback((role: UserRole) => {
+    setUserRole(role);
+    localStorage.setItem('sim_user_role', role);
+    setHomeFeedTab(role === 'enterprise' ? 'enterprise_workspace' : 'featured');
+    setRefreshTrigger(prev => prev + 1);
   }, []);
 
   // Helper to get display name: Username > FirstName > Anonymous
@@ -94,7 +116,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Restore state if returning from a login redirect (which causes page refresh)
+  // Restore state if returning from a login redirect
   useEffect(() => {
     const restoreState = sessionStorage.getItem('restore_state');
     if (restoreState) {
@@ -118,7 +140,6 @@ const App: React.FC = () => {
                 setView('creativeView');
                 setHomeFeedTab('personal');
             }
-            // Clear immediately to prevent restoring on subsequent manual refreshes
             sessionStorage.removeItem('restore_state');
         } catch (e) {
             console.error("Failed to restore app state:", e);
@@ -126,11 +147,10 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Handle inbound links for SEO (Display Wall Strategy) & Admin routing
+  // Handle inbound links for SEO
   useEffect(() => {
     const path = window.location.pathname;
     
-    // Check for Admin Route
     if (path === '/admin') {
         setView('admin');
         return;
@@ -142,7 +162,6 @@ const App: React.FC = () => {
         const id = match[1];
 
         const loadItem = (data: CommunityShare) => {
-             // SEO Strategy: Title = Item Title or User Prompt
              const titleText = data.title || data.prompt;
              const title = `${titleText} - MyPopku`;
              const desc = data.description 
@@ -151,7 +170,6 @@ const App: React.FC = () => {
                 
              updateMetaTags(title, desc, data.screenshotUrl);
             
-            // SEO Strategy: Page contains generated App preview
             if (data.blobUrl) {
                 setBlobUrlToLoad(data.blobUrl);
                 setBlobPromptToLoad(data.prompt);
@@ -159,11 +177,9 @@ const App: React.FC = () => {
             }
         };
 
-        // Check for server-injected initial data to avoid double fetch
         const initialData = (window as any).__INITIAL_DATA__;
         if (initialData && initialData.id === id) {
             loadItem(initialData);
-            // Clear to prevent reuse issues if navigating
             (window as any).__INITIAL_DATA__ = undefined;
         } else {
             setIsLoading(true);
@@ -183,31 +199,27 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Redirect to My MyPopku (Personal Tab) when user signs in
+  // Redirect to Personal Tab when user signs in
   useEffect(() => {
     if (isLoaded && isSignedIn && !hasRedirectedRef.current) {
-        // Don't redirect if we are already viewing a deep link (e.g., view/ID)
-        // Also don't redirect if we just restored a view (e.g. explainer/creative)
         const isRestoring = sessionStorage.getItem('restore_state') !== null;
         if (!window.location.pathname.startsWith('/view/') && view === 'home' && !isRestoring) {
-            setHomeFeedTab('personal');
+            setHomeFeedTab(userRole === 'enterprise' ? 'enterprise_workspace' : 'personal');
         }
         hasRedirectedRef.current = true;
     }
-  }, [isLoaded, isSignedIn, view]);
+  }, [isLoaded, isSignedIn, view, userRole]);
 
   useEffect(() => {
     if (view === 'explainer' || view === 'blobExplainer' || view === 'creativeView') {
       window.scrollTo(0, 0);
     }
-    // Reset title when going back home
     if (view === 'home') {
         updateMetaTags(
             language === 'zh' ? 'MyPopku - 代码即魔法 | AI创意编程社区' : 'MyPopku - AI-Native Creative Coding Community | Code is Magic', 
             language === 'zh' ? '代码即魔法。MyPopku是一个AI原生的创意编程社区。无需编程基础，用自然语言将你的情感、故事与想象力，瞬间转化为互动的数字艺术与沉浸式体验。Websim的最佳平替。' : 'Code is the closest thing we have to magic. MyPopku is an AI-Native Creative Coding Community. Turn your emotions, stories, and imagination into interactive digital art instantly. The best free alternative to Websim.',
             'https://popku.com/og-image.png'
         );
-        // Only push '/' if we are not on /zh
         const path = language === 'zh' ? '/zh' : '/';
         window.history.pushState({}, '', path);
     }
@@ -215,7 +227,6 @@ const App: React.FC = () => {
 
   const handleTabChange = useCallback((tab: FeedTab) => {
     setHomeFeedTab(tab);
-    // If explicitly clicking the personal tab, reset to "My" profile (current user)
     if (tab === 'personal') {
         setViewingProfileId(null);
     }
@@ -227,7 +238,6 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Helper to check guest usage limit
   const checkGuestUsage = useCallback(() => {
     if (isSignedIn) return true;
     const count = parseInt(localStorage.getItem('guest_gen_count') || '0', 10);
@@ -247,14 +257,11 @@ const App: React.FC = () => {
 
   const handleConceptSubmit = useCallback(async (concept: string) => {
     if (!concept.trim()) return;
-
     if (!checkGuestUsage()) return;
-    
     setIsLoading(true);
     setError(null);
     setConsultantMessage(null);
     setGeneratedContent(null);
-
     try {
       const content = await generateInteractiveConcept(concept);
       incrementGuestUsage();
@@ -273,15 +280,12 @@ const App: React.FC = () => {
   
   const handleCreativeSubmit = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
-
     if (!checkGuestUsage()) return;
-
     setIsLoading(true);
     setError(null);
     setConsultantMessage(null);
     setCreativeHtml(null);
     setCreativeMetadata(null);
-
     try {
         const result = await generateCreativePage(prompt);
         incrementGuestUsage();
@@ -296,8 +300,6 @@ const App: React.FC = () => {
     } catch (err) {
         console.error("Creative page generation failed:", err);
         const message = err instanceof Error ? err.message : 'An unknown error occurred. Please try again.';
-        
-        // Handle Consultant Negotiation Message
         if (message.startsWith("Technical Consultant:")) {
             setConsultantMessage(message.replace("Technical Consultant:", "").trim());
         } else {
@@ -309,23 +311,18 @@ const App: React.FC = () => {
     }
   }, [checkGuestUsage, incrementGuestUsage]);
 
-  // Heuristic to decide whether to use Learn (Concept) or Create (Creative) mode
   const handleUnifiedSubmit = useCallback(async (input: string) => {
     const trimmed = input.trim();
     if (!trimmed) return;
-
     const lower = trimmed.toLowerCase();
     const wordCount = trimmed.split(/\s+/).length;
-    
     const creativeKeywords = [
         'create', 'make', 'generate', 'code', 'app', 'game', 'simulation', 'toy', 'builder', 'tool',
         '创建', '生成', '制作', '编写', '设计', '开发', '游戏', '模拟', '工具', '代码', '做一个', '弄一个'
     ];
     const hasCreativeKeyword = creativeKeywords.some(kw => lower.includes(kw));
-
     const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
     const isLongChinese = hasChinese && trimmed.length > 10;
-
     if (wordCount > 6 || isLongChinese || hasCreativeKeyword) {
         await handleCreativeSubmit(trimmed);
     } else {
@@ -336,7 +333,6 @@ const App: React.FC = () => {
   const handleFileUpload = useCallback(async (htmlContent: string, prompt: string, screenshotDataUrl: string) => {
     setIsLoading(true);
     setError(null);
-    
     try {
         const response = await fetch('/api/share', {
             method: 'POST',
@@ -349,20 +345,17 @@ const App: React.FC = () => {
               userId: user?.id,
               authorName: getDisplayName(),
               authorAvatarUrl: user?.imageUrl,
+              scope: userRole === 'enterprise' ? 'enterprise' : 'public'
             }),
         });
-        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Failed to share uploaded HTML');
         }
-
         const data = await response.json();
         setShareUrlOnLoad(data.url); 
-
         setCreativeHtml(htmlContent);
         setCreativePrompt(prompt);
-        // For uploaded files, we lack AI generated metadata, so passing null will fallback to prompt usage
         setCreativeMetadata(null);
         setView('creativeView');
     } catch (err) {
@@ -373,22 +366,19 @@ const App: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, [user, getDisplayName]);
+  }, [user, getDisplayName, userRole]);
 
   const handleLoadBlobConcept = useCallback((blobUrl: string, prompt: string) => {
     setError(null);
     setBlobUrlToLoad(blobUrl);
     setBlobPromptToLoad(prompt);
     setView('blobExplainer');
-    
-    // Update Meta Tags for internal navigation
     const title = `${prompt} - MyPopku`;
     const desc = `Play and explore "${prompt}". An AI-generated interactive mini-app on MyPopku.`;
     updateMetaTags(title, desc);
   }, []);
 
   const handleGoBack = useCallback(() => {
-    // If we are in a deep-linked view (blobExplainer active on load), hitting back should go to home
     if (window.location.pathname.startsWith('/view/')) {
         const path = language === 'zh' ? '/zh' : '/';
         window.history.pushState({}, '', path);
@@ -407,7 +397,6 @@ const App: React.FC = () => {
     setRefreshTrigger(prev => prev + 1);
   }, [language]);
 
-  // Simple Router Switch
   if (view === 'admin') {
       return <AdminDashboard />;
   }
@@ -432,6 +421,9 @@ const App: React.FC = () => {
           onClearConsultantMessage={() => setConsultantMessage(null)}
           refreshTrigger={refreshTrigger}
           language={language}
+          userRole={userRole}
+          enterpriseName={enterpriseName}
+          onToggleRole={handleToggleRole}
         />
       </div>
       

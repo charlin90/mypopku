@@ -1,4 +1,5 @@
 
+export type UserRole = 'personal' | 'enterprise';
 
 export interface GeneratedConcept {
   html: string;
@@ -41,4 +42,5 @@ export interface CommunityShare {
   userId?: string;
   authorName?: string;
   authorAvatarUrl?: string;
+  scope?: 'public' | 'enterprise'; // New field for enterprise filtering
 }
