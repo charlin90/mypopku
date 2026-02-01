@@ -61,6 +61,9 @@ const translations = {
     urlPlaceholder: 'https://example.com/my-cool-app',
     fileLabel: 'HTML File*',
     chooseFile: 'Choose File',
+    all: 'All',
+    marketing: 'Marketing',
+    training: 'Training',
   },
   zh: {
     latest: '最新',
@@ -99,6 +102,9 @@ const translations = {
     urlPlaceholder: 'https://example.com/my-cool-app',
     fileLabel: 'HTML 文件*',
     chooseFile: '选择文件',
+    all: '全部',
+    marketing: '营销',
+    training: '培训',
   }
 };
 
@@ -299,8 +305,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   
   if (isEnterprise) {
       categories = [
-          { id: 'company', label: companyName, emoji: '🏢', colorClass: 'bg-blue-200' },
-          // Enterprise users might still want to see some generic tools/misc or just personal
+          { id: 'company', label: t.all, emoji: '🏢', colorClass: 'bg-blue-200' },
+          { id: 'marketing', label: t.marketing, emoji: '📢', colorClass: 'bg-purple-200' },
+          { id: 'training', label: t.training, emoji: '🎓', colorClass: 'bg-green-200' },
       ];
   } else {
       categories = [
@@ -334,8 +341,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 return;
             }
             endpoint = `/api/user-creations?userId=${effectiveUserId}`;
-        } else if (activeTab === 'company' && companyId) {
-            endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
+        } else if ((activeTab === 'company' || activeTab === 'marketing' || activeTab === 'training') && companyId) {
+            endpoint = `/api/community?filter=${activeTab}&companyId=${companyId}&lang=${language}`;
         }
 
         const response = await fetch(endpoint);
@@ -465,7 +472,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  {isEnterprise && (
                      <>
                         <span className="border-l-2 border-black h-6 mx-1"></span>
-                        <span className="text-blue-600 truncate">{companyName}</span>
+                        <span className="text-blue-600 font-bold whitespace-nowrap">{companyName}</span>
                      </>
                  )}
              </div>
@@ -648,7 +655,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
-                {(effectiveUserId) && (
+                {(effectiveUserId && !isEnterprise) && (
                      <button 
                         onClick={() => onTabChange('personal')}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}

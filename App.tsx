@@ -13,7 +13,7 @@ import { AdminDashboard } from './components/AdminDashboard.js';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'admin';
-export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc' | 'company';
+export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc' | 'company' | 'marketing' | 'training';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');

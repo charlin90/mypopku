@@ -33,11 +33,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .filter((item): item is CommunityShare => !!item);
             }
         }
-    } else if (mode === 'company' && typeof companyId === 'string' && companyId) {
+    } else if ((mode === 'company' || mode === 'marketing' || mode === 'training') && typeof companyId === 'string' && companyId) {
         // --- ENTERPRISE LOGIC ---
         // Fetch items from the company-specific list
         const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
         shares = data as unknown as CommunityShare[];
+
+        if (mode === 'marketing') {
+             shares = shares.filter(s => /marketing|brand|promo|ad|sales|social|market|营销|推广|品牌|广告|销售|市场/i.test((s.title || '') + (s.description || '') + s.prompt));
+        } else if (mode === 'training') {
+             shares = shares.filter(s => /train|course|lesson|guide|onboard|skill|educat|class|teach|培训|课程|教学|入职|学习|教/i.test((s.title || '') + (s.description || '') + s.prompt));
+        }
     } else {
         // Fetch all items from the public list (for other categories/latest)
         const data = await redis.lrange('community:shares', 0, -1);
