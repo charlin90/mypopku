@@ -33,22 +33,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .filter((item): item is CommunityShare => !!item);
             }
         }
-    } else if ((mode === 'company' || (mode && mode.startsWith('company_'))) && typeof companyId === 'string' && companyId) {
+    } else if (mode === 'company' && typeof companyId === 'string' && companyId) {
         // --- ENTERPRISE LOGIC ---
         // Fetch items from the company-specific list
         const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
-        // Explicitly parse JSON strings if necessary, as lpush stringifies data
-        shares = data.map((item: any) => (typeof item === 'string' ? JSON.parse(item) : item)) as CommunityShare[];
-
-        // Apply Enterprise Filters
-        if (mode === 'company_marketing') {
-             shares = shares.filter(s => /marketing|sales|brand|promo|ad|campaign|market|营销|推广|广告|品牌|销售|市场/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
-        } else if (mode === 'company_operations') {
-             shares = shares.filter(s => /operation|admin|manage|process|workflow|dashboard|report|biz|ops|运营|管理|流程|报表|后台|业务/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
-        } else if (mode === 'company_training') {
-             shares = shares.filter(s => /train|educat|learn|course|guide|onboard|skill|lesson|quiz|knowledge|hr|培训|教学|课程|指南|学习|知识|人力/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
-        }
-        // company_all returns everything
+        shares = data as unknown as CommunityShare[];
     } else {
         // Fetch all items from the public list (for other categories/latest)
         const data = await redis.lrange('community:shares', 0, -1);

@@ -61,10 +61,8 @@ const translations = {
     urlPlaceholder: 'https://example.com/my-cool-app',
     fileLabel: 'HTML File*',
     chooseFile: 'Choose File',
-    compAll: 'All',
-    compMarketing: 'Marketing',
-    compOperations: 'Operations',
-    compTraining: 'Training',
+    all: 'All',
+    marketing: 'Marketing',
   },
   zh: {
     latest: '最新',
@@ -103,10 +101,8 @@ const translations = {
     urlPlaceholder: 'https://example.com/my-cool-app',
     fileLabel: 'HTML 文件*',
     chooseFile: '选择文件',
-    compAll: '全部',
-    compMarketing: '营销',
-    compOperations: '运营',
-    compTraining: '培训',
+    all: '全部',
+    marketing: '营销',
   }
 };
 
@@ -302,19 +298,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const effectiveUserId = viewingProfileId || userId;
   const isViewingOther = viewingProfileId && viewingProfileId !== userId;
 
-  // Logic to hide "Personal/My Creations" tab for enterprise users unless viewing another user's profile
-  // This effectively makes the first category (e.g. "All" for enterprise) the first tab.
-  const showPersonalTab = effectiveUserId && (!isEnterprise || isViewingOther);
-
   // Define the main categories
   let categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [];
   
   if (isEnterprise) {
       categories = [
-          { id: 'company_all', label: t.compAll, emoji: '🏢', colorClass: 'bg-blue-200' },
-          { id: 'company_marketing', label: t.compMarketing, emoji: '📢', colorClass: 'bg-purple-200' },
-          { id: 'company_operations', label: t.compOperations, emoji: '⚙️', colorClass: 'bg-green-200' },
-          { id: 'company_training', label: t.compTraining, emoji: '🎓', colorClass: 'bg-yellow-200' },
+          { id: 'company', label: t.marketing, emoji: '🏢', colorClass: 'bg-blue-200' },
+          // Enterprise users might still want to see some generic tools/misc or just personal
       ];
   } else {
       categories = [
@@ -348,8 +338,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 return;
             }
             endpoint = `/api/user-creations?userId=${effectiveUserId}`;
-        } else if (activeTab.startsWith('company') && companyId) {
-            endpoint = `/api/community?filter=${activeTab}&companyId=${companyId}&lang=${language}`;
+        } else if (activeTab === 'company' && companyId) {
+            endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
         }
 
         const response = await fetch(endpoint);
@@ -470,19 +460,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Sticky Header */}
       <header className="flex-none w-full h-20 sm:h-24 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0 transition-all duration-300">
          {/* Left: Logo */}
-         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0 max-w-[50%]">
+         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0">
              <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
-                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center flex-shrink-0">
+                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
                      P
                  </div>
-                 {/* Only show MyPopku if NOT enterprise or if screen is large enough */}
-                 {!isEnterprise && <span className="hidden sm:inline">MyPopku</span>}
-                 {isEnterprise && <span className="hidden md:inline">MyPopku</span>}
-                 
+                 <span className="hidden sm:inline">MyPopku</span>
                  {isEnterprise && (
                      <>
-                        <span className="border-l-2 border-black h-6 mx-1 hidden sm:block"></span>
-                        <span className="text-blue-600 leading-none break-words text-sm sm:text-lg">{companyName}</span>
+                        <span className="border-l-2 border-black h-6 mx-1"></span>
+                        <span className="text-blue-600">{companyName}</span>
                      </>
                  )}
              </div>
@@ -665,12 +652,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* Unified Feed Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
-                {(showPersonalTab) && (
+                {(effectiveUserId) && (
                      <button 
                         onClick={() => onTabChange('personal')}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
                     >
-                        <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
+                        <span>👤</span> {isViewingOther ? t.userGallery : (isEnterprise ? t.all : t.personal)}
                     </button>
                 )}
                 {categories.map((cat) => (
