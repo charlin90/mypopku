@@ -622,8 +622,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
       </main>
 
-      {/* Modals remain same but use translations if needed... */}
-      {/* (Upload, Consultant, WeChat modals code continues here) */}
+      {/* Consultant Message Modal */}
+      {consultantMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClearConsultantMessage}>
+            <div onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 flex flex-col gap-4 relative animate-bounce-short">
+                <div className="text-4xl">🤔</div>
+                <h3 className="text-2xl font-black text-black">{t.consultantTitle}</h3>
+                <p className="text-gray-700 font-bold leading-relaxed">{consultantMessage}</p>
+                <button onClick={onClearConsultantMessage} className="mt-4 px-6 py-3 rounded-xl text-lg font-bold border-2 border-black bg-yellow-300 text-black shadow-[4px_4px_0px_0px_black] active:shadow-none hover:bg-yellow-400 transition-all">
+                    {t.consultantBtn}
+                </button>
+            </div>
+        </div>
+      )}
+
+      {/* WeChat Group Modal */}
+      {showWeChatModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWeChatModal(false)}>
+            <div onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
+                <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
+                <h3 className="text-2xl font-black text-black text-center mt-2">加入微信群</h3>
+                <p className="text-center text-sm font-bold text-gray-500">扫码加入 MyPopku 创意编程社区</p>
+                <div className="w-full aspect-square border-2 border-black rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
+                    <img src="/wechat.png" alt="WeChat QR Code" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-center text-xs font-bold text-gray-400">代码即魔法，连接每一份创意</p>
+            </div>
+        </div>
+      )}
+
       {showUploadForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowUploadForm(false)}>
             <form onSubmit={handleUploadSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
@@ -653,7 +680,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </form>
         </div>
       )}
-      {/* ... Consultant and WeChat modals truncated for brevity ... */}
     </div>
   );
 };

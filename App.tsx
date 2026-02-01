@@ -22,7 +22,7 @@ const App: React.FC = () => {
   
   // Enterprise State (Simulated for Prototype)
   const [userRole, setUserRole] = useState<UserRole>('personal');
-  const [enterpriseName, setEnterpriseName] = useState<string>('Acme Corp');
+  const [enterpriseName] = useState<string>('Acme Corp');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
