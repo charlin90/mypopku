@@ -465,7 +465,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  {isEnterprise && (
                      <>
                         <span className="border-l-2 border-black h-6 mx-1"></span>
-                        <span className="text-blue-600 truncate">{companyName}</span>
+                        <span className="text-blue-600 not-italic tracking-normal whitespace-nowrap font-bold">{companyName}</span>
                      </>
                  )}
              </div>
@@ -645,7 +645,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           )}
 
-          {/* Unified Feed Tabs */}
+          {/* Unified Feed Tabs - Hide for Enterprise */}
+          {!isEnterprise && (
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
                 {(effectiveUserId) && (
@@ -667,6 +668,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 ))}
             </div>
           </div>
+          )}
 
           {/* Feed Content */}
           {isFeedLoading ? (
