@@ -21,20 +21,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const mode = Array.isArray(filter) ? filter[0] : filter;
     const isZh = lang === 'zh';
 
-    // Helper to safely parse Redis list items which might be strings or objects
-    const safeParse = (items: any[]): CommunityShare[] => {
-        return items.map(item => {
-            if (typeof item === 'string') {
-                try {
-                    return JSON.parse(item);
-                } catch (e) {
-                    return null;
-                }
-            }
-            return item;
-        }).filter(item => item !== null);
-    };
-
     if (mode === 'featured') {
         // Fetch IDs from the featured sorted set
         const ids = await redis.zrange<string[]>('community:featured_ids', 0, -1);
@@ -51,11 +37,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // --- ENTERPRISE LOGIC ---
         // Fetch items from the company-specific list
         const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
-        shares = safeParse(data);
+        shares = data as unknown as CommunityShare[];
     } else {
         // Fetch all items from the public list (for other categories/latest)
         const data = await redis.lrange('community:shares', 0, -1);
-        shares = safeParse(data);
+        shares = data as unknown as CommunityShare[];
     }
     
     // Fetch view counts for all shares in one go using Hash
@@ -113,14 +99,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         shares.sort((a, b) => b.createdAt - a.createdAt);
     }
     
-    // CACHE CONTROL:
-    // If it's a company feed, we want 0 caching to ensure immediate updates after upload.
-    // For public feeds, we can keep the cache.
-    if (mode === 'company') {
-        res.setHeader('Cache-Control', 'no-store, max-age=0');
-    } else {
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
-    }
+    // Set cache headers for performance
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
 
     return res.status(200).json(shares);
 

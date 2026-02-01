@@ -47,7 +47,6 @@ const translations = {
     emptySubPersonal: "You haven't created anything yet.",
     emptySubOther: "This user hasn't shared anything yet.",
     emptySubCat: "Be the first to create something in this category.",
-    emptySubEnterprise: "Your company workspace is empty. Create the first app!",
     foundInGallery: 'Found in Gallery',
     generateNew: 'Generate New',
     createNewDesc: 'Create a brand new concept for',
@@ -86,7 +85,6 @@ const translations = {
     emptySubPersonal: "你还没有创建任何内容。",
     emptySubOther: "该用户尚未分享任何内容。",
     emptySubCat: "成为第一个在这个分类下创作的人吧。",
-    emptySubEnterprise: "您的企业空间还是空的。快来创建第一个应用吧！",
     foundInGallery: '库中发现',
     generateNew: '生成新的',
     createNewDesc: '创建一个全新的概念：',
@@ -301,8 +299,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   
   if (isEnterprise) {
       categories = [
-          // Empty categories for enterprise as UI will hide them anyway or just show Personal if we kept it
-          // But per request to "remove labels classification", we effectively have no category navigation.
+          { id: 'company', label: companyName, emoji: '🏢', colorClass: 'bg-blue-200' },
+          // Enterprise users might still want to see some generic tools/misc or just personal
       ];
   } else {
       categories = [
@@ -328,10 +326,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       try {
         let endpoint = `/api/community?filter=${activeTab}&lang=${language}`;
         
-        if (isEnterprise && companyId) {
-            // Enterprise Override: Always fetch company data regardless of the active tab
-            endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
-        } else if (activeTab === 'personal') {
+        if (activeTab === 'personal') {
             if (!effectiveUserId) {
                 // If we somehow got here without a user ID, empty list
                 setShares([]);
@@ -342,9 +337,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         } else if (activeTab === 'company' && companyId) {
             endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
         }
-
-        // Add cache buster timestamp
-        endpoint += `&_t=${Date.now()}`;
 
         const response = await fetch(endpoint);
         if (!response.ok) {
@@ -360,7 +352,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId, isEnterprise]);
+  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -654,7 +646,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           {/* Unified Feed Tabs */}
-          {!isEnterprise && (
           <div className="flex justify-center mb-8">
             <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
                 {(effectiveUserId) && (
@@ -676,7 +667,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 ))}
             </div>
           </div>
-          )}
 
           {/* Feed Content */}
           {isFeedLoading ? (
@@ -705,10 +695,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">{t.empty}</p>
                         <p className="text-gray-400 mt-2">
-                           {isEnterprise 
-                                ? t.emptySubEnterprise
-                                : activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat
-                           }
+                           {activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat}
                         </p>
                     </div>
                 )}
