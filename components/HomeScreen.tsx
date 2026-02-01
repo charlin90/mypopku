@@ -752,7 +752,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                             onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
                             className="hidden"
                             accept="text/html,.html"
-                            required
                         />
                         <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
                             {htmlFile ? htmlFile.name : 'No file chosen'}
@@ -785,7 +784,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
                         className="hidden"
                         accept="image/*"
-                        required
                     />
                         <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
                         {screenshotFile ? screenshotFile.name : 'No file chosen'}
