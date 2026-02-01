@@ -17,6 +17,7 @@ interface CreativeViewProps {
   userId?: string | null;
   userName?: string;
   userAvatarUrl?: string;
+  companyId?: string;
 }
 
 const LoadingSpinnerInline: React.FC = () => (
@@ -24,7 +25,7 @@ const LoadingSpinnerInline: React.FC = () => (
 );
 
 
-export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title, description, keywords, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl }) => {
+export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title, description, keywords, onBack, initialShareUrl, onClearInitialShareUrl, userId, userName, userAvatarUrl, companyId }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -133,6 +134,7 @@ export const CreativeView: React.FC<CreativeViewProps> = ({ html, prompt, title,
                 userId: userId,
                 authorName: userName,
                 authorAvatarUrl: userAvatarUrl,
+                companyId: companyId
                 }),
             });
 

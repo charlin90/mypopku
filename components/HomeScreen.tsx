@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
-import type { CommunityShare, UserRole } from '../types.js';
+import type { CommunityShare } from '../types.js';
 import type { FeedTab } from '../App.js';
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser, useClerk } from "@clerk/clerk-react";
 
 interface HomeScreenProps {
   activeTab: FeedTab;
@@ -19,9 +20,7 @@ interface HomeScreenProps {
   onClearConsultantMessage?: () => void;
   refreshTrigger: number;
   language: 'en' | 'zh';
-  userRole?: UserRole;
-  enterpriseName?: string;
-  onToggleRole?: (role: UserRole) => void;
+  companyId?: string;
 }
 
 const translations = {
@@ -38,19 +37,14 @@ const translations = {
     music: 'Music',
     misc: 'Misc',
     personal: 'My Creations',
-    enterprise_workspace: 'Enterprise Workspace',
-    workspace_breadcrumb: 'Home / Enterprise Workspace',
-    enterprise_only: 'Enterprise Only',
     userGallery: 'User Gallery',
     searchPlaceholder: 'Search or type to create...',
     upload: 'Upload',
     signIn: 'Sign In',
-    enterprise_login_sim: 'Switch to Enterprise Mode',
-    personal_login_sim: 'Switch to Personal Mode',
+    enterpriseLogin: 'Enterprise Login',
     empty: 'Nothing here yet!',
     emptySubFeatured: "Check back later for curated picks.",
     emptySubPersonal: "You haven't created anything yet.",
-    emptySubEnterprise: "No enterprise-level apps have been shared with you yet.",
     emptySubOther: "This user hasn't shared anything yet.",
     emptySubCat: "Be the first to create something in this category.",
     foundInGallery: 'Found in Gallery',
@@ -74,20 +68,15 @@ const translations = {
     ai: 'AI',
     music: '音乐',
     misc: '其他',
-    personal: '我的作品',
-    enterprise_workspace: '企业工作台',
-    workspace_breadcrumb: '首页 / 企业工作台',
-    enterprise_only: '企业专用',
+    personal: '我的',
     userGallery: '用户作品',
     searchPlaceholder: '搜索或输入以创建...',
     upload: '上传',
     signIn: '登录',
-    enterprise_login_sim: '企业模式',
-    personal_login_sim: '个人模式',
+    enterpriseLogin: '企业登录',
     empty: '这里还什么都没有！',
     emptySubFeatured: "稍后再来看看精选内容吧。",
     emptySubPersonal: "你还没有创建任何内容。",
-    emptySubEnterprise: "暂无企业内部应用共享。",
     emptySubOther: "该用户尚未分享任何内容。",
     emptySubCat: "成为第一个在这个分类下创作的人吧。",
     foundInGallery: '库中发现',
@@ -112,17 +101,14 @@ const CommunityCard: React.FC<{ item: CommunityShare, onClick: () => void, onUse
       onClick={(e) => {
         e.preventDefault();
         window.history.pushState({}, '', `/view/${item.id}`);
+        // Trigger view increment without blocking navigation
         fetch(`/api/item?id=${item.id}`).catch(() => {});
         onClick();
       }}
       className="group bg-white border-2 border-black rounded-xl text-left transition-all hover:-translate-y-2 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full relative"
     >
       <div className="absolute top-2 right-2 z-10 flex gap-1.5">
-          {item.scope === 'enterprise' ? (
-              <span className="px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-blue-600 text-white">
-                  {t.enterprise_only}
-              </span>
-          ) : /game|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏/i.test(item.prompt) ? (
+          {/game|arcade|tetris|snake|pong|minecraft|mario|zelda|游戏/i.test(item.prompt) ? (
               <span className="px-2 py-1 text-xs font-bold border border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-purple-300 text-black">
                   GAME
               </span>
@@ -212,15 +198,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onClearConsultantMessage,
   refreshTrigger,
   language,
-  userRole = 'personal',
-  enterpriseName = 'Acme Corp',
-  onToggleRole
+  companyId
 }) => {
   const [inputValue, setInputValue] = useState('');
   const maxLength = 800;
   const t = translations[language];
-  const isEnterprise = userRole === 'enterprise';
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
   
+  // Enterprise Check
+  const publicMetadata = user?.publicMetadata as any;
+  const isEnterprise = publicMetadata?.role === 'enterprise';
+  const companyName = publicMetadata?.companyName || 'Company';
+
   // Community Feed State
   const [shares, setShares] = useState<CommunityShare[]>([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
@@ -242,6 +232,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Placeholder Typewriter State
   const [placeholderText, setPlaceholderText] = useState('');
 
+  // Typewriter effect logic
   useEffect(() => {
     const examples = language === 'zh' 
         ? ['生成流动的数字艺术...', '制作一个赛博朋克时钟...', '模拟星系碰撞...', '可视化我的情绪...', '创建一个禅意花园...', '解释量子纠缠...']
@@ -255,6 +246,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
     const type = () => {
       const currentString = examples[currentStringIndex];
+      
       if (isDeleting) {
         setPlaceholderText(currentString.substring(0, currentCharIndex - 1));
         currentCharIndex--;
@@ -264,60 +256,80 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         currentCharIndex++;
         typingSpeed = 100;
       }
+
       if (!isDeleting && currentCharIndex === currentString.length) {
         isDeleting = true;
-        typingSpeed = 2000;
+        typingSpeed = 2000; // Pause at end of string
       } else if (isDeleting && currentCharIndex === 0) {
         isDeleting = false;
         currentStringIndex = (currentStringIndex + 1) % examples.length;
-        typingSpeed = 500;
+        typingSpeed = 500; // Pause before typing next string
       }
+
       timeout = setTimeout(type, typingSpeed);
     };
+
+    // Start typing after a short delay
     timeout = setTimeout(type, 500);
+
     return () => clearTimeout(timeout);
   }, [language]);
 
+
+  // Determine effective user ID for the personal tab (either viewing another user or self)
   const effectiveUserId = viewingProfileId || userId;
   const isViewingOther = viewingProfileId && viewingProfileId !== userId;
 
-  const categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [
-    { id: 'featured', label: t.featured, emoji: '✨', colorClass: 'bg-yellow-300' },
-    { id: 'most_viewed', label: t.most_viewed, emoji: '👁️', colorClass: 'bg-orange-300' },
-    { id: 'latest', label: t.latest, emoji: '🔥', colorClass: 'bg-cyan-300' },
-    { id: 'games', label: t.games, emoji: '🎮', colorClass: 'bg-purple-300' },
-    { id: 'tools', label: t.tools, emoji: '🛠️', colorClass: 'bg-blue-300' },
-    { id: 'art', label: t.art, emoji: '🎨', colorClass: 'bg-pink-300' },
-    { id: 'education', label: t.education, emoji: '📚', colorClass: 'bg-green-300' },
-    { id: 'ai', label: t.ai, emoji: '🤖', colorClass: 'bg-indigo-300' },
-    { id: 'misc', label: t.misc, emoji: '🧩', colorClass: 'bg-gray-300' },
-  ];
+  // Define the main categories
+  let categories: { id: FeedTab, label: string, emoji: string, colorClass: string }[] = [];
+  
+  if (isEnterprise) {
+      categories = [
+          { id: 'company', label: companyName, emoji: '🏢', colorClass: 'bg-blue-200' },
+          // Enterprise users might still want to see some generic tools/misc or just personal
+      ];
+  } else {
+      categories = [
+        { id: 'featured', label: t.featured, emoji: '✨', colorClass: 'bg-yellow-300' },
+        { id: 'christmas', label: t.christmas, emoji: '🎄', colorClass: 'bg-red-300' },
+        { id: 'most_viewed', label: t.most_viewed, emoji: '👁️', colorClass: 'bg-orange-300' },
+        { id: 'latest', label: t.latest, emoji: '🔥', colorClass: 'bg-cyan-300' },
+        { id: 'games', label: t.games, emoji: '🎮', colorClass: 'bg-purple-300' },
+        { id: 'tools', label: t.tools, emoji: '🛠️', colorClass: 'bg-blue-300' },
+        { id: 'art', label: t.art, emoji: '🎨', colorClass: 'bg-pink-300' },
+        { id: 'education', label: t.education, emoji: '📚', colorClass: 'bg-green-300' },
+        { id: 'ai', label: t.ai, emoji: '🤖', colorClass: 'bg-indigo-300' },
+        { id: 'music', label: t.music, emoji: '🎵', colorClass: 'bg-red-300' },
+        { id: 'misc', label: t.misc, emoji: '🧩', colorClass: 'bg-gray-300' },
+      ];
+  }
 
+  // Fetch community shares or user creations when tab changes
   useEffect(() => {
     const fetchShares = async () => {
       setIsFeedLoading(true);
       setFeedError(null);
       try {
         let endpoint = `/api/community?filter=${activeTab}&lang=${language}`;
-        if (isEnterprise && activeTab === 'enterprise_workspace') {
-             endpoint = `/api/community?filter=latest&lang=${language}&scope=enterprise`;
-        } else if (activeTab === 'personal') {
+        
+        if (activeTab === 'personal') {
             if (!effectiveUserId) {
+                // If we somehow got here without a user ID, empty list
                 setShares([]);
                 setIsFeedLoading(false);
                 return;
             }
             endpoint = `/api/user-creations?userId=${effectiveUserId}`;
+        } else if (activeTab === 'company' && companyId) {
+            endpoint = `/api/community?filter=company&companyId=${companyId}&lang=${language}`;
         }
+
         const response = await fetch(endpoint);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || 'Failed to load creations.');
         }
-        let data: CommunityShare[] = await response.json();
-        if (isEnterprise && activeTab === 'enterprise_workspace') {
-            data = data.filter(s => s.scope === 'enterprise');
-        }
+        const data: CommunityShare[] = await response.json();
         setShares(data);
       } catch (err) {
         setFeedError(err instanceof Error ? err.message : String(err));
@@ -326,8 +338,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }
     };
     fetchShares();
-  }, [activeTab, effectiveUserId, refreshTrigger, language, isEnterprise]);
+  }, [activeTab, effectiveUserId, refreshTrigger, language, companyId]);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -355,10 +368,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowDropdown(false);
+
     if (inputValue.length > maxLength) {
         alert(language === 'zh' ? '输入内容过长，请控制在800字以内' : 'Input too long. Please keep it under 800 characters.');
         return;
     }
+
     if (inputValue && !isLoading) {
       onUnifiedSubmit(inputValue);
     }
@@ -367,6 +382,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading) return;
+
     try {
       const [htmlContent, screenshotDataUrl] = await Promise.all([
         htmlFile.text(),
@@ -377,7 +393,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           reader.readAsDataURL(screenshotFile);
         })
       ]);
+
       onFileUpload(htmlContent, uploadPrompt, screenshotDataUrl);
+
       setHtmlFile(null);
       setScreenshotFile(null);
       setUploadPrompt('');
@@ -387,7 +405,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
+  const primaryBtn = "px-6 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed bg-teal-300 text-black hover:bg-teal-400";
   const authBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-yellow-300 text-black hover:bg-yellow-400";
+  const enterpriseBtn = "px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:shadow-none active:translate-y-0.5 bg-blue-300 text-black hover:bg-blue-400";
   const socialBtn = "w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white hover:bg-gray-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none";
 
   return (
@@ -395,31 +415,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       
       {/* Sticky Header */}
       <header className="flex-none w-full h-20 sm:h-24 border-b-4 border-black bg-white flex items-center justify-between px-4 sm:px-6 z-30 sticky top-0 transition-all duration-300">
-         {/* Left: Logo + Enterprise Identifier */}
-         <div className="flex items-center gap-3 justify-start flex-shrink-0 lg:flex-1 lg:min-w-0">
-             <div className="flex flex-col justify-center">
-                 <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
-                     <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
-                         P
-                     </div>
-                     <span className="hidden sm:inline">MyPopku</span>
+         {/* Left: Logo */}
+         <div className="flex flex-col justify-center flex-shrink-0 lg:flex-1 lg:min-w-0">
+             <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-black flex items-center gap-2">
+                 <div className="w-8 h-8 bg-yellow-400 border-2 border-black rounded-full flex items-center justify-center">
+                     P
                  </div>
-                 {!isEnterprise && (
-                    <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
-                        {language === 'zh' ? '代码即魔法 · AI创意编程社区' : 'Code is Magic · An AI-Native Creative Coding Community'}
-                    </span>
+                 <span className="hidden sm:inline">MyPopku</span>
+                 {isEnterprise && (
+                     <>
+                        <span className="border-l-2 border-black h-6 mx-1"></span>
+                        <span className="text-blue-600 truncate">{companyName}</span>
+                     </>
                  )}
              </div>
-             
-             {isEnterprise && (
-                <>
-                    <div className="h-8 w-1 bg-black rounded-full mx-1"></div>
-                    <div className="flex flex-col">
-                        <span className="text-sm sm:text-lg font-black text-blue-600 truncate max-w-[120px]">{enterpriseName}</span>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Enterprise</span>
-                    </div>
-                </>
-             )}
+             <span className="hidden lg:block text-[10px] font-bold text-gray-500 tracking-wide mt-0.5">
+                {language === 'zh' ? '代码即魔法 · AI创意编程社区' : 'Code is Magic · An AI-Native Creative Coding Community'}
+             </span>
          </div>
 
          {/* Center: Unified Input Omni-box */}
@@ -435,6 +447,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                          placeholder={placeholderText}
                          disabled={isLoading}
                      />
+                     
+                     {/* Character Count Indicator */}
                      {inputValue.length > 0 && (
                         <div className={`absolute bottom-2 right-36 mr-4 text-[10px] font-bold pointer-events-none transition-colors ${
                              inputValue.length > maxLength ? 'text-red-500' : 'text-gray-300'
@@ -442,6 +456,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                            {inputValue.length}/{maxLength}
                         </div>
                      )}
+
                      <button 
                         type="submit" 
                         className="absolute right-2 top-2 bottom-2 bg-pink-400 hover:bg-pink-500 text-black border-2 border-black rounded-xl px-4 sm:px-6 font-black text-sm sm:text-base flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none" 
@@ -452,6 +467,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                  </div>
              </form>
 
+             {/* Omni-box Dropdown */}
              {showDropdown && inputValue.trim().length > 1 && (
                 <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden z-10 flex flex-col animate-fade-in-up">
                     {filteredShares.length > 0 && (
@@ -466,6 +482,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                     onClick={(e) => {
                                         e.preventDefault();
                                         window.history.pushState({}, '', `/view/${share.id}`);
+                                        // Trigger count but don't wait
                                         fetch(`/api/item?id=${share.id}`).catch(() => {});
                                         handleExistingSelect(share);
                                     }}
@@ -478,10 +495,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                                         <p className="text-sm font-bold text-black truncate">{share.title || share.prompt}</p>
                                         <p className="text-xs text-gray-500">{new Date(share.createdAt).toLocaleDateString()}</p>
                                      </div>
+                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border border-black flex-shrink-0 ${share.type === 'learn' ? 'bg-pink-300' : 'bg-lime-300'}`}>
+                                        {share.type === 'learn' ? t.learnTag : t.appTag}
+                                     </span>
                                 </a>
                              ))}
                         </div>
                     )}
+                    
                     <button 
                         onClick={() => {
                             if (inputValue.length > maxLength) {
@@ -507,87 +528,107 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
              )}
          </div>
 
-         {/* Right: Social, Simulation Toggles & Auth */}
+         {/* Right: Social/Nav, Upload & Auth */}
          <div className="flex-shrink-0 flex justify-end items-center gap-3 lg:flex-1">
-             {/* SIMULATION ROLE TOGGLE */}
-             <SignedIn>
-                <button 
-                    onClick={() => onToggleRole?.(isEnterprise ? 'personal' : 'enterprise')}
-                    className={`px-3 py-1.5 rounded-lg border-2 border-black font-black text-[10px] uppercase shadow-[2px_2px_0px_0px_black] active:shadow-none active:translate-y-0.5 transition-all ${isEnterprise ? 'bg-blue-300' : 'bg-gray-100'}`}
-                >
-                    {isEnterprise ? t.personal_login_sim : t.enterprise_login_sim}
-                </button>
-             </SignedIn>
-
              <div className="flex items-center gap-2">
+                {/* Slot 1: WeChat (Logged Out only) */}
                 <SignedOut>
-                    <button onClick={() => setShowWeChatModal(true)} className={`${socialBtn} text-green-600`} title="WeChat Group">
+                    <button 
+                        onClick={() => setShowWeChatModal(true)}
+                        className={`${socialBtn} text-green-600`}
+                        title="WeChat Group"
+                    >
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
                             <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.03 2 11C2 13.974 3.582 16.618 6.052 18.23C5.783 19.467 5.167 21.096 4.025 21.98C6.397 21.98 8.435 20.84 9.94 19.535C10.603 19.645 11.29 19.704 12 19.704C17.523 19.704 22 15.674 22 10.704C22 5.733 17.523 2 12 2Z" fill="#07C160"/>
                             <circle cx="8.5" cy="9.5" r="1.5" fill="white"/>
                             <circle cx="15.5" cy="9.5" r="1.5" fill="white"/>
                         </svg>
                     </button>
-                    <SignInButton mode="modal">
-                        <button className={`${authBtn} hidden md:block`}>{t.signIn}</button>
-                    </SignInButton>
                 </SignedOut>
-                <SignedIn>
-                    <button onClick={() => setShowUploadForm(true)} className="hidden md:flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
-                        <span className="hidden md:inline">{t.upload}</span>
-                    </button>
-                    <div className="flex items-center justify-center border-2 border-black rounded-full overflow-hidden w-9 h-9 shadow-[2px_2px_0px_0px_black]">
-                        <UserButton />
-                    </div>
-                </SignedIn>
+
+                {/* Slot 2: Discord (Logged Out only) - HIDDEN ON MOBILE */}
+                <SignedOut>
+                    <a 
+                        href="https://discord.com/invite/x4am4gaRZY" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`${socialBtn} text-[#5865F2] hidden md:flex`}
+                        title="Join Discord"
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.486 13.486 0 0 0-.59 1.227 18.312 18.312 0 0 0-5.552 0 13.486 13.486 0 0 0-.59-1.227.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.074.074 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                        </svg>
+                    </a>
+                </SignedOut>
              </div>
+
+            {/* Slot 3: Upload Button - HIDDEN ON MOBILE */}
+            <button 
+                onClick={() => setShowUploadForm(true)} 
+                className="hidden md:flex items-center gap-2 bg-pink-300 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-400 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all active:shadow-none active:translate-y-1"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="hidden md:inline">{t.upload}</span>
+            </button>
+
+            {/* Slot 4: Auth (Sign In / User Button) - Sign In HIDDEN ON MOBILE */}
+            <SignedOut>
+                <button onClick={() => openSignIn()} className={`${enterpriseBtn} hidden md:block text-xs`}>
+                    {t.enterpriseLogin}
+                </button>
+                <SignInButton mode="modal">
+                    <button className={`${authBtn} hidden md:block`}>
+                        {t.signIn}
+                    </button>
+                </SignInButton>
+            </SignedOut>
+            <SignedIn>
+                <div className="flex items-center justify-center border-2 border-black rounded-full overflow-hidden w-9 h-9 shadow-[2px_2px_0px_0px_black]">
+                    <UserButton />
+                </div>
+            </SignedIn>
+
          </div>
       </header>
 
-      {/* Navigation / Breadcrumb Area */}
-      <div className="bg-gray-50 border-b-2 border-black px-6 py-3 flex items-center">
-         {isEnterprise ? (
-             <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                 <span className="hover:text-black cursor-pointer" onClick={() => onTabChange('enterprise_workspace')}>Home</span>
-                 <span>/</span>
-                 <span className="text-blue-600">Enterprise Workspace</span>
-             </div>
-         ) : (
-            <div className="flex justify-start w-full overflow-x-auto no-scrollbar">
-                <div className="flex items-center space-x-2">
-                    {effectiveUserId && (
-                         <button 
-                            onClick={() => onTabChange('personal')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 border-transparent flex items-center gap-1.5 whitespace-nowrap ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_black]' : 'text-gray-500 hover:bg-gray-100'}`}
-                        >
-                            <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
-                        </button>
-                    )}
-                    {categories.map((cat) => (
-                         <button 
-                            key={cat.id}
-                            onClick={() => onTabChange(cat.id)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 border-transparent flex items-center gap-1.5 whitespace-nowrap ${activeTab === cat.id ? `${cat.colorClass} text-black border-black shadow-[2px_2px_0px_0px_black]` : 'text-gray-500 hover:bg-gray-100'}`}
-                        >
-                            <span>{cat.emoji}</span> {cat.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-         )}
-      </div>
-
       {/* Main Content: Community Grid */}
       <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white relative z-0">
+          {/* Global Error Display */}
           {error && (
             <div className="w-full max-w-3xl mx-auto mb-8 animate-bounce">
                 <div className="bg-red-100 border-2 border-red-500 text-red-600 p-4 rounded-xl font-bold shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] flex items-center gap-3">
-                    <span className="text-2xl">⚠️</span> {error}
+                    <span className="text-2xl">⚠️</span>
+                    {error}
                 </div>
             </div>
           )}
 
+          {/* Unified Feed Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white border-2 border-black p-1 rounded-2xl flex items-center space-x-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-x-auto max-w-full no-scrollbar">
+                {(effectiveUserId) && (
+                     <button 
+                        onClick={() => onTabChange('personal')}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === 'personal' ? 'bg-pink-300 text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>👤</span> {isViewingOther ? t.userGallery : t.personal}
+                    </button>
+                )}
+                {categories.map((cat) => (
+                     <button 
+                        key={cat.id}
+                        onClick={() => onTabChange(cat.id)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 border-transparent flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${activeTab === cat.id ? `${cat.colorClass} text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]` : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                        <span>{cat.emoji}</span> {cat.label}
+                    </button>
+                ))}
+            </div>
+          </div>
+
+          {/* Feed Content */}
           {isFeedLoading ? (
              <div className="flex justify-center items-center h-64">
                 <div className="w-12 h-12 border-4 border-black border-t-pink-500 rounded-full animate-spin"></div>
@@ -614,7 +655,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="col-span-full text-center py-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl">
                         <p className="text-2xl font-black text-gray-300">{t.empty}</p>
                         <p className="text-gray-400 mt-2">
-                           {activeTab === 'enterprise_workspace' ? t.emptySubEnterprise : activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat}
+                           {activeTab === 'featured' ? t.emptySubFeatured : activeTab === 'personal' ? (isViewingOther ? t.emptySubOther : t.emptySubPersonal) : t.emptySubCat}
                         </p>
                     </div>
                 )}
@@ -622,62 +663,126 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
       </main>
 
-      {/* Consultant Message Modal */}
-      {consultantMessage && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClearConsultantMessage}>
-            <div onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 flex flex-col gap-4 relative animate-bounce-short">
-                <div className="text-4xl">🤔</div>
-                <h3 className="text-2xl font-black text-black">{t.consultantTitle}</h3>
-                <p className="text-gray-700 font-bold leading-relaxed">{consultantMessage}</p>
-                <button onClick={onClearConsultantMessage} className="mt-4 px-6 py-3 rounded-xl text-lg font-bold border-2 border-black bg-yellow-300 text-black shadow-[4px_4px_0px_0px_black] active:shadow-none hover:bg-yellow-400 transition-all">
-                    {t.consultantBtn}
-                </button>
-            </div>
-        </div>
-      )}
-
-      {/* WeChat Group Modal */}
-      {showWeChatModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWeChatModal(false)}>
-            <div onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
-                <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
-                <h3 className="text-2xl font-black text-black text-center mt-2">加入微信群</h3>
-                <p className="text-center text-sm font-bold text-gray-500">扫码加入 MyPopku 创意编程社区</p>
-                <div className="w-full aspect-square border-2 border-black rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
-                    <img src="/wechat.png" alt="WeChat QR Code" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-center text-xs font-bold text-gray-400">代码即魔法，连接每一份创意</p>
-            </div>
-        </div>
-      )}
-
+      {/* Upload Modal */}
       {showUploadForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowUploadForm(false)}>
             <form onSubmit={handleUploadSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-lg bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-6 flex flex-col gap-4 relative animate-fade-in">
                 <button type="button" onClick={() => setShowUploadForm(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-red-100 font-bold">✕</button>
-                <h3 className="text-2xl font-black text-black text-center mt-2">{isEnterprise ? 'Enterprise Upload' : 'Upload Creation'}</h3>
+                <h3 className="text-2xl font-black text-black text-center mt-2">Upload Creation</h3>
+                
                 <div>
                     <label className="block text-sm font-bold text-black mb-2 text-left">Prompt / Description*</label>
-                    <textarea value={uploadPrompt} onChange={(e) => setUploadPrompt(e.target.value)} className="w-full h-24 p-3 rounded-lg border-2 border-black resize-none focus:outline-none focus:ring-4 focus:ring-pink-200" placeholder="What is this app?" required />
+                    <textarea 
+                        value={uploadPrompt}
+                        onChange={(e) => setUploadPrompt(e.target.value)}
+                        className="w-full h-24 p-3 rounded-lg border-2 border-black resize-none focus:outline-none focus:ring-4 focus:ring-pink-200"
+                        placeholder="What is this app? e.g., 'A classic Snake game with neon graphics'"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block text-sm font-bold text-black mb-2 text-left">HTML File*</label>
                     <div className="flex items-center gap-3">
-                        <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 shadow-[2px_2px_0px_0px_#000]">Choose File</label>
-                        <input id="html-upload" type="file" onChange={(e) => setHtmlFile(e.target.files?.[0] || null)} className="hidden" accept="text/html,.html" required />
-                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">{htmlFile ? htmlFile.name : 'No file chosen'}</span>
+                    <label htmlFor="html-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-yellow-300 text-black hover:bg-yellow-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="html-upload"
+                        type="file"
+                        onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="text/html,.html"
+                        required
+                    />
+                    <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {htmlFile ? htmlFile.name : 'No file chosen'}
+                    </span>
                     </div>
                 </div>
+
                 <div>
                     <label className="block text-sm font-bold text-black mb-2 text-left">Screenshot*</label>
                     <div className="flex items-center gap-3">
-                        <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-cyan-300 text-black hover:bg-cyan-400 shadow-[2px_2px_0px_0px_#000]">Choose File</label>
-                        <input id="screenshot-upload" type="file" onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)} className="hidden" accept="image/*" required />
-                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">{screenshotFile ? screenshotFile.name : 'No file chosen'}</span>
+                    <label htmlFor="screenshot-upload" className="cursor-pointer py-2 px-4 rounded-lg border-2 border-black text-sm font-bold bg-cyan-300 text-black hover:bg-cyan-400 hover:-translate-y-0.5 transition-all shrink-0 shadow-[2px_2px_0px_0px_#000]">
+                        Choose File
+                    </label>
+                    <input
+                        id="screenshot-upload"
+                        type="file"
+                        onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept="image/*"
+                        required
+                    />
+                        <span className="text-sm font-medium text-gray-600 truncate bg-gray-100 px-3 py-2 rounded-lg border-2 border-gray-200 flex-grow">
+                        {screenshotFile ? screenshotFile.name : 'No file chosen'}
+                    </span>
                     </div>
                 </div>
-                <button type="submit" disabled={!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading} className="px-6 py-3 rounded-xl text-lg font-bold border-2 border-black bg-teal-300 text-black shadow-[4px_4px_0px_0px_black] active:shadow-none hover:bg-teal-400 transition-all">{isEnterprise ? 'Publish to Enterprise' : 'Upload & Share'}</button>
+
+                <div className="flex justify-end pt-2">
+                    <button
+                    type="submit"
+                    disabled={!htmlFile || !screenshotFile || !uploadPrompt.trim() || isLoading}
+                    className={primaryBtn + " w-full text-lg py-3"}
+                    >
+                    Upload & Share
+                    </button>
+                </div>
             </form>
+        </div>
+      )}
+
+      {/* Consultant Modal */}
+      {consultantMessage && onClearConsultantMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={onClearConsultantMessage}>
+            <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 max-w-md w-full relative animate-fade-in" onClick={e => e.stopPropagation()}>
+                <button onClick={onClearConsultantMessage} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold transition-colors">✕</button>
+                
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-20 h-20 bg-yellow-300 rounded-full border-4 border-black flex items-center justify-center text-4xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        🤔
+                    </div>
+                    <h3 className="text-2xl font-black text-black leading-tight">{t.consultantTitle}</h3>
+                    <div className="bg-gray-50 border-2 border-black rounded-xl p-4 text-left w-full shadow-inner">
+                        <p className="text-base text-gray-800 font-medium leading-relaxed whitespace-pre-wrap">
+                            {consultantMessage}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={onClearConsultantMessage}
+                        className="w-full mt-2 px-6 py-3 rounded-xl text-base font-black border-2 border-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-pink-300 text-black hover:bg-pink-400 active:translate-y-0 active:shadow-none"
+                    >
+                        {t.consultantBtn} 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* WeChat Modal */}
+      {showWeChatModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWeChatModal(false)}>
+            <div className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] rounded-3xl p-8 max-w-sm w-full relative text-center" onClick={e => e.stopPropagation()}>
+                 <button onClick={() => setShowWeChatModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-2 border-black hover:bg-gray-100 font-bold">✕</button>
+                 <h3 className="text-xl font-black mb-4">群聊：MyPopku</h3>
+                 <div className="w-48 h-48 mx-auto bg-gray-200 border-2 border-black rounded-xl flex items-center justify-center mb-4 relative overflow-hidden">
+                    <img 
+                        src="https://lksz5l2aw9u3i96n.public.blob.vercel-storage.com/WECHAT/wechat.png" 
+                        alt="WeChat QR Code" 
+                        width={192}
+                        height={192}
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none'; 
+                            target.parentElement!.innerHTML = '<span class="text-xs text-gray-400 p-4 text-center">QR Code not found<br/>(Check file location)</span>';
+                        }}
+                    />
+                 </div>
+                 <p className="text-sm text-gray-500 font-bold">该二维码长期有效</p>
+            </div>
         </div>
       )}
     </div>

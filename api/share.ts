@@ -317,7 +317,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = req.body;
     let htmlContent: string;
-    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl, title, description, keywords } = body;
+    const { screenshot, type, prompt, userId, authorName, authorAvatarUrl, title, description, keywords, companyId } = body;
 
     if (!prompt || !type) {
       return res.status(400).json({ error: 'Invalid payload.' });
@@ -384,12 +384,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         userId: userId || undefined,
         authorName,
         authorAvatarUrl,
+        companyId: companyId || undefined
     };
     
-    // 1. Add to the feed list
-    await redis.lpush('community:shares', JSON.stringify(shareData));
+    // 1. Storage Logic: If Enterprise, save to isolated list
+    if (companyId) {
+        await redis.lpush(`enterprise:${companyId}:shares`, JSON.stringify(shareData));
+    } else {
+        // Public feed logic
+        await redis.lpush('community:shares', JSON.stringify(shareData));
+    }
     
-    // 2. Add to key-value store using Hash to avoid cluttering keys
+    // 2. Add to key-value store using Hash (Global lookup for /view/:id)
     await redis.hset('shares', { [id]: shareData });
 
     // 3. If user is logged in, add to their personal list stored in a single Hash

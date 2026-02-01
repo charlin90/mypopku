@@ -1,3 +1,5 @@
+
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Redis } from '@upstash/redis';
 import type { CommunityShare } from '../types.js';
@@ -15,29 +17,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     let shares: CommunityShare[] = [];
-    const { filter, lang } = req.query;
+    const { filter, lang, companyId } = req.query;
     const mode = Array.isArray(filter) ? filter[0] : filter;
     const isZh = lang === 'zh';
 
     if (mode === 'featured') {
         // Fetch IDs from the featured sorted set
-        // We use zrange (0, -1) to get all members sorted by score.
         const ids = await redis.zrange<string[]>('community:featured_ids', 0, -1);
         
         if (ids && ids.length > 0) {
-            // Fetch actual item data from the shares hash
             const sharesMap = await redis.hmget<Record<string, CommunityShare>>('shares', ...ids);
-            
             if (sharesMap) {
-                // IMPORTANT: Use the ordered 'ids' array to map the values. 
-                // Object.values() does not guarantee order.
                 shares = ids
                     .map(id => sharesMap[id])
                     .filter((item): item is CommunityShare => !!item);
             }
         }
+    } else if (mode === 'company' && typeof companyId === 'string' && companyId) {
+        // --- ENTERPRISE LOGIC ---
+        // Fetch items from the company-specific list
+        const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
+        shares = data as unknown as CommunityShare[];
     } else {
-        // Fetch all items from the list (for other categories/latest)
+        // Fetch all items from the public list (for other categories/latest)
         const data = await redis.lrange('community:shares', 0, -1);
         shares = data as unknown as CommunityShare[];
     }
@@ -93,7 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         shares = shares.filter(s => /misc|random|fun|joke|meme|magic|trick|tarot|horoscope|fortune|cookie|dice|coin|flip|spin|wheel|decision|picker|lottery|raffle|prize|gift|card|greeting|holiday|xmas|christmas|halloween|easter|valentine|festival|party|celebrat|event|date|calendar|time|zone|world|map|globe|earth|space|universe|star|planet|galaxy|alien|ufo|crypt|blockchain|nft|web3|meta|verse|vr|ar|xr|mr|other|etc|趣味|其他|杂项/i.test(s.prompt));
         shares.sort((a, b) => b.createdAt - a.createdAt);
     } else if (mode !== 'featured') {
-        // Default (Latest)
+        // Default (Latest or Company Latest)
         shares.sort((a, b) => b.createdAt - a.createdAt);
     }
     
