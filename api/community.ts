@@ -33,17 +33,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .filter((item): item is CommunityShare => !!item);
             }
         }
-    } else if ((mode === 'company' || mode === 'marketing' || mode === 'training') && typeof companyId === 'string' && companyId) {
+    } else if ((mode === 'company' || (mode && mode.startsWith('company_'))) && typeof companyId === 'string' && companyId) {
         // --- ENTERPRISE LOGIC ---
         // Fetch items from the company-specific list
         const data = await redis.lrange(`enterprise:${companyId}:shares`, 0, -1);
         shares = data as unknown as CommunityShare[];
 
-        if (mode === 'marketing') {
-             shares = shares.filter(s => /marketing|brand|promo|ad|sales|social|market|营销|推广|品牌|广告|销售|市场/i.test((s.title || '') + (s.description || '') + s.prompt));
-        } else if (mode === 'training') {
-             shares = shares.filter(s => /train|course|lesson|guide|onboard|skill|educat|class|teach|培训|课程|教学|入职|学习|教/i.test((s.title || '') + (s.description || '') + s.prompt));
+        // Apply Enterprise Filters
+        if (mode === 'company_marketing') {
+             shares = shares.filter(s => /marketing|sales|brand|promo|ad|campaign|market|营销|推广|广告|品牌|销售|市场/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
+        } else if (mode === 'company_operations') {
+             shares = shares.filter(s => /operation|admin|manage|process|workflow|dashboard|report|biz|ops|运营|管理|流程|报表|后台|业务/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
+        } else if (mode === 'company_training') {
+             shares = shares.filter(s => /train|educat|learn|course|guide|onboard|skill|lesson|quiz|knowledge|hr|培训|教学|课程|指南|学习|知识|人力/i.test((s.prompt || '') + (s.title || '') + (s.description || '') + (s.keywords || '')));
         }
+        // company_all returns everything
     } else {
         // Fetch all items from the public list (for other categories/latest)
         const data = await redis.lrange('community:shares', 0, -1);

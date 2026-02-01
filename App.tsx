@@ -13,7 +13,7 @@ import { AdminDashboard } from './components/AdminDashboard.js';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
 type View = 'home' | 'explainer' | 'blobExplainer' | 'creativeView' | 'admin';
-export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc' | 'company' | 'marketing' | 'training';
+export type FeedTab = 'featured' | 'christmas' | 'most_viewed' | 'latest' | 'personal' | 'games' | 'tools' | 'art' | 'education' | 'ai' | 'music' | 'misc' | 'company' | 'company_all' | 'company_marketing' | 'company_operations' | 'company_training';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
@@ -197,7 +197,7 @@ const App: React.FC = () => {
         const isRestoring = sessionStorage.getItem('restore_state') !== null;
         if (!window.location.pathname.startsWith('/view/') && view === 'home' && !isRestoring) {
             if (isEnterprise) {
-                setHomeFeedTab('company');
+                setHomeFeedTab('company_all');
             } else {
                 setHomeFeedTab('personal');
             }
