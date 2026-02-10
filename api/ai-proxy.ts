@@ -83,9 +83,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Extract image if present (for convenience)
     let imageUri = null;
-    if (response.candidates && response.candidates[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+    const parts = response.candidates?.[0]?.content?.parts;
+    if (parts) {
+        for (const part of parts) {
+            // Check if inlineData exists and mimeType is defined before accessing
+            if (part.inlineData && part.inlineData.mimeType && part.inlineData.mimeType.startsWith('image/')) {
                 imageUri = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
                 break; // Return the first image found
             }
