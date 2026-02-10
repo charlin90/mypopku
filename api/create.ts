@@ -1,6 +1,8 @@
 
 
 
+
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Redis } from '@upstash/redis';
@@ -54,11 +56,20 @@ function getPrompt(prompt: string): string {
     *   **AI Intelligence (NEW):** You can make the app "smart"! If the user needs features like a chatbot, storyteller, dynamic analysis, NPC conversation, OR **Image Generation**, call the **AI Proxy API**:
         *   **Endpoint:** \`/api/ai-proxy\`
         *   **Method:** POST
-        *   **Body:** \`JSON.stringify({ prompt: "Your prompt here", model: "flash" })\`
-            *   \`model\`: "flash" (fast text), "pro" (smart text), or "image" (generates an image).
+        *   **Body Structure:**
+            *   **Simple Text:** \`JSON.stringify({ prompt: "Your prompt here", model: "flash" })\`
+            *   **Multimodal (Images/Files):** Use the 'contents' structure for analyzing user-uploaded images or files.
+                \`JSON.stringify({ 
+                    model: "flash", 
+                    contents: [{ parts: [{ text: "Analyze this image" }, { inlineData: { mimeType: "image/jpeg", data: "BASE64_STRING..." } }] }] 
+                })\`
+            *   **Models:** 
+                *   \`"flash"\` (Gemini Flash - Default, fast, supports text & images/PDFs)
+                *   \`"pro"\` (Gemini Pro - Smartest, supports text & images/PDFs)
+                *   \`"image"\` (Generates an image from text. Returns base64 in \`.image\` property)
         *   **Response:** JSON object.
-            *   \`.text\`: String. The AI's text reply (for flash/pro).
-            *   \`.image\`: String. A base64 Data URI (e.g. "data:image/jpeg;base64,...") if \`model: "image"\` was used.
+            *   \`.text\`: String. The AI's text reply.
+            *   \`.image\`: String. A base64 Data URI if \`model: "image"\` was used.
         *   **Usage:** Call this asynchronously. ALWAYS show a beautiful loading state/animation while waiting for the AI.
 
     **Language Consistency:** 
