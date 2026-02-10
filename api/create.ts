@@ -1,5 +1,6 @@
 
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Redis } from '@upstash/redis';
@@ -50,6 +51,15 @@ function getPrompt(prompt: string): string {
     *   **Mobile-First & Responsive:** Flawless execution on all device sizes.
     *   **Self-Contained:** Single HTML file with embedded high-quality CSS/JS.
     *   **Persistence:** Auto-save state to \`localStorage\`. Implement the standard cloud sync logic (fetch/POST to \`/api/storage?id={id}\`) if user data is involved, with a subtle, elegantly designed status indicator.
+    *   **AI Intelligence (NEW):** You can make the app "smart"! If the user needs features like a chatbot, storyteller, dynamic analysis, NPC conversation, OR **Image Generation**, call the **AI Proxy API**:
+        *   **Endpoint:** \`/api/ai-proxy\`
+        *   **Method:** POST
+        *   **Body:** \`JSON.stringify({ prompt: "Your prompt here", model: "flash" })\`
+            *   \`model\`: "flash" (fast text), "pro" (smart text), or "image" (generates an image).
+        *   **Response:** JSON object.
+            *   \`.text\`: String. The AI's text reply (for flash/pro).
+            *   \`.image\`: String. A base64 Data URI (e.g. "data:image/jpeg;base64,...") if \`model: "image"\` was used.
+        *   **Usage:** Call this asynchronously. ALWAYS show a beautiful loading state/animation while waiting for the AI.
 
     **Language Consistency:** 
        * All UI text, title, and descriptions MUST be in the same language as the User Prompt: "${prompt}".
