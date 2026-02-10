@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Determine the model to use. Default to Flash for speed/cost in generated apps.
-    let modelName = 'gemini-2.5-flash-latest';
+    let modelName = 'gemini-3-flash-preview';
     
     // Check for explicit image model request first
     if (model === 'image' || model === 'gemini-image') {
@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (model === 'pro' || model === 'gemini-pro') {
         modelName = 'gemini-3-pro-preview';
     } else if (model === 'flash' || model === 'gemini-flash') {
-        modelName = 'gemini-2.5-flash-latest';
+        modelName = 'gemini-2.5-flash';
     } else if (typeof model === 'string' && model.startsWith('gemini-')) {
         // Allow specific model overrides if they start with gemini-
         modelName = model;
