@@ -6,15 +6,10 @@
 
 # upstash-kv-export.json 这个文件包含每一个小应用的metadata信息
 
-# 超过1000个小应用html文件打包下载地址在
+# 超过1000个小应用html文件打包下载地址在百度网盘：vercel-blob-downloads.zip
+链接: https://pan.baidu.com/s/1RXhsGsrD9Ip2FTNy4o_RQw?pwd=sxwp 提取码: sxwp
 
 
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1ZTHcK49IWVhIaLfVZf8erqOTZujjaP0K
 
 ## Run Locally
 
